@@ -3,14 +3,15 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { Header } from '@/components/header';
+import { Analytics } from "@vercel/analytics/react"
 import { Footer } from '@/components/footer';
+import { siteConfig } from '@/config/site';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Kubeasy v2 - Master Kubernetes Through Hands-on Challenges',
-  description: 'Interactive learning platform for mastering Kubernetes through practical challenges',
+  title: siteConfig.title,
+  description: siteConfig.description,
   icons: {
     icon: '/favicon.ico',
   },
@@ -18,9 +19,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
@@ -31,6 +32,7 @@ export default function RootLayout({
           </div>
           <Toaster />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
