@@ -63,8 +63,10 @@
     "react-dom": "19.0.0",
     "react-hook-form": "^7.54.2",
     "react-intersection-observer": "9.16.0",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.15.1",
+    "remark-gfm": "^4.0.1",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "3.4.17",
@@ -74,6 +76,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
     "eslint-config-next": "15.1.6",
     "supabase": "^2.9.6"
   },

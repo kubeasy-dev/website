@@ -58,7 +58,9 @@ export type Database = {
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           estimated_time: number
+          fts: unknown | null
           id: string
+          slug: string | null
           title: string
           updated_at: string | null
         }
@@ -68,7 +70,9 @@ export type Database = {
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           estimated_time?: number
+          fts?: unknown | null
           id?: string
+          slug?: string | null
           title: string
           updated_at?: string | null
         }
@@ -78,7 +82,9 @@ export type Database = {
           description?: string
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           estimated_time?: number
+          fts?: unknown | null
           id?: string
+          slug?: string | null
           title?: string
           updated_at?: string | null
         }
