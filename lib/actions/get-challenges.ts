@@ -1,15 +1,9 @@
 "use server"
 
+import { difficultySections } from "@/config/difficulty-sections";
 import { createClient } from "@/lib/supabase/server"
 import { ChallengeExtended } from "@/lib/types";
-import { revalidateTag, unstable_cache } from "next/cache";
-import { cookies } from "next/headers";
-
-export type ChallengesFilters = {
-  searchTerm?: string;
-  showAchieved?: boolean;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
-};
+import { unstable_cache } from "next/cache";
 
 /**
  * Tags used for cache invalidation
@@ -17,7 +11,6 @@ export type ChallengesFilters = {
 export const CACHE_TAGS = {
   CHALLENGES: "challenges"
 }
-
 
 /**
  * Get base challenges without user-specific data
@@ -62,7 +55,7 @@ const getBaseChallenges = unstable_cache(
     } 
     // If no search term, use separate queries by difficulty
     else {
-      const difficulties = ['beginner', 'intermediate', 'advanced'] as const;
+      const difficulties = difficultySections.map(section => section.key);
       const result: Record<string, any[]> = {
         beginner: [],
         intermediate: [],
