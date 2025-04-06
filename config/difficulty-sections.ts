@@ -14,7 +14,7 @@ export type DifficultySection = {
 export const difficultySections: DifficultySection[] = [
   {
     title: "Beginner Challenges",
-    key: 'beginner'
+    key: 'beginner',
     description: "Perfect for those just starting with Kubernetes. Learn the basics."
   },
   {
