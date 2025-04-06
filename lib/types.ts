@@ -9,7 +9,7 @@ export type ChallengeExtended = Challenge & {
 export type ChallengesFilters = {
   searchTerm?: string;
   showAchieved?: boolean;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: DifficultyLevel;
 };
 
 export type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"]
