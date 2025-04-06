@@ -12,6 +12,8 @@ export type ChallengesFilters = {
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
 };
 
+export type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"]
+
 export type UserStats = Database["public"]["Tables"]["user_stats"]["Row"]
 
 export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"]

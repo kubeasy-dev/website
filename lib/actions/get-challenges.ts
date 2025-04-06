@@ -1,16 +1,17 @@
 "use server"
 
 import { createClient, createStaticClient } from "@/lib/supabase/server"
-import { ChallengeExtended } from "@/lib/types";
+import { Challenge, ChallengeExtended } from "@/lib/types";
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache-tags";
+import { DifficultyLevel } from "@/lib/types";
 
 /**
  * Get base challenges without user-specific data
  * This can be safely cached and shared between users
  */
 const getBaseChallenges = unstable_cache(
-  async (searchTerm?: string): Promise<Record<string, any[]>> => {
+  async (searchTerm?: string): Promise<Record<DifficultyLevel, any[]>> => {
     const supabase = createStaticClient();
     let query = supabase.from("challenges").select("*");
     
@@ -56,7 +57,7 @@ const getBaseChallenges = unstable_cache(
  */
 export async function getInitialChallengesByDifficulty(
   searchTerm?: string
-): Promise<Record<string, ChallengeExtended[]>> {
+): Promise<Record<DifficultyLevel, ChallengeExtended[]>> {
   // Get base challenges from cache (shared between users)
   const baseChallenges = await getBaseChallenges(searchTerm);
   
@@ -84,13 +85,18 @@ export async function getInitialChallengesByDifficulty(
   }
   
   // Add user-specific data (achieved status) to challenges
-  const result: Record<string, ChallengeExtended[]> = {};
+  const result: Record<DifficultyLevel, ChallengeExtended[]> = {
+    beginner: [],
+    intermediate: [],
+    advanced: []
+  }
   
   Object.entries(baseChallenges).forEach(([difficulty, challenges]) => {
-    result[difficulty] = challenges.map(challenge => ({
+    const extendedChallenges = challenges.map(challenge => ({
       ...challenge,
       achieved: completedIds.has(challenge.id)
     }));
+    result[difficulty as DifficultyLevel] = extendedChallenges;
   });
   
   return result;
