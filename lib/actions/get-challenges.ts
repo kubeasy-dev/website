@@ -1,16 +1,9 @@
 "use server"
 
-import { difficultySections } from "@/config/difficulty-sections";
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createStaticClient } from "@/lib/supabase/server"
 import { ChallengeExtended } from "@/lib/types";
 import { unstable_cache } from "next/cache";
-
-/**
- * Tags used for cache invalidation
- */
-export const CACHE_TAGS = {
-  CHALLENGES: "challenges"
-}
+import { CACHE_TAGS } from "@/config/cache-tags";
 
 /**
  * Get base challenges without user-specific data
@@ -18,71 +11,40 @@ export const CACHE_TAGS = {
  */
 const getBaseChallenges = unstable_cache(
   async (searchTerm?: string): Promise<Record<string, any[]>> => {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
+    let query = supabase.from("challenges").select("*");
     
-    // If we have an active search, perform a single query with text search
+    // If we have an active search, add text search clause
     if (searchTerm) {
       // Format search term for textSearch (replace spaces with + signs)
       const formattedSearchTerm = searchTerm.split(' ').join('+');
-      
-      let query = supabase
-        .from("challenges")
-        .select("*")
-        .textSearch('fts', formattedSearchTerm)
-        .order('updated_at', { ascending: false });
-      
-      const { data: challenges, error } = await query;
-      
-      if (error) {
-        console.error("Error retrieving challenges:", error);
-        throw error;
-      }
-      
-      // Group the results by difficulty
-      const result: Record<string, any[]> = {
-        beginner: [],
-        intermediate: [],
-        advanced: []
-      };
-      
-      challenges.forEach(challenge => {
-        if (challenge.difficulty && result[challenge.difficulty]) {
-          result[challenge.difficulty].push(challenge);
-        }
-      });
-      
-      return result;
-    } 
-    // If no search term, use separate queries by difficulty
-    else {
-      const difficulties = difficultySections.map(section => section.key);
-      const result: Record<string, any[]> = {
-        beginner: [],
-        intermediate: [],
-        advanced: []
-      };
-
-      // Run all queries in parallel using Promise.all
-      await Promise.all(
-        difficulties.map(async (difficulty) => {
-          const { data: challenges, error } = await supabase
-            .from("challenges")
-            .select("*")
-            .eq("difficulty", difficulty)
-            .order('updated_at', { ascending: false });
-
-          if (error) {
-            console.error(`Error retrieving ${difficulty} challenges:`, error);
-            return;
-          }
-          
-          // Store all challenges
-          result[difficulty] = challenges;
-        })
-      );
-
-      return result;
+      query = query.textSearch('fts', formattedSearchTerm);
     }
+
+    // Order challenges by updated_at in a single query
+    query = query.order('updated_at', { ascending: false });
+    
+    const { data: challenges, error } = await query;
+    
+    if (error) {
+      console.error("Error retrieving challenges:", error);
+      throw error;
+    }
+    
+    // Group all results by difficulty
+    const result: Record<string, any[]> = {
+      beginner: [],
+      intermediate: [],
+      advanced: []
+    };
+    
+    challenges.forEach(challenge => {
+      if (challenge.difficulty && result[challenge.difficulty]) {
+        result[challenge.difficulty].push(challenge);
+      }
+    });
+    
+    return result;
   },
   ['getBaseChallenges'],
   { tags: [CACHE_TAGS.CHALLENGES], revalidate: false }
@@ -114,7 +76,8 @@ export async function getInitialChallengesByDifficulty(
       .eq("status", "completed");
 
     if (progressError) {
-      console.error("Error retrieving progress:", progressError);
+      console.error("Error retrieving user progress:", progressError);
+      throw progressError;
     } else if (userProgress) {
       completedIds = new Set(userProgress.map(progress => progress.challenge_id));
     }

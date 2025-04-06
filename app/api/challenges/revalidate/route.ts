@@ -1,4 +1,4 @@
-import { CACHE_TAGS } from "@/lib/actions/get-challenges";
+import { CACHE_TAGS } from "@/config/cache-tags";
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 

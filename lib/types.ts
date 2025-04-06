@@ -11,3 +11,7 @@ export type ChallengesFilters = {
   showAchieved?: boolean;
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
 };
+
+export type UserStats = Database["public"]["Tables"]["user_stats"]["Row"]
+
+export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"]
