@@ -35,10 +35,26 @@ export default async function ProfileProgressCard() {
     throw new Error("User not authenticated");
   }
 
-  const { data } = await supabase.from("user_stats").select("*").eq("user_id", user.id).single();
-
-  if (!data) {
-    return <div>No data available</div>;
+  try {
+    const { data, error } = await supabase
+      .from("user_stats")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching user stats:", error);
+      return <div>Error loading progress data</div>;
+    }
+    
+    if (!data) {
+      return <div>No data available</div>;
+    }
+    
+    // Continue with existing code...
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    return <div>An unexpected error occurred</div>;
   }
   const { level, currentLevelXp, xpToNextLevel } = getLevelFromXP(data.exp);
 
