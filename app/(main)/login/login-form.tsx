@@ -26,7 +26,7 @@ export function LoginForm() {
   return (
     <div className="mt-8 space-y-4">
       <Button
-        className="w-full bg-muted text-white"
+        className="w-full dark:bg-muted text-white"
         onClick={() => handleLogin("github")}
         disabled={isLoading}
       >
@@ -34,7 +34,7 @@ export function LoginForm() {
         Sign in with GitHub
       </Button>
       <Button
-        className="w-full bg-muted text-white"
+        className="w-full dark:bg-muted text-white"
         onClick={() => handleLogin("azure")}
         disabled={isLoading}
       >
@@ -42,7 +42,7 @@ export function LoginForm() {
         Sign in with Microsoft
       </Button>
       <Button
-        className="w-full bg-muted text-white"
+        className="w-full dark:bg-muted text-white"
         onClick={() => handleLogin("google")}
         disabled={isLoading}
       >

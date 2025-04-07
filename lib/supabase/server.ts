@@ -28,3 +28,19 @@ export async function createClient() {
     }
   )
 }
+
+// Supabase client for static functions like generateStaticParams
+// which cannot access cookies
+export function createStaticClient() {
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      // No cookie management for static contexts
+      cookies: {
+        getAll: () => [],
+        setAll: () => {},
+      },
+    }
+  )
+}
