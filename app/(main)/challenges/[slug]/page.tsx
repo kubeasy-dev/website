@@ -1,9 +1,14 @@
+import React, { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { createClient, createStaticClient } from '@/lib/supabase/server'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Params } from 'next/dist/server/request/params'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import ChallengeProgressCard from '@/components/challenges/challenge-progress-card'
 import { Challenge } from '@/lib/types'
+import { generateCacheTag } from '@/lib/cache'
 
 // Next.js will invalidate the cache when a
 // request comes in, at most once every 60 seconds.
@@ -24,15 +29,25 @@ export async function generateStaticParams() {
   }))
 }
 
+/**
+ * Main challenge page component
+ * Displays challenge details and progress tracking UI
+ */
 export default async function ChallengePage({ params }: Readonly<{ params: Promise<Params> }>) {
   const { slug } = await params
-  const supabase = await createClient()
-
+ 
   if (typeof slug != 'string') {
     throw new Error("Invalid slug")
   }
 
-  const { data: challenge, error } = await supabase.from("challenges").select("*").eq("slug", slug).single()
+  const supabase = await createClient(generateCacheTag("challenges", { slug }))
+
+  // Get the challenge data
+  const { data: challenge, error } = await supabase
+    .from("challenges")
+    .select("*")
+    .eq("slug", slug)
+    .single()
 
   if (error) {
     throw error
@@ -44,21 +59,39 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
 
   return (
     <section className="container mx-auto py-12 md:py-24 lg:py-32">
-      <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
-        <div className="items-center">
+      <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-6 text-center">
+        <div className="flex flex-col items-center space-y-4 w-full">
           <h1 className="text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]">
             {challenge.title}
           </h1>
-          <div className="flex flex-row gap-4">
-            {challenge.difficulty} . {challenge.estimated_time}
+          <div className="flex flex-row items-center gap-4 text-sm font-medium mt-2">
+            <Badge>
+              {challenge.difficulty}
+            </Badge>
+            <span className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {challenge.estimated_time} min
+            </span>
           </div>
         </div>
-        <div className="text-left border-2 rounded-lg p-4 prose prose-p:text-base prose-ol:list-disc">
-          <Markdown remarkPlugins={[remarkGfm]}>{challenge.content}</Markdown>
-        </div>
+        
+        {/* Challenge Instructions Card */}
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Instructions</CardTitle>
+          </CardHeader>
+          <CardContent className="prose prose-p:text-base prose-ol:list-disc max-w-none">
+            <Markdown remarkPlugins={[remarkGfm]}>{challenge.content}</Markdown>
+          </CardContent>
+        </Card>
+        
+        {/* Challenge Progress Card */}
+        <Suspense fallback={<div className="w-full max-w-md bg-white border rounded-lg p-6 shadow-md">Loading...</div>}>
+          <ChallengeProgressCard challenge={challenge}/>
+        </Suspense>
       </div>
-
     </section>
   )
-
 }

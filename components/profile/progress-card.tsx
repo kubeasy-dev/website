@@ -28,7 +28,7 @@ function getLevelFromXP(totalXP: number): LevelInfo {
 
 export default async function ProfileProgressCard() {
 
-  const supabase = await createClient()
+  const supabase = await createClient(null)
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

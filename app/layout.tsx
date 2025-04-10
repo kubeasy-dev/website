@@ -2,7 +2,8 @@ import { Mona_Sans as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { Providers } from "@/components/providers"
 import "./globals.css"
-import type React from "react" // Import React
+import type React from "react"
+import { Toaster } from "@/components/ui/toaster"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -11,13 +12,14 @@ const fontSans = FontSans({
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
         <Providers>{children}</Providers>
+        <Toaster />
       </body>
     </html>
   )

@@ -1,5 +1,7 @@
 import { Database } from "@/lib/database.types";
 
+export type TableName = keyof Database["public"]["Tables"];
+
 export type Challenge = Database["public"]["Tables"]["challenges"]["Row"]
 
 export type ChallengeExtended = Challenge & {
