@@ -17,7 +17,6 @@ export const createFetch =
  * @returns Supabase client
  */
 export async function createClient(cacheTag: string | null) {
-  console.log("Creating Supabase client with cache tag:", cacheTag)
   const cookieStore = await cookies()
 
   return createServerClient<Database>(
@@ -54,11 +53,19 @@ export async function createClient(cacheTag: string | null) {
 
 // Supabase client for static functions like generateStaticParams
 // which cannot access cookies
-export function createStaticClient() {
+export function createStaticClient(cacheTag: string | null = null) {
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: createFetch({
+          next: {
+            tags: cacheTag ? [cacheTag, 'db'] : ['db'],
+          },
+          cache: 'force-cache',
+        }),
+      },
       // No cookie management for static contexts
       cookies: {
         getAll: () => [],

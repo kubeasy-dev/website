@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react'
 import { notFound } from 'next/navigation'
-import { createClient, createStaticClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/server'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Params } from 'next/dist/server/request/params'
@@ -11,8 +11,8 @@ import { Challenge } from '@/lib/types'
 import { generateCacheTag } from '@/lib/cache'
 
 // Next.js will invalidate the cache when a
-// request comes in, at most once every 60 seconds.
-export const revalidate = 60
+// request comes in, at most once every 3660 seconds.
+export const revalidate = 3600
  
 // We'll prerender only the params from `generateStaticParams` at build time.
 // If a request comes in for a path that hasn't been generated,
@@ -40,7 +40,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
     throw new Error("Invalid slug")
   }
 
-  const supabase = await createClient(generateCacheTag("challenges", { slug }))
+  const supabase = createStaticClient(generateCacheTag("challenges", { slug }))
 
   // Get the challenge data
   const { data: challenge, error } = await supabase
