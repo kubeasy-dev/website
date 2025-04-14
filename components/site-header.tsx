@@ -19,7 +19,7 @@ export function SiteHeader() {
   const [loggedIn, setLoggedIn] = useState(false)
 
   const getUser = useCallback(async () => {
-    const {data: { user}} = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       setLoggedIn(true)
     }
@@ -50,15 +50,11 @@ export function SiteHeader() {
             Kubeasy
           </motion.span>
         </Link>
-        <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <Link href="/challenges" legacyBehavior passHref>
-                <NavigationMenuLink className="h-10 px-4 py-2">Challenges</NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+        <div className="hidden md:flex">
+          <Link href="/challenges" className="h-10 px-4 py-2">
+            Challenges
+          </Link>
+        </div>
         <div className="flex items-center space-x-4">
           <ModeSwitcher />
           {loggedIn ? (
