@@ -41,7 +41,7 @@ const ProfileHeader = ({
 );
 
 export default async function Profile() {
-  const supabase = await createClient(null)
+  const supabase = await createClient()
   const { error, data: { user } } = await supabase.auth.getUser()
 
   if (error || !user) {

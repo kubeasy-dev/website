@@ -1,21 +1,12 @@
-import { Database } from "./database.types";
-import { TableName } from "./types";
+import { QueryCache, MemoryStore } from '@supabase-cache-helpers/postgrest-server';
+import { DefaultStatefulContext } from "@unkey/cache";
 
-export function generateCacheTag<T extends TableName>(
-  table: T,
-  keys: Partial<Database["public"]["Tables"][T]["Row"]>,
-  scope?: string
-): string | null {
+const ctx = new DefaultStatefulContext()
 
-  const parts: string[] = [];
+const map = new Map();
 
-  for (const [key, value] of Object.entries(keys)) {
-    if (value === undefined || value === null) {
-      return null;
-    }
-    parts.push(`${key}=${value}`);
-  }
-
-  const base = `${table}:${parts.join(",")}`;
-  return scope ? `${base}:${scope}` : base;
-}
+export const cache = new QueryCache(ctx, {
+    stores: [new MemoryStore({ persistentMap: map })],
+    fresh: 1000,
+    stale: 2000,
+});

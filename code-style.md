@@ -1,6 +1,6 @@
 Always use React functional components
 
-Always add comments in English
+Write comments for non trivial code in English
 
 Always use function for components like `export default function`
 

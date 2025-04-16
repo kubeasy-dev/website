@@ -1,10 +1,5 @@
 import { DifficultyLevel } from "@/lib/types";
 
-/**
- * Configuration for challenge difficulty sections
- * Defines metadata for each difficulty level throughout the application
- */
-
 export type DifficultySection = {
   title: string;
   key: DifficultyLevel;

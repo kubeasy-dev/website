@@ -2,35 +2,18 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '../database.types'
 
-export const createFetch =
-  (options: Pick<RequestInit, "next" | "cache">) =>
-  (url: RequestInfo | URL, init?: RequestInit) => {
-    return fetch(url, {
-      ...init,
-      ...options,
-    });
-  };
-
 /**
  * Creates a Supabase client with authentication handling
  * @param cacheTag - Optional cache tag for revalidation
  * @returns Supabase client
  */
-export async function createClient(cacheTag: string | null) {
+export async function createClient() {
   const cookieStore = await cookies()
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      global: {
-        fetch: createFetch({
-          next: {
-            tags: cacheTag ? [cacheTag, 'db'] : ['db'],
-          },
-          cache: 'force-cache',
-        }),
-      },
       cookies: {
         getAll() {
           return cookieStore.getAll()
@@ -53,19 +36,11 @@ export async function createClient(cacheTag: string | null) {
 
 // Supabase client for static functions like generateStaticParams
 // which cannot access cookies
-export function createStaticClient(cacheTag: string | null = null) {
+export function createStaticClient() {
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      global: {
-        fetch: createFetch({
-          next: {
-            tags: cacheTag ? [cacheTag, 'db'] : ['db'],
-          },
-          cache: 'force-cache',
-        }),
-      },
       // No cookie management for static contexts
       cookies: {
         getAll: () => [],

@@ -1,86 +1,133 @@
-import React from 'react';
+"use client";
+
+import React, { createContext, useContext } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { Challenge, UserProgress } from '@/lib/types';
-import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { StartButton, RestartButton } from '@/components/challenges/progress-actions';
-import { generateCacheTag } from '@/lib/cache';
+import useSupabase from '@/hooks/use-supabase';
+import { useQuery as useCacheQuery, useUpsertMutation } from '@supabase-cache-helpers/postgrest-react-query';
+import { queries } from '@/lib/queries';
+import { useQuery } from '@tanstack/react-query';
+import { UserProgressStatus } from '@/lib/types';
+import { User } from '@supabase/supabase-js';
+import { useToast } from '@/hooks/use-toast';
 
+type ChallengeProgressContextType = {
+  challenge: Challenge;
+  userProgress?: UserProgress | null;
+  user?: User | null;
+};
 
-const getChallengeProgress = async (challengeId: string, userId: string) => {
-  const cacheKey = generateCacheTag("user_progress", { user_id: userId, challenge_id: challengeId });
-  const supabase = await createClient(cacheKey);
+const ChallengeProgressContext = createContext<ChallengeProgressContextType | undefined>(undefined);
 
-  const { data, error } = await supabase
-    .from('user_progress')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('challenge_id', challengeId)
-    .order('started_at', { ascending: false })
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to fetch challenge progress: ${error.message}`);
+function useChallengeProgress() {
+  const context = useContext(ChallengeProgressContext);
+  if (context === undefined) {
+    throw new Error('useChallengeProgress must be used within a ChallengeProgressProvider');
   }
-
-  return data || null;
+  return context;
 }
-
 
 /**
  * Main Challenge Progress Card Component - Server Component
  * Fetches data server-side and renders the appropriate sub-component
  */
-export default async function ChallengeProgressCard({
+export default function ChallengeProgressCard({
   challenge,
 }: Readonly<{
   challenge: Challenge;
 }>) {
-  // Fetch user progress data server-side
-  let userProgress: UserProgress | null = null;
+  const supabase = useSupabase()
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => supabase.auth.getUser(),
+    select: (res) => res.data.user,
+    refetchOnWindowFocus: true,
+  })
+  const { data: progress } = useCacheQuery(queries.userProgress.get(supabase, { challengeId: challenge.id }), {
+    enabled: !!user,
+  })
 
-  const supabase = await createClient(null)
-  const { data: { user } } = await supabase.auth.getUser()
-  const userId = user?.id;
-
-  if (userId) {
-    userProgress = await getChallengeProgress(challenge.id, userId);
-  }
+  // Contexte partagé avec tous les sous-composants
+  const contextValue = {
+    challenge,
+    userProgress: progress,
+    user
+  };
 
   // Render appropriate component based on auth state and user progress
-  if (!userId) {
-    return <NotLoggedInCard challengeSlug={challenge.slug} />;
-  }
+  return (
+    <ChallengeProgressContext.Provider value={contextValue}>
+      {!user ? (
+        <NotLoggedInCard />
+      ) : !progress || progress.status === "not_started" ? (
+        <NotStartedCard />
+      ) : progress.status === "in_progress" ? (
+        <InProgressCard />
+      ) : progress.status === "completed" ? (
+        <CompletedCard />
+      ) : (
+        <ErrorCard />
+      )}
+    </ChallengeProgressContext.Provider>
+  );
+}
 
-  if (!userProgress || userProgress.status === "not_started") {
-    return <NotStartedCard challenge={challenge} />;
-  }
+function ActionButton() {
+  const supabase = useSupabase();
+  const { toast } = useToast();
+  const { challenge, user, userProgress } = useChallengeProgress();
+  const { mutateAsync: update } = useUpsertMutation(
+    supabase.from('user_progress'),
+    ['user_id', 'challenge_id'],
+    'status',
+    {
+      onSuccess: () => {
+        toast({
+          title: 'Challenge Started!',
+          description: 'You have successfully started the challenge.',
+          variant: 'default',
+        });
+      },
+    }
+  );
 
-  if (userProgress.status === "in_progress") {
-    return <InProgressCard userProgress={userProgress} challenge={challenge} />;
-  }
+  const handleStart = async () => {
+    if (user && challenge) {
+      try {
+        const progressData = {
+          user_id: user.id,
+          challenge_id: challenge.id,
+          status: 'in_progress' as UserProgressStatus,
+          started_at: new Date().toISOString(),
+        };
+        
+        await update([progressData]);
+        
+      } catch (error) {
+        console.error('Failed to start challenge:', error);
+      }
+    }
+  };
 
-  if (userProgress.status === "completed") {
-    return <CompletedCard userProgress={userProgress} challenge={challenge} />;
-  }
-
-  // Fallback
-  return <ErrorCard />;
+  return (
+    <Button className="w-full" onClick={handleStart}>
+      {userProgress?.status === 'in_progress' ? 'Restart Challenge' : 'Start Challenge'}
+    </Button>
+  );
 }
 
 /**
  * Card displayed when user is not logged in
  */
-function NotLoggedInCard({
-  challengeSlug
-}: Readonly<{
-  challengeSlug: string | null
-}>) {
+function NotLoggedInCard() {
+  const { challenge } = useChallengeProgress();
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -93,7 +140,7 @@ function NotLoggedInCard({
       </CardContent>
       <CardFooter>
         <Link
-          href={`/login?next=${encodeURIComponent('/challenges/' + challengeSlug)}`}
+          href={`/login?next=${encodeURIComponent('/challenges/' + challenge.slug)}`}
           className="w-full"
         >
           <Button className="w-full">Sign in to continue</Button>
@@ -106,11 +153,7 @@ function NotLoggedInCard({
 /**
  * Card displayed when the challenge has not been started yet
  */
-function NotStartedCard({
-  challenge,
-}: Readonly<{
-  challenge: Challenge,
-}>) {
+function NotStartedCard() {  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -122,7 +165,7 @@ function NotStartedCard({
         </p>
       </CardContent>
       <CardFooter>
-        <StartButton challengeId={challenge.id} />
+        <ActionButton />
       </CardFooter>
     </Card>
   );
@@ -131,15 +174,11 @@ function NotStartedCard({
 /**
  * Card displayed when the challenge is in progress
  */
-function InProgressCard({
-  userProgress,
-  challenge,
-}: Readonly<{
-  userProgress: UserProgress,
-  challenge: Challenge,
-}>) {
-  const startedAt = userProgress.started_at
-    ? formatDistanceToNow(new Date(userProgress.started_at), { addSuffix: true, locale: fr })
+function InProgressCard() {
+  const { userProgress } = useChallengeProgress();
+  
+  const startedAt = userProgress?.started_at
+    ? formatDistanceToNow(new Date(userProgress.started_at), { addSuffix: true, locale: enUS })
     : "recently";
 
   return (
@@ -162,9 +201,6 @@ function InProgressCard({
           Keep working on this challenge. You're making great progress!
         </p>
       </CardContent>
-      <CardFooter>
-        <RestartButton challengeId={challenge.id} />
-      </CardFooter>
     </Card>
   );
 }
@@ -172,18 +208,14 @@ function InProgressCard({
 /**
  * Card displayed when the challenge is completed
  */
-function CompletedCard({
-  userProgress,
-  challenge,
-}: Readonly<{
-  userProgress: UserProgress,
-  challenge: Challenge,
-}>) {
-  const completedAt = userProgress.completed_at
-    ? formatDistanceToNow(new Date(userProgress.completed_at), { addSuffix: true, locale: fr })
+function CompletedCard() {
+  const { userProgress } = useChallengeProgress();
+  
+  const completedAt = userProgress?.completed_at
+    ? formatDistanceToNow(new Date(userProgress.completed_at), { addSuffix: true, locale: enUS })
     : "recently";
 
-  const duration = userProgress.started_at && userProgress.completed_at
+  const duration = userProgress?.started_at && userProgress?.completed_at
     ? Math.round((new Date(userProgress.completed_at).getTime() - new Date(userProgress.started_at).getTime()) / (1000 * 60))
     : null;
 
@@ -212,14 +244,10 @@ function CompletedCard({
           Congratulations! You've successfully completed this challenge.
         </p>
       </CardContent>
-      {/* Removed restart button from completed card */}
     </Card>
   );
 }
 
-/**
- * Error state card
- */
 function ErrorCard() {
   return (
     <Card className="w-full">

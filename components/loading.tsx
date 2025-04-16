@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <Button disabled variant="ghost">
       <Loader2 className="animate-spin" />
-      Please wait
+      Loading...
     </Button>
   )
 }

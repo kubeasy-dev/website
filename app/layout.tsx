@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils"
 import { Providers } from "@/components/providers"
 import "./globals.css"
 import type React from "react"
-import { Toaster } from "@/components/ui/toaster"
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -19,7 +18,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
         <Providers>{children}</Providers>
-        <Toaster />
       </body>
     </html>
   )
