@@ -8,12 +8,12 @@ export type ChallengesFilters = {
 
 export type TableName = keyof Database["public"]["Tables"];
 
-export type Challenge = Database["public"]["Tables"]["challenges"]["Row"]
+export type Challenge = Database["public"]["Tables"]["challenges"]["Row"];
 
-export type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"]
+export type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"];
 
-export type UserStats = Database["public"]["Tables"]["user_stats"]["Row"]
+export type UserStats = Database["public"]["Tables"]["user_stats"]["Row"];
 
-export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"]
+export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"];
 
-export type UserProgressStatus = Database["public"]["Enums"]["challenge_status"]
+export type UserProgressStatus = Database["public"]["Enums"]["challenge_status"];

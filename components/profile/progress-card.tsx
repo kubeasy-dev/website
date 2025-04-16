@@ -27,25 +27,22 @@ function getLevelFromXP(totalXP: number): LevelInfo {
 }
 
 export default async function ProfileProgressCard() {
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     throw new Error("User not authenticated");
   }
 
-  const { data, error } = await supabase
-      .from("user_stats")
-      .select("*")
-      .eq("user_id", user.id)
-      .single()
-  
+  const { data, error } = await supabase.from("user_stats").select("*").eq("user_id", user.id).single();
+
   if (error) {
     console.error("Error fetching user stats:", error);
     return <div>Error loading progress data</div>;
   }
-  
+
   if (!data) {
     return <div>No data available</div>;
   }
@@ -59,15 +56,15 @@ export default async function ProfileProgressCard() {
         <CardDescription>Your Kubernetes learning journey</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium">Level {level}</span>
-          <span className="text-sm text-muted-foreground">
+        <div className='flex justify-between items-center mb-2'>
+          <span className='text-sm font-medium'>Level {level}</span>
+          <span className='text-sm text-muted-foreground'>
             {currentLevelXp} / {xpToNextLevel} XP
           </span>
         </div>
-        <Progress value={(currentLevelXp / xpToNextLevel) * 100} className="w-full" />
-        <p className="mt-2 text-sm text-muted-foreground">Completed Challenges: {data.challenges_terminated}</p>
+        <Progress value={(currentLevelXp / xpToNextLevel) * 100} className='w-full' />
+        <p className='mt-2 text-sm text-muted-foreground'>Completed Challenges: {data.challenges_terminated}</p>
       </CardContent>
     </Card>
-  )
+  );
 }

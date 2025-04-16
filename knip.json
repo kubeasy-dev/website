@@ -1,8 +1,6 @@
 {
   "next": {
-    "config": [
-      "next.config.{js,ts,cjs,mjs}"
-    ],
+    "config": ["next.config.{js,ts,cjs,mjs}"],
     "entry": [
       "{instrumentation,middleware}.{js,ts}",
       "app/global-error.{js,jsx,ts,tsx}",

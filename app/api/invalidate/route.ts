@@ -3,43 +3,41 @@ import { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
 import { TableName } from "@/lib/types";
 
-type SupabaseEvent =
-  {
-    [T in TableName]:
-      | {
-          type: "INSERT";
-          table: T;
-          schema: string;
-          record: Database["public"]["Tables"][T]["Row"];
-          old_record: null;
-        }
-      | {
-          type: "UPDATE";
-          table: T;
-          schema: string;
-          record: Database["public"]["Tables"][T]["Row"];
-          old_record: Database["public"]["Tables"][T]["Row"];
-        }
-      | {
-          type: "DELETE";
-          table: T;
-          schema: string;
-          record: null;
-          old_record: Database["public"]["Tables"][T]["Row"];
-        };
-  }[TableName];
+type SupabaseEvent = {
+  [T in TableName]:
+    | {
+        type: "INSERT";
+        table: T;
+        schema: string;
+        record: Database["public"]["Tables"][T]["Row"];
+        old_record: null;
+      }
+    | {
+        type: "UPDATE";
+        table: T;
+        schema: string;
+        record: Database["public"]["Tables"][T]["Row"];
+        old_record: Database["public"]["Tables"][T]["Row"];
+      }
+    | {
+        type: "DELETE";
+        table: T;
+        schema: string;
+        record: null;
+        old_record: Database["public"]["Tables"][T]["Row"];
+      };
+}[TableName];
 
 function processPayload(payload: SupabaseEvent): string[] {
   const tags: string[] = [];
 
-  if (payload.table === "challenges" && (payload.type === "DELETE" || payload.type == "INSERT") ) {
+  if (payload.table === "challenges" && (payload.type === "DELETE" || payload.type == "INSERT")) {
     tags.push("challenges");
   }
 
   if (payload.table === "challenges" && payload.type === "UPDATE") {
-    tags.push(`challenge`)
+    tags.push(`challenge`);
   }
-
 
   return tags;
 }

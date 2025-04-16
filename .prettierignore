@@ -1,0 +1,5 @@
+# Ignoring Shadcn UI components
+components/ui/*
+
+# Ingore pnpm lock
+pnpm-lock.yaml
