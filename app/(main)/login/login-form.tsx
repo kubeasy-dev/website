@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { createClient } from "@/lib/supabase/client";
+import posthog from "posthog-js";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -19,6 +20,10 @@ export function LoginForm() {
       options: {
         redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}`,
       },
+    });
+    posthog.capture("login", {
+      provider,
+      next: next ?? "/",
     });
     setIsLoading(false);
   };
