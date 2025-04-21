@@ -7,8 +7,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+  const supabase = createClient();
+
   useEffect(() => {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
       api_host: "/ingest",
@@ -19,6 +22,20 @@ export function PostHogProvider({ children }: Readonly<{ children: React.ReactNo
       debug: process.env.NODE_ENV === "development",
     });
   }, []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then((res) => {
+      if (res.data?.user) {
+        const user = res.data.user;
+        posthog.identify(user.id, {
+          email: user.email,
+          name: user.user_metadata.full_name,
+        });
+      } else {
+        posthog.reset(); // clears identity if user logs out
+      }
+    });
+  }, [supabase]);
 
   return (
     <PHProvider client={posthog}>
