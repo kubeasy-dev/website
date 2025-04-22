@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "jotai";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -88,12 +89,14 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
 
   return (
     <PostHogProvider>
-      <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} />
-        <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={false}>
-          {children}
-        </NextThemesProvider>
-      </QueryClientProvider>
+      <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={false}>
+        <Provider>
+          <QueryClientProvider client={queryClient}>
+            <ReactQueryDevtools initialIsOpen={false} />
+            {children}
+          </QueryClientProvider>
+        </Provider>
+      </NextThemesProvider>
     </PostHogProvider>
   );
 }

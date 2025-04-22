@@ -1,14 +1,14 @@
 import React from "react";
 import { queries } from "@/lib/queries";
-import { createStaticClient } from "@/lib/supabase/server";
-import ChallengesList from "@/components/challenges/challenge-list";
+import { createClient } from "@/lib/supabase/server";
+import { ChallengesList } from "@/components/challenges/challenges-list";
 import { prefetchQuery } from "@supabase-cache-helpers/postgrest-react-query";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 
 export default async function Challenges() {
   const queryClient = new QueryClient();
-  const supabase = createStaticClient();
-  await prefetchQuery(queryClient, queries.challenges.list(supabase, { searchQuery: "" }));
+  const supabase = await createClient();
+  await prefetchQuery(queryClient, queries.challengeProgress.list(supabase, {}));
 
   return (
     <section className='container mx-auto py-12 md:py-24 lg:py-32'>
@@ -19,7 +19,7 @@ export default async function Challenges() {
         </p>
       </div>
 
-      <div className='mx-auto mt-6 max-w-5xl'>
+      <div className='mx-auto items-center container flex flex-col gap-20 py-12'>
         <HydrationBoundary state={dehydrate(queryClient)}>
           <ChallengesList />
         </HydrationBoundary>

@@ -137,6 +137,13 @@ export type Database = {
             foreignKeyName: "user_progress_challenge_id_fkey";
             columns: ["challenge_id"];
             isOneToOne: false;
+            referencedRelation: "challenge_progress";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_progress_challenge_id_fkey";
+            columns: ["challenge_id"];
+            isOneToOne: false;
             referencedRelation: "challenges";
             referencedColumns: ["id"];
           },
@@ -162,7 +169,21 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      challenge_progress: {
+        Row: {
+          completed_at: string | null;
+          description: string | null;
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null;
+          estimated_time: number | null;
+          fts: unknown | null;
+          id: string | null;
+          slug: string | null;
+          started_at: string | null;
+          status: Database["public"]["Enums"]["challenge_status"] | null;
+          title: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       create_api_token: {

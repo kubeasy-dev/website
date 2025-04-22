@@ -17,3 +17,5 @@ export type UserStats = Database["public"]["Tables"]["user_stats"]["Row"];
 export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"];
 
 export type UserProgressStatus = Database["public"]["Enums"]["challenge_status"];
+
+export type ChallengeProgress = Database["public"]["Views"]["challenge_progress"]["Row"];
