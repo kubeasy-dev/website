@@ -9,7 +9,7 @@ export default function SignOutButton() {
   const supabase = createClient();
 
   const handleSignOut = async () => {
-    posthog.capture("logout");
+    posthog.capture("Logout");
     await supabase.auth.signOut();
     window.location.reload();
   };

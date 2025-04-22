@@ -15,9 +15,9 @@ export function LoginForm() {
 
   const handleLogin = async (provider: "github" | "azure" | "google") => {
     setIsLoading(true);
-    posthog.capture("login", {
-      provider,
-      next: next ?? "/",
+    posthog.capture("Login", {
+      Provider: provider,
+      Redirect: next ?? "/",
     });
     await supabase.auth.signInWithOAuth({
       provider,
