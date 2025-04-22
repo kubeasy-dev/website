@@ -15,15 +15,15 @@ export function LoginForm() {
 
   const handleLogin = async (provider: "github" | "azure" | "google") => {
     setIsLoading(true);
+    posthog.capture("login", {
+      provider,
+      next: next ?? "/",
+    });
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}`,
       },
-    });
-    posthog.capture("login", {
-      provider,
-      next: next ?? "/",
     });
     setIsLoading(false);
   };
