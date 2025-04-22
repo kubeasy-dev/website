@@ -1,5 +1,6 @@
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { Container } from "./ui/container";
 
 export function SiteFooter() {
   const number = performance.now();
@@ -7,7 +8,7 @@ export function SiteFooter() {
 
   return (
     <footer className='border-t bg-background'>
-      <div className='container mx-auto flex flex-col gap-10 py-16'>
+      <Container className='flex flex-col gap-10 py-16'>
         <div className='grid grid-cols-2 gap-12 md:grid-cols-3'>
           <div className='flex flex-col gap-4'>
             <h3 className='text-lg font-semibold'>Product</h3>
@@ -70,7 +71,7 @@ export function SiteFooter() {
             </Link>
           </div>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }

@@ -2,10 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Container } from "../ui/container";
 
 export function CTASection() {
   return (
-    <section className='container mx-auto py-12 md:py-24 lg:py-32'>
+    <Container className='py-12 md:py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -25,6 +26,6 @@ export function CTASection() {
         </div>
         <p className='mt-4 text-sm'>No credit card required. No hidden fees. Just free, quality Kubernetes education.</p>
       </motion.div>
-    </section>
+    </Container>
   );
 }

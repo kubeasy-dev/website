@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Container } from "../ui/container";
 
 const howItWorks = [
   {
@@ -27,7 +28,7 @@ const howItWorks = [
 
 export function HowItWorksSection() {
   return (
-    <section className='container mx-auto py-12 md:py-24 lg:py-32'>
+    <Container className='py-12 md:py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -55,6 +56,6 @@ export function HowItWorksSection() {
           </motion.div>
         ))}
       </div>
-    </section>
+    </Container>
   );
 }

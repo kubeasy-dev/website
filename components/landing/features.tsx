@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Code, Trophy, Laptop } from "lucide-react";
+import { Container } from "@/components/ui/container";
 
 const features = [
   {
@@ -23,7 +24,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className='container mx-auto space-y-12 py-12 md:py-24 lg:py-32'>
+    <Container className='space-y-12 py-12 md:py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -59,6 +60,6 @@ export function FeaturesSection() {
           </motion.div>
         ))}
       </div>
-    </section>
+    </Container>
   );
 }

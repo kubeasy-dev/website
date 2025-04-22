@@ -4,10 +4,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { HandHeart } from "lucide-react";
+import { Container } from "../ui/container";
 
 export function OpenSourceSection() {
   return (
-    <section className='container mx-auto py-12 md:py-24 lg:py-32'>
+    <Container className='py-12 md:py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -25,6 +26,6 @@ export function OpenSourceSection() {
           Fork on GitHub
         </Button>
       </motion.div>
-    </section>
+    </Container>
   );
 }

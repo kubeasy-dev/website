@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
+import { Container } from "../ui/container";
 
 const testimonials = [
   {
@@ -23,7 +24,7 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section className='container mx-auto py-12 md:py-24 lg:py-32'>
+    <Container className='py-12 md:py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -56,6 +57,6 @@ export function TestimonialsSection() {
           </motion.div>
         ))}
       </div>
-    </section>
+    </Container>
   );
 }

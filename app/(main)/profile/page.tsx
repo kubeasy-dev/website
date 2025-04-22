@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Container } from "@/components/ui/container";
 
 type UserMetadata = {
   avatar_url?: string;
@@ -13,7 +14,7 @@ type UserMetadata = {
 };
 
 const ProfileHeader = ({ avatarUrl, fullName, email }: { avatarUrl?: string; fullName: string; email: string }) => (
-  <div className='mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center'>
+  <div className='mx-auto flex flex-col items-center justify-center gap-4 text-center'>
     <Image
       src={avatarUrl ?? "/placeholder.svg"}
       alt={fullName || "Profile"}
@@ -47,7 +48,7 @@ export default async function Profile() {
   const fullName = metadata?.full_name || "Anonymous User";
 
   return (
-    <section className='container mx-auto py-12 md:py-24 lg:py-32'>
+    <Container className='py-12 md:py-24 lg:py-32'>
       <ProfileHeader avatarUrl={avatarUrl} fullName={fullName} email={user.email || ""} />
       <div className='mx-auto mt-12 max-w-4xl'>
         <Suspense
@@ -66,6 +67,6 @@ export default async function Profile() {
           <ProfileProgressCard />
         </Suspense>
       </div>
-    </section>
+    </Container>
   );
 }
