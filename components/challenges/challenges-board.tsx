@@ -49,7 +49,7 @@ export function ChallengeBoardColumn({ status, label, challenges }: Readonly<{ s
             {visibleChallenges.map((challenge) => (
               <Link href={`/challenges/${challenge.slug}`} className='block' key={challenge.id}>
                 <motion.li
-                  className='bg-background rounded shadow p-3 border'
+                  className='bg-card dark:bg rounded shadow p-3 border'
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
