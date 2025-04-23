@@ -71,11 +71,11 @@ export function SiteHeader() {
               About
             </Link>
           </div>
-          <div className='flex-1 flex justify-end  items-center space-x-4'>
+          <div className='flex-1 flex justify-end items-center space-x-2'>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant='secondary'>
+                  <Button variant='ghost'>
                     <UserIcon />
                     {user.user_metadata.full_name.split(" ")[0]}
                   </Button>
@@ -114,7 +114,7 @@ export function SiteHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant='secondary' onClick={() => router.push("/login")}>
+              <Button variant='ghost' onClick={() => router.push("/login")}>
                 <LogInIcon />
                 Sign In
               </Button>
