@@ -128,10 +128,10 @@ export function ChallengesList() {
       <section>
         <h2 className='text-2xl font-bold mb-4'>Explore challenges</h2>
         <div className='flex flex-row items-center gap-4 mb-6'>
-          <div className='w-11/12'>
+          <div className='flex-grow'>
             <Input type='text' placeholder='Search challenges...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className='flex-grow bg-card' />
           </div>
-          <div className='w-1/12 space-x-2'>
+          <div className='space-x-2'>
             <div className='flex items-center space-x-2'>
               <Button variant={viewMode === "board" ? "default" : "outline"} size='sm' onClick={() => setViewMode("board")} className='flex items-center gap-1'>
                 <svg
