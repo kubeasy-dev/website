@@ -27,10 +27,10 @@ export function HeroSection() {
         </motion.span>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className='flex gap-4'>
           <Button size='lg' className='h-12 px-8 text-white' asChild>
-            <Link href='/challenges'>View Challenges</Link>
+            <Link href='/learning-path'>Start your journey</Link>
           </Button>
-          <Button size='lg' variant='outline' className='h-12 px-8'>
-            <Link href='/project'>Learn More</Link>
+          <Button size='lg' variant='secondary' className='h-12 px-8'>
+            <Link href='/challenges'>Explore challenges</Link>
           </Button>
         </motion.div>
       </motion.div>

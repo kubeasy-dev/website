@@ -27,19 +27,16 @@ export function SiteFooter() {
           </div>
           <div className='flex flex-col gap-4'>
             <h3 className='text-lg font-semibold'>Resources</h3>
-            <Link href='#' className='text-sm text-muted-foreground hover:text-foreground'>
+            <Link href='/documentation' className='text-sm text-muted-foreground hover:text-foreground'>
               Documentation
             </Link>
-            <Link href='#' className='text-sm text-muted-foreground hover:text-foreground'>
+            <Link href='/challenges' className='text-sm text-muted-foreground hover:text-foreground'>
               Challenges
             </Link>
-            <Link href='#' className='text-sm text-muted-foreground hover:text-foreground'>
+            <Link href='/blog' className='text-sm text-muted-foreground hover:text-foreground'>
               Blog
             </Link>
-            <Link href='#' className='text-sm text-muted-foreground hover:text-foreground'>
-              Community
-            </Link>
-            <Link href='#' className='text-sm text-muted-foreground hover:text-foreground'>
+            <Link href='/about' className='text-sm text-muted-foreground hover:text-foreground'>
               About
             </Link>
           </div>
