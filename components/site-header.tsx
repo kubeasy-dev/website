@@ -3,31 +3,48 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { CompassIcon, GithubIcon, LifeBuoyIcon, LogInIcon, LogOutIcon, UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ModeSwitcher } from "./mode-switcher";
 import { Container } from "./ui/container";
+import { tryCatch } from "@/lib/try-catch";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import posthog from "posthog-js";
+import { User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 export function SiteHeader() {
   const supabase = createClient();
-  const [loggedIn, setLoggedIn] = useState(false);
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   const getUser = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      setLoggedIn(true);
+    const { data: user, error } = await tryCatch(supabase.auth.getUser());
+    if (error) {
+      console.error("Error fetching user:", error);
+      setUser(null);
+    }
+    if (user?.data.user) {
+      setUser(user.data.user);
+    } else {
+      setUser(null);
     }
   }, [supabase]);
 
   useEffect(() => {
     getUser();
     return () => {
-      setLoggedIn(false);
+      setUser(null);
     };
   }, [getUser]);
+
+  const handleSignOut = async () => {
+    posthog.capture("Logout");
+    setUser(null);
+    window.location.reload();
+    await supabase.auth.signOut();
+  };
 
   return (
     <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.5 }} className='fixed top-0 z-50 w-full border-b'>
@@ -44,57 +61,66 @@ export function SiteHeader() {
             <Link href='/challenges' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
               Challenges
             </Link>
-            {loggedIn && (
-              <Link href='/dashboard' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
-                Dashboard
-              </Link>
-            )}
+            <Link href='/documentation' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
+              Documentation
+            </Link>
+            <Link href='/blog' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
+              Blog
+            </Link>
+            <Link href='/about' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
+              About
+            </Link>
           </div>
           <div className='flex-1 flex justify-end  items-center space-x-4'>
-            <ModeSwitcher />
-            {loggedIn ? (
-              <Button variant='ghost' asChild>
-                <Link href='/profile'>
-                  <User className='h-4 w-4' />
-                  Profile
-                </Link>
-              </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='secondary'>
+                    <UserIcon />
+                    {user.user_metadata.full_name.split(" ")[0]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className='w-56'>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <Link href='/profile'>
+                      <DropdownMenuItem>
+                        <UserIcon />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href='/learning-path'>
+                      <DropdownMenuItem>
+                        <CompassIcon />
+                        <span>My journey</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <GithubIcon />
+                    <span>GitHub</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <LifeBuoyIcon />
+                    <span>Support</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleSignOut()}>
+                    <LogOutIcon />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Button variant='ghost' asChild>
-                <Link href='/login'>Sign In</Link>
+              <Button variant='secondary' onClick={() => router.push("/login")}>
+                <LogInIcon />
+                Sign In
               </Button>
             )}
-          </div>
-          {/* <Link href='/'>
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className='text-2xl font-bold'>
-              Kubeasy
-            </motion.span>
-          </Link>
-          <div className='hidden md:flex items-center space-x-4'>
-            <Link href='/challenges' className="hover:underline underline-offset-8 decoration-2 decoration-primary">
-              Challenges
-            </Link>
-            {loggedIn && (
-              <Link href='/dashboard' className="hover:underline underline-offset-8 decoration-2 decoration-primary">
-                Dashboard
-              </Link>
-            )}
-          </div>
-          <div className='flex items-center space-x-4 w-20 bg-destructive'>
             <ModeSwitcher />
-            {loggedIn ? (
-              <Button variant='ghost' asChild>
-                <Link href='/profile'>
-                  <User className='h-4 w-4' />
-                  Profile
-                </Link>
-              </Button>
-            ) : (
-              <Button variant='ghost' asChild>
-                <Link href='/login'>Sign In</Link>
-              </Button>
-            )}
-          </div> */}
+          </div>
         </div>
       </Container>
     </motion.header>
