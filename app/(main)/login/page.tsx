@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 import { Container } from "@/components/ui/container";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Login() {
   return (
@@ -13,7 +15,9 @@ export default function Login() {
           <h2 className='mt-6 text-3xl font-bold tracking-tight'>Sign in to Kubeasy</h2>
           <p className='mt-2 text-sm text-muted-foreground'>Choose your preferred method to sign in and start mastering Kubernetes</p>
         </div>
-        <LoginForm />
+        <Suspense fallback={<Skeleton className='h-12 w-full' />}>
+          <LoginForm />
+        </Suspense>
         <div className='mt-8 text-center'>
           <p className='text-sm text-muted-foreground'>
             By signing in, you agree to our{" "}
