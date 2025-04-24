@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BarChart2 } from "lucide-react";
+import Loading from "@/components/loading";
 export default async function ChallengesPage() {
   const supabase = createStaticClient();
   const { data: themes } = await queries.challenges.listThemes(supabase);
 
   if (!themes) {
-    return <p>Loading...</p>;
+    return <Loading />;
   }
 
   return (

@@ -1,14 +1,13 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { queries } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import { ChallengesList } from "@/components/challenges/challenges-list";
-import { prefetchQuery } from "@supabase-cache-helpers/postgrest-react-query";
-import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { PrefetchWrapper } from "@/components/prefetch-wrapper";
+import Loading from "@/components/loading";
 
 export default async function LearningPath() {
-  const queryClient = new QueryClient();
   const supabase = await createClient();
-  await prefetchQuery(queryClient, queries.challengeProgress.list(supabase, {}));
+  const prefetchedQueries = [queries.challengeProgress.list(supabase, {})];
 
   return (
     <section className='container mx-auto py-12 md:py-24 lg:py-32'>
@@ -18,9 +17,11 @@ export default async function LearningPath() {
       </div>
 
       <div className='mx-auto items-center container flex flex-col gap-20 py-12'>
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          <ChallengesList />
-        </HydrationBoundary>
+        <Suspense fallback={<Loading />}>
+          <PrefetchWrapper queries={prefetchedQueries}>
+            <ChallengesList />
+          </PrefetchWrapper>
+        </Suspense>
       </div>
     </section>
   );

@@ -1,35 +1,18 @@
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import ProfileProgressCard from "../../../components/profile/progress-card";
-import SignOutButton from "@/components/signout-button";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Container } from "@/components/ui/container";
-
-type UserMetadata = {
-  avatar_url?: string;
-  full_name: string;
-};
-
-const ProfileHeader = ({ avatarUrl, fullName, email }: { avatarUrl?: string; fullName: string; email: string }) => (
-  <div className='mx-auto flex flex-col items-center justify-center gap-4 text-center'>
-    <Image
-      src={avatarUrl ?? "/placeholder.svg"}
-      alt={fullName || "Profile"}
-      width={100}
-      height={100}
-      className='rounded-full'
-      priority // Important pour LCP (Largest Contentful Paint)
-    />
-    <div className='flex flex-row gap-4 items-baseline'>
-      <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>{fullName}</h1>
-      <SignOutButton />
-    </div>
-    <p className='text-muted-foreground'>{email}</p>
-  </div>
-);
+import { ProfileHeader } from "@/components/profile/profile-header";
+import { Suspense } from "react";
+import { ApiTokensList } from "@/components/profile/api-tokens-list";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PrefetchWrapper } from "@/components/prefetch-wrapper";
+import { queries } from "@/lib/queries";
+import Loading from "@/components/loading";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { DialogTitle, DialogTrigger } from "@radix-ui/react-dialog";
+import { CreateApiTokenForm } from "@/components/profile/create-api-token-form";
 
 export default async function Profile() {
   const supabase = await createClient();
@@ -43,29 +26,45 @@ export default async function Profile() {
     redirect("/login");
   }
 
-  const metadata = user.user_metadata as UserMetadata;
-  const avatarUrl = metadata?.avatar_url;
-  const fullName = metadata?.full_name || "Anonymous User";
+  const avatarUrl = user.user_metadata?.avatar_url;
+  const fullName = user.user_metadata?.full_name || "Anonymous User";
+
+  const prefetchedQueries = [queries.apiTokens.list(supabase)];
 
   return (
     <Container className='py-12 md:py-24 lg:py-32'>
       <ProfileHeader avatarUrl={avatarUrl} fullName={fullName} email={user.email || ""} />
-      <div className='mx-auto mt-12 max-w-4xl'>
-        <Suspense
-          fallback={
-            <Card>
-              <CardHeader>
-                <CardTitle>Progress</CardTitle>
-                <CardDescription>Your Kubernetes learning journey</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className='h-6 w-full mt-4' />
-              </CardContent>
-            </Card>
-          }
-        >
-          <ProfileProgressCard />
-        </Suspense>
+      <div className='mx-auto mt-12 max-w-4xl flex flex-col gap-8'>
+        <Dialog>
+          <Card>
+            <CardHeader>
+              <div className='flex items-center justify-between'>
+                <div className='flex flex-col gap-1'>
+                  <CardTitle>API Tokens</CardTitle>
+                  <CardDescription>Create and manage your API tokens. These tokens can be used to authenticate with the CLI tool.</CardDescription>
+                </div>
+                <DialogTrigger asChild>
+                  <Button variant='default' size='icon'>
+                    <PlusIcon />
+                  </Button>
+                </DialogTrigger>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Suspense fallback={<Loading />}>
+                <PrefetchWrapper queries={prefetchedQueries}>
+                  <ApiTokensList />
+                </PrefetchWrapper>
+              </Suspense>
+            </CardContent>
+          </Card>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Api Token</DialogTitle>
+            </DialogHeader>
+            <CreateApiTokenForm />
+          </DialogContent>
+        </Dialog>
       </div>
     </Container>
   );

@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Suspense } from "react";
 import ChallengeProgressCard from "@/components/challenges/challenge-progress-card";
+import Loading from "../loading";
 
 export default function ChallengeContent({ slug }: Readonly<{ slug: string }>) {
   const supabase = useSupabase();
@@ -35,7 +36,6 @@ export default function ChallengeContent({ slug }: Readonly<{ slug: string }>) {
           </div>
         </div>
 
-        {/* Challenge Instructions Card */}
         <Card className='w-full'>
           <CardHeader>
             <CardTitle>Instructions</CardTitle>
@@ -45,8 +45,7 @@ export default function ChallengeContent({ slug }: Readonly<{ slug: string }>) {
           </CardContent>
         </Card>
 
-        {/* Challenge Progress Card */}
-        <Suspense fallback={<div className='w-full max-w-md bg-white border rounded-lg p-6 shadow-md'>Loading...</div>}>
+        <Suspense fallback={<Loading />}>
           <ChallengeProgressCard challenge={challenge} />
         </Suspense>
       </div>

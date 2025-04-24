@@ -1,11 +1,26 @@
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
 export default function Loading() {
   return (
-    <Button disabled variant='ghost'>
-      <Loader2 className='animate-spin' />
-      Loading...
-    </Button>
+    <div className='flex items-center justify-center'>
+      <svg
+        className='animate-spin h-10 w-10 text-muted-foreground'
+        xmlns='http://www.w3.org/2000/svg'
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='currentColor'
+        strokeWidth={2}
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      >
+        <circle cx={12} cy={12} r={10} />
+        <line x1={12} y1={2} x2={12} y2={6} />
+        <line x1={12} y1={18} x2={12} y2={22} />
+        <line x1={4.22} y1={4.22} x2={6.34} y2={6.34} />
+        <line x1={17.66} y1={17.66} x2={19.78} y2={19.78} />
+        <line x1={2} y1={12} x2={6} y2={12} />
+        <line x1={18} y1={12} x2={22} y2={12} />
+        <line x1={4.22} y1={19.78} x2={6.34} y2={17.66} />
+        <line x1={17.66} y1={6.34} x2={19.78} y2={4.22} />
+      </svg>
+    </div>
   );
 }
