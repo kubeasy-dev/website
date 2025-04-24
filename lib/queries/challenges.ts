@@ -1,22 +1,19 @@
 import { TypedSupabaseClient } from "../supabase/client";
 
-function getChallenges(client: TypedSupabaseClient, opts: { searchQuery: string }) {
-  const parsedQuery = opts.searchQuery.toLowerCase().split(" ").join("+");
-  let query = client.from("challenges").select("*").order("created_at", { ascending: false });
+function listChallengesTheme(client: TypedSupabaseClient) {
+  return client.from("theme").select("*").throwOnError();
+}
 
-  if (parsedQuery.length > 0) {
-    query = query.textSearch("fts,", parsedQuery);
-  }
-
-  return query;
+function listChallengesByTheme(client: TypedSupabaseClient, { theme }: { theme: string }) {
+  return client.from("challenges").select("*").eq("theme", theme).throwOnError();
 }
 
 function getChallengeBySlug(client: TypedSupabaseClient, { slug }: { slug: string }) {
-  const query = client.from("challenges").select("*").eq("slug", slug).throwOnError().single();
-  return query;
+  return client.from("challenges").select("*").eq("slug", slug).throwOnError().single();
 }
 
 export const challenges = {
-  list: getChallenges,
+  listThemes: listChallengesTheme,
+  listByTheme: listChallengesByTheme,
   get: getChallengeBySlug,
 };

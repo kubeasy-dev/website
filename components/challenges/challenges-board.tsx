@@ -2,12 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
-import { ChallengeProgress } from "@/lib/types";
-import { UserProgressStatus } from "@/lib/types";
+import { ChallengeProgress, UserProgressStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClockIcon } from "lucide-react";
+import { DisplayDifficultyLevel } from "../difficulty-level";
 
 const STATUS_COLUMNS = [
   { key: "not_started", label: "To Do" },
@@ -15,16 +15,17 @@ const STATUS_COLUMNS = [
   { key: "completed", label: "Done" },
 ] as const;
 
+const NB_CARDS = 10;
+
 export function ChallengeBoardColumn({ status, label, challenges }: Readonly<{ status: UserProgressStatus; label: string; challenges: ChallengeProgress[] }>) {
-  // Show max 10 by default, expand to show all
   const [expanded, setExpanded] = React.useState(false);
   const visibleChallenges = React.useMemo(() => {
     if (expanded) {
       return challenges;
     }
-    return challenges.slice(0, 10);
+    return challenges.slice(0, NB_CARDS);
   }, [challenges, expanded]);
-  const hasMore = React.useMemo(() => challenges.length > 10, [challenges]);
+  const hasMore = React.useMemo(() => challenges.length > NB_CARDS, [challenges]);
 
   return (
     <div className='min-w-[320px] flex-1 bg-muted rounded-lg p-4 flex flex-col'>
@@ -47,7 +48,7 @@ export function ChallengeBoardColumn({ status, label, challenges }: Readonly<{ s
         >
           <AnimatePresence>
             {visibleChallenges.map((challenge) => (
-              <Link href={`/challenges/${challenge.slug}`} className='block' key={challenge.id}>
+              <Link href={`/challenge/${challenge.slug}`} className='block' key={challenge.id}>
                 <motion.li
                   className='bg-card dark:bg rounded shadow p-3 border'
                   initial={{ opacity: 0, y: 20 }}
@@ -56,11 +57,14 @@ export function ChallengeBoardColumn({ status, label, challenges }: Readonly<{ s
                   transition={{ type: "spring", stiffness: 300, damping: 24 }}
                   layout
                 >
-                  <div className='font-medium'>{challenge.title}</div>
-                  <div className='text-xs text-muted-foreground'>{challenge.description}</div>
+                  <div className='font-medium flex flex-row gap-1.5 items-baseline'>
+                    <DisplayDifficultyLevel level={challenge.difficulty!} />
+                    {challenge.title}
+                  </div>
+                  <div className='text-sm text-muted-foreground mt-1'>{challenge.description}</div>
                   {status === "not_started" && (
                     <div className='flex justify-between items-center mt-2'>
-                      <Badge variant='secondary'>{challenge.difficulty}</Badge>
+                      <Badge variant='secondary'>{challenge.theme}</Badge>
                       <div className='flex flex-row space-x-0.5 items-center text-sm text-muted-foreground'>
                         <ClockIcon className='h-4 w-4' />
                         <span>{challenge.estimated_time} min.</span>
@@ -94,7 +98,7 @@ export function ChallengesBoard({ challenges }: Readonly<{ challenges: Challenge
     completed: [],
   };
   for (const challenge of challenges) {
-    const status = (challenge.status ?? "not_started") as UserProgressStatus;
+    const status = challenge.status ?? "not_started";
     grouped[status].push(challenge);
   }
 

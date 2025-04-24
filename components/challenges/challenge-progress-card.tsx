@@ -131,7 +131,7 @@ function NotLoggedInCard() {
         <p className='mb-4 text-muted-foreground'>Sign in to track your progress on this challenge.</p>
       </CardContent>
       <CardFooter>
-        <Link href={`/login?next=${encodeURIComponent("/challenges/" + challenge.slug)}`} className='w-full'>
+        <Link href={`/login?next=${encodeURIComponent("/challenge/" + challenge.slug)}`} className='w-full'>
           <Button className='w-full'>Sign in to continue</Button>
         </Link>
       </CardFooter>

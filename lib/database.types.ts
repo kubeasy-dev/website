@@ -3,27 +3,6 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
-      achievements: {
-        Row: {
-          description: string;
-          id: string;
-          logo_url: string;
-          name: string;
-        };
-        Insert: {
-          description: string;
-          id?: string;
-          logo_url: string;
-          name: string;
-        };
-        Update: {
-          description?: string;
-          id?: string;
-          logo_url?: string;
-          name?: string;
-        };
-        Relationships: [];
-      };
       api_token: {
         Row: {
           created_at: string;
@@ -55,6 +34,7 @@ export type Database = {
           fts: unknown | null;
           id: string;
           slug: string | null;
+          theme: string;
           title: string;
           updated_at: string | null;
         };
@@ -67,6 +47,7 @@ export type Database = {
           fts?: unknown | null;
           id?: string;
           slug?: string | null;
+          theme: string;
           title: string;
           updated_at?: string | null;
         };
@@ -79,36 +60,40 @@ export type Database = {
           fts?: unknown | null;
           id?: string;
           slug?: string | null;
+          theme?: string;
           title?: string;
           updated_at?: string | null;
         };
-        Relationships: [];
-      };
-      user_achievements: {
-        Row: {
-          achievement_id: string;
-          earned_at: string | null;
-          user_id: string;
-        };
-        Insert: {
-          achievement_id: string;
-          earned_at?: string | null;
-          user_id: string;
-        };
-        Update: {
-          achievement_id?: string;
-          earned_at?: string | null;
-          user_id?: string;
-        };
         Relationships: [
           {
-            foreignKeyName: "user_achievements_achievement_id_fkey";
-            columns: ["achievement_id"];
+            foreignKeyName: "challenges_theme_fkey";
+            columns: ["theme"];
             isOneToOne: false;
-            referencedRelation: "achievements";
-            referencedColumns: ["id"];
+            referencedRelation: "theme";
+            referencedColumns: ["slug"];
           },
         ];
+      };
+      theme: {
+        Row: {
+          description: string;
+          last_updated: string;
+          slug: string;
+          title: string;
+        };
+        Insert: {
+          description: string;
+          last_updated?: string;
+          slug: string;
+          title: string;
+        };
+        Update: {
+          description?: string;
+          last_updated?: string;
+          slug?: string;
+          title?: string;
+        };
+        Relationships: [];
       };
       user_progress: {
         Row: {
@@ -149,24 +134,6 @@ export type Database = {
           },
         ];
       };
-      user_stats: {
-        Row: {
-          challenges_terminated: number;
-          exp: number;
-          user_id: string;
-        };
-        Insert: {
-          challenges_terminated?: number;
-          exp?: number;
-          user_id: string;
-        };
-        Update: {
-          challenges_terminated?: number;
-          exp?: number;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
     };
     Views: {
       challenge_progress: {
@@ -180,6 +147,7 @@ export type Database = {
           slug: string | null;
           started_at: string | null;
           status: Database["public"]["Enums"]["challenge_status"] | null;
+          theme: string | null;
           title: string | null;
         };
         Relationships: [];
@@ -188,6 +156,10 @@ export type Database = {
     Functions: {
       create_api_token: {
         Args: { user_id: string; name: string };
+        Returns: string;
+      };
+      slugify: {
+        Args: { text: string };
         Returns: string;
       };
       tid: {

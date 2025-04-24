@@ -1,11 +1,15 @@
 import { Container } from "@/components/ui/container";
 import { createStaticClient } from "@/lib/supabase/server";
-
+import { queries } from "@/lib/queries";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { BarChart2 } from "lucide-react";
 export default async function ChallengesPage() {
   const supabase = createStaticClient();
-  const { data: challenges } = await supabase.from("challenges").select();
+  const { data: themes } = await queries.challenges.listThemes(supabase);
 
-  if (!challenges) {
+  if (!themes) {
     return <p>Loading...</p>;
   }
 
@@ -19,17 +23,28 @@ export default async function ChallengesPage() {
           </p>
         </div>
 
-        <div className='mx-auto items-center container flex flex-col gap-20 py-12'>
-          {challenges?.length ? (
-            challenges.map((challenge) => (
-              <div key={challenge.id} className='p-4 border rounded-md'>
-                <h2 className='text-xl font-bold'>{challenge.title}</h2>
-                <p>{challenge.description}</p>
-              </div>
-            ))
-          ) : (
-            <p>No challenges available at the moment.</p>
-          )}
+        <div className='flex flex-row justify-end mt-6'>
+          <Button variant='secondary'>
+            <>
+              <BarChart2 className='mr-2 h-4 w-4w' />
+              <Link href='/learning-path'>My Kubernetes Journey</Link>
+            </>
+          </Button>
+        </div>
+
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12'>
+          {themes.map((theme) => (
+            <Link href={`/challenges/${theme.slug}`} key={theme.slug} className='block'>
+              <Card key={theme.slug} className='bg-muted hover:border-primary cursor-pointer transition duration-200'>
+                <CardHeader>
+                  <CardTitle className='text-lg font-bold'>{theme.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className='text-sm text-muted-foreground'>{theme.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
       </section>
     </Container>

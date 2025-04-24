@@ -73,7 +73,7 @@ export function ChallengesList() {
             {lastStartedChallenge ? (
               <div className='flex flex-row'>
                 <div className='flex flex-col'>
-                  <Link href={`/challenges/${lastStartedChallenge.slug}`} className='font-medium'>
+                  <Link href={`/challenge/${lastStartedChallenge.slug}`} className='font-medium'>
                     {lastStartedChallenge.title}
                   </Link>
                   <div className='text-sm text-muted-foreground'>
@@ -81,7 +81,7 @@ export function ChallengesList() {
                   </div>
                 </div>
                 <Button variant='secondary' className='ml-auto'>
-                  <Link href={`/challenges/${lastStartedChallenge.slug}`}>Continue</Link>
+                  <Link href={`/challenge/${lastStartedChallenge.slug}`}>Continue</Link>
                 </Button>
               </div>
             ) : (
@@ -108,7 +108,7 @@ export function ChallengesList() {
             {lastCompletedChallenge ? (
               <div className='flex flex-row'>
                 <div className='flex flex-col'>
-                  <Link href={`/challenges/${lastCompletedChallenge.slug}`} className='font-medium'>
+                  <Link href={`/challenge/${lastCompletedChallenge.slug}`} className='font-medium'>
                     {lastCompletedChallenge.title}
                   </Link>
                   <div className='text-sm text-muted-foreground'>
@@ -116,7 +116,7 @@ export function ChallengesList() {
                   </div>
                 </div>
                 <Button variant='secondary' className='ml-auto'>
-                  <Link href={`/challenges/${lastCompletedChallenge.slug}`}>Review</Link>
+                  <Link href={`/challenge/${lastCompletedChallenge.slug}`}>Review</Link>
                 </Button>
               </div>
             ) : (
@@ -177,7 +177,17 @@ export function ChallengesList() {
             </div>
           </div>
         </div>
-        <div>{queryLoading ? <Loading /> : viewMode === "table" ? <ChallengesTable challenges={challenges} /> : <ChallengesBoard challenges={challenges} />}</div>
+        {(() => {
+          let content;
+          if (queryLoading) {
+            content = <Loading />;
+          } else if (viewMode === "table") {
+            content = <ChallengesTable challenges={challenges} />;
+          } else {
+            content = <ChallengesBoard challenges={challenges} />;
+          }
+          return <div>{content}</div>;
+        })()}
       </section>
     </div>
   );
