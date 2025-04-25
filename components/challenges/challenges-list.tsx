@@ -81,7 +81,7 @@ export function ChallengesList() {
                     Started {lastStartedChallenge?.started_at ? formatDistanceToNow(new Date(lastStartedChallenge.started_at), { addSuffix: true, locale: enUS }) : "recently"}
                   </div>
                 </div>
-                <Button variant='secondary' className='ml-auto'>
+                <Button variant='secondary' className='ml-auto' asChild>
                   <Link href={`/challenge/${lastStartedChallenge.slug}`}>Continue</Link>
                 </Button>
               </div>
@@ -116,7 +116,7 @@ export function ChallengesList() {
                     Completed {lastCompletedChallenge?.completed_at ? formatDistanceToNow(new Date(lastCompletedChallenge.completed_at), { addSuffix: true, locale: enUS }) : "recently"}
                   </div>
                 </div>
-                <Button variant='secondary' className='ml-auto'>
+                <Button variant='secondary' className='ml-auto' asChild>
                   <Link href={`/challenge/${lastCompletedChallenge.slug}`}>Review</Link>
                 </Button>
               </div>

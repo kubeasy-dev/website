@@ -21,7 +21,7 @@ export function CTASection() {
           <Button size='lg' className='w-full sm:w-auto'>
             <Link href='/learning-path'>Get Started Now</Link>
           </Button>
-          <Button size='lg' variant='secondary' className='w-full sm:w-auto'>
+          <Button size='lg' variant='secondary' className='w-full sm:w-auto' asChild>
             <Link href='/challenges'>Explore Challenges</Link>
           </Button>
         </div>

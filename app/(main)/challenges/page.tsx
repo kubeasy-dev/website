@@ -26,7 +26,7 @@ export default async function ChallengesPage() {
         </div>
 
         <div className='flex flex-row justify-end mt-6'>
-          <Button variant='secondary'>
+          <Button variant='secondary' asChild>
             <>
               <BarChart2 className='mr-2 h-4 w-4w' />
               <Link href='/learning-path'>My Kubernetes Journey</Link>

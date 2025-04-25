@@ -51,7 +51,7 @@ export default async function ThemePage({ params }: Readonly<{ params: Promise<P
         <p className='max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7'>{themeData.description}</p>
       </div>
       <div className='flex flex-row justify-start py-6'>
-        <Button variant='secondary'>
+        <Button variant='secondary' asChild>
           <ChevronLeft />
           <Link href='/challenges'>Back to Challenges</Link>
         </Button>

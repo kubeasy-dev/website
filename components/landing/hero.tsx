@@ -29,7 +29,7 @@ export function HeroSection() {
           <Button size='lg' className='h-12 px-8 text-white' asChild>
             <Link href='/learning-path'>Start your journey</Link>
           </Button>
-          <Button size='lg' variant='secondary' className='h-12 px-8'>
+          <Button size='lg' variant='secondary' className='h-12 px-8' asChild>
             <Link href='/challenges'>Explore challenges</Link>
           </Button>
         </motion.div>
