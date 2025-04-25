@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BarChart2 } from "lucide-react";
 import Loading from "@/components/loading";
+
 export default async function ChallengesPage() {
   const supabase = createStaticClient();
-  const { data: themes } = await queries.challenges.listThemes(supabase);
+  const { data: themes } = await queries.theme.list(supabase);
 
   if (!themes) {
     return <Loading />;

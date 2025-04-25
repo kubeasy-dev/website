@@ -17,6 +17,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { enUS } from "date-fns/locale";
 import { formatDistanceToNow } from "date-fns";
+import { Columns3Icon, Grid3X3Icon } from "lucide-react";
 
 export function ChallengesList() {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -134,44 +135,11 @@ export function ChallengesList() {
           <div className='space-x-2'>
             <div className='flex items-center space-x-2'>
               <Button variant={viewMode === "board" ? "default" : "outline"} size='sm' onClick={() => setViewMode("board")} className='flex items-center gap-1'>
-                <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  width='16'
-                  height='16'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  className='lucide lucide-layout-grid'
-                >
-                  <rect width='7' height='7' x='3' y='3' rx='1' />
-                  <rect width='7' height='7' x='14' y='3' rx='1' />
-                  <rect width='7' height='7' x='14' y='14' rx='1' />
-                  <rect width='7' height='7' x='3' y='14' rx='1' />
-                </svg>
+                <Columns3Icon />
                 Board
               </Button>
               <Button variant={viewMode === "table" ? "default" : "outline"} size='sm' onClick={() => setViewMode("table")} className='flex items-center gap-1'>
-                <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  width='16'
-                  height='16'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  strokeWidth='2'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  className='lucide lucide-table'
-                >
-                  <rect x='3' y='3' width='18' height='18' rx='2' ry='2' />
-                  <line x1='3' y1='9' x2='21' y2='9' />
-                  <line x1='3' y1='15' x2='21' y2='15' />
-                  <line x1='9' y1='3' x2='9' y2='21' />
-                  <line x1='15' y1='3' x2='15' y2='21' />
-                </svg>
+                <Grid3X3Icon />
                 Table
               </Button>
             </div>

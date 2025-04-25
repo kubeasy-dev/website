@@ -1,11 +1,13 @@
-import { challenges } from "./challenges";
+import { challenge } from "./challenge";
 import { userProgress } from "./user-progress";
 import { challengeProgress } from "./challenge-progress";
-import { apiTokens } from "./api_tokens";
+import { apiToken } from "./api_token";
+import { theme } from "./theme";
 
 export const queries = {
-  challenges,
+  challenge,
+  theme,
   userProgress,
   challengeProgress,
-  apiTokens,
+  apiToken,
 };

@@ -33,7 +33,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
   const queryClient = new QueryClient();
 
   const supabase = createStaticClient();
-  await prefetchQuery(queryClient, queries.challenges.get(supabase, { slug }));
+  await prefetchQuery(queryClient, queries.challenge.get(supabase, { slug }));
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

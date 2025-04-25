@@ -1,13 +1,11 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { ChallengeProgress, UserProgressStatus } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClockIcon } from "lucide-react";
-import { DisplayDifficultyLevel } from "../difficulty-level";
+import { ChallengeCard } from "./challenge-card";
+import { MakeAllRequiredExcept } from "@/lib/types";
 
 const STATUS_COLUMNS = [
   { key: "not_started", label: "To Do" },
@@ -17,13 +15,13 @@ const STATUS_COLUMNS = [
 
 const NB_CARDS = 10;
 
-export function ChallengeBoardColumn({ status, label, challenges }: Readonly<{ status: UserProgressStatus; label: string; challenges: ChallengeProgress[] }>) {
+export function ChallengeBoardColumn({ label, challenges }: Readonly<{ label: string; challenges: ChallengeProgress[] }>) {
   const [expanded, setExpanded] = React.useState(false);
   const visibleChallenges = React.useMemo(() => {
     if (expanded) {
-      return challenges;
+      return challenges as MakeAllRequiredExcept<ChallengeProgress, "started_at" | "completed_at">[];
     }
-    return challenges.slice(0, NB_CARDS);
+    return challenges.slice(0, NB_CARDS) as MakeAllRequiredExcept<ChallengeProgress, "started_at" | "completed_at">[];
   }, [challenges, expanded]);
   const hasMore = React.useMemo(() => challenges.length > NB_CARDS, [challenges]);
 
@@ -48,31 +46,16 @@ export function ChallengeBoardColumn({ status, label, challenges }: Readonly<{ s
         >
           <AnimatePresence>
             {visibleChallenges.map((challenge) => (
-              <Link href={`/challenge/${challenge.slug}`} className='block' key={challenge.id}>
-                <motion.li
-                  className='bg-card dark:bg rounded shadow p-3 border'
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                  layout
-                >
-                  <div className='font-medium flex flex-row gap-1.5 items-baseline'>
-                    <DisplayDifficultyLevel level={challenge.difficulty!} />
-                    {challenge.title}
-                  </div>
-                  <div className='text-sm text-muted-foreground mt-1'>{challenge.description}</div>
-                  {status === "not_started" && (
-                    <div className='flex justify-between items-center mt-2'>
-                      <Badge variant='secondary'>{challenge.theme}</Badge>
-                      <div className='flex flex-row space-x-0.5 items-center text-sm text-muted-foreground'>
-                        <ClockIcon className='h-4 w-4' />
-                        <span>{challenge.estimated_time} min.</span>
-                      </div>
-                    </div>
-                  )}
-                </motion.li>
-              </Link>
+              <motion.li
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                layout
+                key={challenge.id}
+              >
+                <ChallengeCard challenge={challenge} />
+              </motion.li>
             ))}
           </AnimatePresence>
         </motion.ul>
@@ -105,7 +88,7 @@ export function ChallengesBoard({ challenges }: Readonly<{ challenges: Challenge
   return (
     <div className='flex gap-4 overflow-x-auto'>
       {STATUS_COLUMNS.map(({ key: status, label }) => (
-        <ChallengeBoardColumn key={status} status={status} label={label} challenges={grouped[status]} />
+        <ChallengeBoardColumn key={status} label={label} challenges={grouped[status]} />
       ))}
     </div>
   );

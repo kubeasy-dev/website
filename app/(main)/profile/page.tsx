@@ -29,7 +29,7 @@ export default async function Profile() {
   const avatarUrl = user.user_metadata?.avatar_url;
   const fullName = user.user_metadata?.full_name || "Anonymous User";
 
-  const prefetchedQueries = [queries.apiTokens.list(supabase)];
+  const prefetchedQueries = [queries.apiToken.list(supabase)];
 
   return (
     <Container className='py-12 md:py-24 lg:py-32'>

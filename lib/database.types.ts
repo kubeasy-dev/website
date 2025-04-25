@@ -27,42 +27,42 @@ export type Database = {
       challenges: {
         Row: {
           content: string;
-          created_at: string | null;
+          created_at: string;
           description: string;
           difficulty: Database["public"]["Enums"]["difficulty_level"];
           estimated_time: number;
           fts: unknown | null;
           id: string;
-          slug: string | null;
+          slug: string;
           theme: string;
           title: string;
-          updated_at: string | null;
+          updated_at: string;
         };
         Insert: {
           content: string;
-          created_at?: string | null;
+          created_at?: string;
           description: string;
           difficulty: Database["public"]["Enums"]["difficulty_level"];
           estimated_time?: number;
           fts?: unknown | null;
           id?: string;
-          slug?: string | null;
+          slug: string;
           theme: string;
           title: string;
-          updated_at?: string | null;
+          updated_at?: string;
         };
         Update: {
           content?: string;
-          created_at?: string | null;
+          created_at?: string;
           description?: string;
           difficulty?: Database["public"]["Enums"]["difficulty_level"];
           estimated_time?: number;
           fts?: unknown | null;
           id?: string;
-          slug?: string | null;
+          slug?: string;
           theme?: string;
           title?: string;
-          updated_at?: string | null;
+          updated_at?: string;
         };
         Relationships: [
           {
@@ -100,21 +100,24 @@ export type Database = {
           challenge_id: string;
           completed_at: string | null;
           started_at: string | null;
-          status: Database["public"]["Enums"]["challenge_status"] | null;
+          status: Database["public"]["Enums"]["challenge_status"];
+          updated_at: string | null;
           user_id: string;
         };
         Insert: {
           challenge_id: string;
           completed_at?: string | null;
           started_at?: string | null;
-          status?: Database["public"]["Enums"]["challenge_status"] | null;
+          status?: Database["public"]["Enums"]["challenge_status"];
+          updated_at?: string | null;
           user_id: string;
         };
         Update: {
           challenge_id?: string;
           completed_at?: string | null;
           started_at?: string | null;
-          status?: Database["public"]["Enums"]["challenge_status"] | null;
+          status?: Database["public"]["Enums"]["challenge_status"];
+          updated_at?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -123,6 +126,13 @@ export type Database = {
             columns: ["challenge_id"];
             isOneToOne: false;
             referencedRelation: "challenge_progress";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_progress_challenge_id_fkey";
+            columns: ["challenge_id"];
+            isOneToOne: false;
+            referencedRelation: "challenge_with_theme";
             referencedColumns: ["id"];
           },
           {
@@ -139,16 +149,34 @@ export type Database = {
       challenge_progress: {
         Row: {
           completed_at: string | null;
+          created_at: string | null;
+          description: string | null;
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null;
+          estimated_time: number | null;
+          fts: unknown | null;
+          id: string | null;
+          progress_updated_at: string | null;
+          slug: string | null;
+          started_at: string | null;
+          status: Database["public"]["Enums"]["challenge_status"] | null;
+          theme: string | null;
+          title: string | null;
+          updated_at: string | null;
+        };
+        Relationships: [];
+      };
+      challenge_with_theme: {
+        Row: {
+          created_at: string | null;
           description: string | null;
           difficulty: Database["public"]["Enums"]["difficulty_level"] | null;
           estimated_time: number | null;
           fts: unknown | null;
           id: string | null;
           slug: string | null;
-          started_at: string | null;
-          status: Database["public"]["Enums"]["challenge_status"] | null;
           theme: string | null;
           title: string | null;
+          updated_at: string | null;
         };
         Relationships: [];
       };

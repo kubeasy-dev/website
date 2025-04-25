@@ -1,21 +1,30 @@
 import { Database } from "@/lib/database.types";
 
-export type ChallengesFilters = {
-  searchTerm?: string;
-  showAchieved?: boolean;
-  difficulty?: DifficultyLevel;
+export type MakeAllRequiredExcept<T, K extends keyof T> = {
+  [P in keyof T as P extends K ? never : P]-?: NonNullable<T[P]>;
+} & {
+  [P in K]: T[P];
 };
 
-export type TableName = keyof Database["public"]["Tables"];
+type Tables = Database["public"]["Tables"];
+type Enums = Database["public"]["Enums"];
 
-export type Challenge = Database["public"]["Tables"]["challenges"]["Row"];
+export type TableName = keyof Tables;
+type TableRow<T extends TableName> = Tables[T]["Row"];
 
-export type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"];
+type Views = Database["public"]["Views"];
+type ViewRow<T extends keyof Views> = Views[T]["Row"];
 
-export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"];
+export type Challenge = TableRow<"challenges">;
 
-export type UserProgressStatus = Database["public"]["Enums"]["challenge_status"];
+export type Theme = TableRow<"theme">;
 
-export type ChallengeProgress = Database["public"]["Views"]["challenge_progress"]["Row"];
+export type UserProgress = TableRow<"user_progress">;
 
-export type ApiToken = Database["public"]["Tables"]["api_token"]["Row"];
+export type ApiToken = TableRow<"api_token">;
+
+export type ChallengeProgress = ViewRow<"challenge_progress">;
+
+export type UserProgressStatus = Enums["challenge_status"];
+
+export type DifficultyLevel = Enums["difficulty_level"];

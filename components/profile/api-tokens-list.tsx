@@ -9,7 +9,7 @@ import Loading from "../loading";
 export function ApiTokensList() {
   const supabase = useSupabase();
 
-  const { data: tokens, isLoading } = useQuery(queries.apiTokens.list(supabase));
+  const { data: tokens, isLoading } = useQuery(queries.apiToken.list(supabase));
 
   if (isLoading) {
     return <Loading />;
