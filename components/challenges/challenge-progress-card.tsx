@@ -4,16 +4,15 @@ import React, { createContext, useContext } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { Challenge, UserProgress } from "@/lib/types";
+import { Challenge, UserProgress, UserProgressStatus } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import useSupabase from "@/hooks/use-supabase";
-import { useQuery as useCacheQuery, useUpsertMutation } from "@supabase-cache-helpers/postgrest-react-query";
+import { useQuery as useCacheQuery, useRevalidateTables, useUpsertMutation } from "@supabase-cache-helpers/postgrest-react-query";
 import { queries } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
-import { UserProgressStatus } from "@/lib/types";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 
@@ -53,29 +52,32 @@ export default function ChallengeProgressCard({
     enabled: !!user,
   });
 
-  // Contexte partagé avec tous les sous-composants
-  const contextValue = {
-    challenge,
-    userProgress: progress,
-    user,
-  };
-
-  // Render appropriate component based on auth state and user progress
-  return (
-    <ChallengeProgressContext.Provider value={contextValue}>
-      {!user ? (
-        <NotLoggedInCard />
-      ) : !progress || progress.status === "not_started" ? (
-        <NotStartedCard />
-      ) : progress.status === "in_progress" ? (
-        <InProgressCard />
-      ) : progress.status === "completed" ? (
-        <CompletedCard />
-      ) : (
-        <ErrorCard />
-      )}
-    </ChallengeProgressContext.Provider>
+  // Shared context with all sub-components, memoized to avoid unnecessary re-renders
+  const contextValue = React.useMemo(
+    () => ({
+      challenge,
+      userProgress: progress,
+      user,
+    }),
+    [challenge, progress, user]
   );
+
+  // Determine which card to render based on auth state and user progress
+  let cardComponent: React.ReactElement;
+  if (!user) {
+    cardComponent = <NotLoggedInCard />;
+  } else if (!progress || progress.status === "not_started") {
+    cardComponent = <NotStartedCard />;
+  } else if (progress.status === "in_progress") {
+    cardComponent = <InProgressCard />;
+  } else if (progress.status === "completed") {
+    cardComponent = <CompletedCard />;
+  } else {
+    cardComponent = <ErrorCard />;
+  }
+
+  // Render the selected card component
+  return <ChallengeProgressContext.Provider value={contextValue}>{cardComponent}</ChallengeProgressContext.Provider>;
 }
 
 function ActionButton() {
