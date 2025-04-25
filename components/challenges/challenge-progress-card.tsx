@@ -82,11 +82,13 @@ function ActionButton() {
   const supabase = useSupabase();
   const { toast } = useToast();
   const { challenge, user, userProgress } = useChallengeProgress();
+  const revalidateVue = useRevalidateTables([{ schema: "public", table: "challenge_progress" }]);
   const { mutateAsync: update } = useUpsertMutation(supabase.from("user_progress"), ["user_id", "challenge_id"], "status", {
     onSuccess: () => {
+      revalidateVue();
       toast({
         title: "Challenge Started!",
-        description: "You have successfully started the challenge.",
+        description: "Good luck with your challenge! You can track your submitted answers in this page.",
         variant: "default",
       });
     },
