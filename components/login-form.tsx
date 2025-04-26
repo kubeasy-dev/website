@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
-import { createClient } from "@/lib/supabase/client";
 import posthog from "posthog-js";
+import useSupabase from "@/hooks/use-supabase";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const handleLogin = async (provider: "github" | "azure" | "google") => {
     setIsLoading(true);

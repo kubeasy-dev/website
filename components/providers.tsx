@@ -8,10 +8,10 @@ import { Provider } from "jotai";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import useSupabase from "@/hooks/use-supabase";
 
 export function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   useEffect(() => {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {

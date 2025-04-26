@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LogInIcon } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import React, { useCallback, useEffect, useState } from "react";
 import { ModeSwitcher } from "./mode-switcher";
 import { Container } from "./ui/container";
@@ -12,9 +11,10 @@ import { tryCatch } from "@/lib/try-catch";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { UserDropdown } from "./user-dropdown";
+import useSupabase from "@/hooks/use-supabase";
 
 export function SiteHeader() {
-  const supabase = createClient();
+  const supabase = useSupabase();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
 
