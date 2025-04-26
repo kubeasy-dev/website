@@ -1,3 +1,4 @@
+import React from "react";
 import { createStaticClient } from "@/lib/supabase/server";
 import { Params } from "next/dist/server/request/params";
 import { queries } from "@/lib/queries";
@@ -52,8 +53,10 @@ export default async function ThemePage({ params }: Readonly<{ params: Promise<P
       </div>
       <div className='flex flex-row justify-start py-6'>
         <Button variant='secondary' asChild>
-          <ChevronLeft />
-          <Link href='/challenges'>Back to Challenges</Link>
+          <React.Fragment>
+            <ChevronLeft />
+            <Link href='/challenges'>Back to Challenges</Link>
+          </React.Fragment>
         </Button>
       </div>
       {challenges.length === 0 ? (

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BarChart2 } from "lucide-react";
 import Loading from "@/components/loading";
+import React from "react";
 
 export default async function ChallengesPage() {
   const supabase = createStaticClient();
@@ -27,10 +28,10 @@ export default async function ChallengesPage() {
 
         <div className='flex flex-row justify-end mt-6'>
           <Button variant='secondary' asChild>
-            <>
+            <React.Fragment>
               <BarChart2 className='mr-2 h-4 w-4w' />
               <Link href='/learning-path'>My Kubernetes Journey</Link>
-            </>
+            </React.Fragment>
           </Button>
         </div>
 
