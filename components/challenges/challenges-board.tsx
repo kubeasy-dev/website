@@ -26,7 +26,7 @@ export function ChallengeBoardColumn({ label, challenges }: Readonly<{ label: st
   const hasMore = React.useMemo(() => challenges.length > NB_CARDS, [challenges]);
 
   return (
-    <div className='min-w-[320px] flex-1 bg-muted rounded-lg p-4 flex flex-col'>
+    <div className='min-w-[320px] flex-1 bg-muted rounded-lg p-4 flex flex-col border'>
       <h2 className='text-lg font-bold mb-4 text-center'>{label}</h2>
       {visibleChallenges.length === 0 ? (
         <div className='text-muted-foreground text-sm mb-2'>No challenge</div>

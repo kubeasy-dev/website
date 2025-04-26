@@ -66,7 +66,7 @@ export function ChallengesList() {
   return (
     <div className='w-full flex flex-col gap-6'>
       <section className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
-        <Card>
+        <Card className='bg-muted'>
           <CardHeader>
             <CardTitle>Last challenge started</CardTitle>
           </CardHeader>
@@ -90,7 +90,7 @@ export function ChallengesList() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className='bg-muted'>
           <CardHeader>
             <CardTitle>Challenges completed</CardTitle>
           </CardHeader>
@@ -101,7 +101,7 @@ export function ChallengesList() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className='bg-muted'>
           <CardHeader>
             <CardTitle>Last challenge completed</CardTitle>
           </CardHeader>
