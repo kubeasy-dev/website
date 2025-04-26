@@ -54,7 +54,7 @@ export function ChallengeBoardColumn({ label, challenges }: Readonly<{ label: st
                 layout
                 key={challenge.id}
               >
-                <ChallengeCard challenge={challenge} />
+                <ChallengeCard challenge={challenge} showContent={challenge.status == "not_started"} />
               </motion.li>
             ))}
           </AnimatePresence>

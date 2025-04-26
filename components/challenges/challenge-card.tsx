@@ -5,7 +5,7 @@ import { ClockIcon } from "lucide-react";
 import { Challenge } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
-export function ChallengeCard({ challenge }: Readonly<{ challenge: Omit<Challenge, "content"> }>) {
+export function ChallengeCard({ challenge, showContent = true }: Readonly<{ challenge: Omit<Challenge, "content">; showContent?: boolean }>) {
   return (
     <Link href={`/challenge/${challenge.slug}`}>
       <Card className='flex flex-col justify-between h-full'>
@@ -16,15 +16,19 @@ export function ChallengeCard({ challenge }: Readonly<{ challenge: Omit<Challeng
           </CardTitle>
           <CardDescription>{challenge.description}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className='flex justify-between items-center'>
-            <Badge variant='secondary'>{challenge.theme}</Badge>
-            <div className='flex flex-row space-x-0.5 items-center text-sm text-muted-foreground'>
-              <ClockIcon className='h-4 w-4' />
-              <span>{challenge.estimated_time} min.</span>
+        {showContent && (
+          <CardContent>
+            <div className='flex items-center justify-between min-w-0'>
+              <Badge variant='secondary' className='min-w-0 truncate'>
+                {challenge.theme}
+              </Badge>
+              <div className='flex flex-row items-center gap-0.5 text-sm text-muted-foreground flex-shrink-0'>
+                <ClockIcon className='h-4 w-4' />
+                <span>{challenge.estimated_time} min.</span>
+              </div>
             </div>
-          </div>
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
     </Link>
   );
