@@ -3,16 +3,15 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { CompassIcon, GithubIcon, LifeBuoyIcon, LogInIcon, LogOutIcon, UserIcon } from "lucide-react";
+import { LogInIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import React, { useCallback, useEffect, useState } from "react";
 import { ModeSwitcher } from "./mode-switcher";
 import { Container } from "./ui/container";
 import { tryCatch } from "@/lib/try-catch";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import posthog from "posthog-js";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { UserDropdown } from "./user-dropdown";
 
 export function SiteHeader() {
   const supabase = createClient();
@@ -39,13 +38,6 @@ export function SiteHeader() {
     };
   }, [getUser]);
 
-  const handleSignOut = async () => {
-    posthog.capture("Logout");
-    setUser(null);
-    window.location.reload();
-    await supabase.auth.signOut();
-  };
-
   return (
     <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.5 }} className='fixed top-0 z-50 w-full border-b'>
       <Container>
@@ -71,55 +63,18 @@ export function SiteHeader() {
               About
             </Link>
           </div>
-          <div className='flex-1 flex justify-end items-center space-x-2'>
+          <div className='flex-1 flex justify-end'>
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant='ghost'>
-                    <UserIcon />
-                    {user.user_metadata.full_name.split(" ")[0]}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className='w-56'>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <Link href='/profile'>
-                      <DropdownMenuItem>
-                        <UserIcon />
-                        <span>Profile</span>
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href='/learning-path'>
-                      <DropdownMenuItem>
-                        <CompassIcon />
-                        <span>My journey</span>
-                      </DropdownMenuItem>
-                    </Link>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <GithubIcon />
-                    <span>GitHub</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <LifeBuoyIcon />
-                    <span>Support</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleSignOut()}>
-                    <LogOutIcon />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserDropdown user={user} />
             ) : (
-              <Button variant='ghost' onClick={() => router.push("/login")}>
-                <LogInIcon />
-                Sign In
-              </Button>
+              <div className='flex items-center space-x-2'>
+                <Button variant='ghost' onClick={() => router.push("/login")}>
+                  <LogInIcon />
+                  Sign In
+                </Button>
+                <ModeSwitcher />
+              </div>
             )}
-            <ModeSwitcher />
           </div>
         </div>
       </Container>
