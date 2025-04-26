@@ -11,13 +11,9 @@ import { Input } from "@/components/ui/input";
 import { ChallengesTable } from "./challenges-table";
 import { ChallengesBoard } from "./challenges-board";
 import { useViewMode } from "@/hooks/use-view-mode";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Progress } from "../ui/progress";
-import Link from "next/link";
 import { Button } from "../ui/button";
-import { enUS } from "date-fns/locale";
-import { formatDistanceToNow } from "date-fns";
 import { Columns3Icon, Grid3X3Icon } from "lucide-react";
+import { ChallengesStats } from "./challenge-stats";
 
 export function ChallengesList() {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -31,101 +27,13 @@ export function ChallengesList() {
 
   const { viewMode, setViewMode, isLoading } = useViewMode();
 
-  const completedChallenges = React.useMemo(() => {
-    if (!challenges) {
-      return [];
-    }
-    return challenges.filter((challenge) => challenge.status === "completed");
-  }, [challenges]);
-
-  const lastCompletedChallenge = React.useMemo(() => {
-    if (!completedChallenges) {
-      return null;
-    }
-    return completedChallenges[0];
-  }, [completedChallenges]);
-
-  const lastStartedChallenge = React.useMemo(() => {
-    if (!challenges) {
-      return null;
-    }
-    return challenges.find((challenge) => challenge.status === "in_progress");
-  }, [challenges]);
-
-  const progress = React.useMemo(() => {
-    if (!challenges) {
-      return 0;
-    }
-    return Math.round((completedChallenges.length / challenges.length) * 100);
-  }, [challenges, completedChallenges]);
-
   if (isLoading) {
     return <Loading />;
   }
 
   return (
     <div className='w-full flex flex-col gap-6'>
-      <section className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
-        <Card className='bg-muted'>
-          <CardHeader>
-            <CardTitle>Last challenge started</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {lastStartedChallenge ? (
-              <div className='flex flex-row'>
-                <div className='flex flex-col'>
-                  <Link href={`/challenge/${lastStartedChallenge.slug}`} className='font-medium'>
-                    {lastStartedChallenge.title}
-                  </Link>
-                  <div className='text-sm text-muted-foreground'>
-                    Started {lastStartedChallenge?.started_at ? formatDistanceToNow(new Date(lastStartedChallenge.started_at), { addSuffix: true, locale: enUS }) : "recently"}
-                  </div>
-                </div>
-                <Button variant='secondary' className='ml-auto' asChild>
-                  <Link href={`/challenge/${lastStartedChallenge.slug}`}>Continue</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className='text-muted-foreground'>No challenges started yet</div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className='bg-muted'>
-          <CardHeader>
-            <CardTitle>Challenges completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress value={progress} className='w-full' />
-            <div className='mt-2 text-sm text-muted-foreground'>
-              {progress}% - {completedChallenges.length} out of {challenges?.length} challenges completed
-            </div>
-          </CardContent>
-        </Card>
-        <Card className='bg-muted'>
-          <CardHeader>
-            <CardTitle>Last challenge completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {lastCompletedChallenge ? (
-              <div className='flex flex-row'>
-                <div className='flex flex-col'>
-                  <Link href={`/challenge/${lastCompletedChallenge.slug}`} className='font-medium'>
-                    {lastCompletedChallenge.title}
-                  </Link>
-                  <div className='text-sm text-muted-foreground'>
-                    Completed {lastCompletedChallenge?.completed_at ? formatDistanceToNow(new Date(lastCompletedChallenge.completed_at), { addSuffix: true, locale: enUS }) : "recently"}
-                  </div>
-                </div>
-                <Button variant='secondary' className='ml-auto' asChild>
-                  <Link href={`/challenge/${lastCompletedChallenge.slug}`}>Review</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className='text-muted-foreground'>No challenges completed yet</div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+      <ChallengesStats />
       <section>
         <h2 className='text-2xl font-bold mb-4'>Explore challenges</h2>
         <div className='flex flex-row items-center gap-4 mb-6'>
