@@ -5,6 +5,12 @@ import { ChallengesList } from "@/components/challenges/challenges-list";
 import { PrefetchWrapper } from "@/components/prefetch-wrapper";
 import Loading from "@/components/loading";
 
+export async function generateMetadata() {
+  return {
+    title: "Learning Path - Kubeasy",
+  };
+}
+
 export default async function LearningPath() {
   const supabase = await createClient();
   const prefetchedQueries = [queries.challengeProgress.list(supabase, {})];

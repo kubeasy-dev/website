@@ -14,6 +14,12 @@ import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { DialogTitle, DialogTrigger } from "@radix-ui/react-dialog";
 import { CreateApiTokenForm } from "@/components/profile/create-api-token-form";
 
+export async function generateMetadata() {
+  return {
+    title: "Profile - Kubeasy",
+  };
+}
+
 export default async function Profile() {
   const supabase = await createClient();
   const {
