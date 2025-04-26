@@ -1,8 +1,13 @@
-import { ChallengeProgress } from "@/lib/types";
+import { ChallengeProgress, DifficultyLevel, UserProgressStatus } from "@/lib/types";
 import { DataTable } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { DisplayDifficultyLevel } from "../difficulty-level";
+import { formatDistanceToNow } from "date-fns";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 export function ChallengesTable({ challenges }: { challenges: ChallengeProgress[] | null | undefined }) {
-  const columns = [
+  const columns: ColumnDef<ChallengeProgress>[] = [
     {
       header: "Name",
       accessorKey: "title",
@@ -10,10 +15,58 @@ export function ChallengesTable({ challenges }: { challenges: ChallengeProgress[
     {
       header: "Status",
       accessorKey: "status",
+      cell: ({ cell, row }) => {
+        const status = cell.getValue() as UserProgressStatus;
+        const startedAt = row.original.started_at;
+        const completedAt = row.original.completed_at;
+        switch (status) {
+          case "completed":
+            return <p className='text-primary'>{completedAt ? `Completed ${formatDistanceToNow(new Date(completedAt), { addSuffix: true })}` : "Completed"}</p>;
+          case "in_progress":
+            return <p>{startedAt ? `Started ${formatDistanceToNow(new Date(startedAt), { addSuffix: true })}` : "In progress"}</p>;
+          case "not_started":
+            return <p className='text-destructive'>Not Started</p>;
+        }
+      },
+    },
+    {
+      header: "Theme",
+      accessorKey: "theme",
     },
     {
       header: "Difficulty",
       accessorKey: "difficulty",
+      cell: ({ cell }) => {
+        const level = cell.getValue() as DifficultyLevel;
+        return (
+          <div className='flex flex-row items-center gap-2'>
+            <DisplayDifficultyLevel level={level} />
+            <p className='capitalize'>{level}</p>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Estimated Time",
+      accessorKey: "estimated_time",
+      cell: ({ cell }) => {
+        const time = cell.getValue() as string;
+        return <p>{time} minutes</p>;
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const challenge = row.original;
+        const label = challenge.status === "completed" ? "Review" : challenge.status === "in_progress" ? "Continue" : "Start";
+        return (
+          <Button variant='secondary' size='sm' asChild>
+            <Link href={`/challenge/${challenge.slug}`} className='w-full'>
+              {label}
+            </Link>
+          </Button>
+        );
+      },
     },
   ];
 
@@ -21,5 +74,9 @@ export function ChallengesTable({ challenges }: { challenges: ChallengeProgress[
     return <p>No challenges found</p>;
   }
 
-  return <DataTable columns={columns} data={challenges} />;
+  return (
+    <div className='bg-card'>
+      <DataTable columns={columns} data={challenges} />
+    </div>
+  );
 }

@@ -9,13 +9,13 @@ function listChallengesProgress(client: TypedSupabaseClient, opts: { searchQuery
     .map((word) => `'${word}'`)
     .join(" & ")
     .trim();
-  let query = client.from("challenge_progress").select("*").throwOnError().order("started_at", { ascending: false });
+  let query = client.from("challenge_progress").select("*").throwOnError();
   if (parsedQuery && parsedQuery.length > 0) {
     query = query.textSearch("fts,", parsedQuery);
   }
-  query.order("completed_at", { ascending: false });
-  query.order("started_at", { ascending: false });
-  query.order("difficulty", { ascending: true });
+  query = query.order("completed_at", { ascending: false, nullsFirst: true });
+  query = query.order("started_at", { ascending: false, nullsFirst: false });
+  query = query.order("difficulty", { ascending: true });
   return query;
 }
 

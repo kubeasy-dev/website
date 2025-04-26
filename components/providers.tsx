@@ -89,7 +89,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
 
   return (
     <PostHogProvider>
-      <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={false}>
+      <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={true}>
         <Provider>
           <QueryClientProvider client={queryClient}>
             <ReactQueryDevtools initialIsOpen={false} />

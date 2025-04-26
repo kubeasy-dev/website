@@ -12,7 +12,7 @@ export function DisplayDifficultyLevel({ level, showLabel }: Readonly<{ level: D
   const levelIndex = difficulties.indexOf(level);
 
   return (
-    <div className='flex flex-col items-center gap-1'>
+    <div className='flex flex-col gap-1'>
       <div className='flex items-end gap-0.5'>
         {difficulties.map((key, idx) => {
           const { color: barColor, height } = DIFFICULTY_MAP[key];
