@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import { ChallengeProgress, UserProgressStatus } from "@/lib/types";
+import { ChallengeProgress, UserProgressStatus, MakeAllRequiredExcept } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChallengeCard } from "./challenge-card";
-import { MakeAllRequiredExcept } from "@/lib/types";
 
 const STATUS_COLUMNS = [
   { key: "not_started", label: "To Do" },
@@ -13,7 +12,7 @@ const STATUS_COLUMNS = [
   { key: "completed", label: "Done" },
 ] as const;
 
-const NB_CARDS = 10;
+const NB_CARDS = 5;
 
 export function ChallengeBoardColumn({ label, challenges }: Readonly<{ label: string; challenges: ChallengeProgress[] }>) {
   const [expanded, setExpanded] = React.useState(false);
@@ -54,7 +53,7 @@ export function ChallengeBoardColumn({ label, challenges }: Readonly<{ label: st
                 layout
                 key={challenge.id}
               >
-                <ChallengeCard challenge={challenge} showContent={challenge.status == "not_started"} />
+                <ChallengeCard challenge={challenge} />
               </motion.li>
             ))}
           </AnimatePresence>
