@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-export function ProfileHeader({ avatarUrl, fullName, email }: { avatarUrl?: string; fullName: string; email: string }) {
+export function ProfileHeader({ avatarUrl, fullName, email }: Readonly<{ avatarUrl?: string; fullName: string; email: string }>) {
   return (
     <div className='mx-auto flex flex-col items-center justify-center gap-4 text-center'>
       <Image src={avatarUrl ?? "/placeholder.svg"} alt={fullName || "Profile"} width={100} height={100} className='rounded-full' priority />
