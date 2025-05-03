@@ -9,10 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "../ui/button";
 import { Trash2Icon } from "lucide-react";
 
-export function ApiTokenTable({ tokens }: { tokens: ApiToken[] }) {
+export function ApiTokenTable({ tokens }: Readonly<{ tokens: ApiToken[] }>) {
   const supabase = useSupabase();
   const { toast } = useToast();
-  const { mutateAsync: deleteToken } = useDeleteMutation(supabase.from("api_token"), ["id"], "name", {
+  const { mutateAsync: deleteToken } = useDeleteMutation(supabase.from("api_tokens"), ["id"], "name", {
     onSuccess: () => {
       toast({
         title: "Success",

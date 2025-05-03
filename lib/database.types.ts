@@ -1,304 +1,361 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   public: {
     Tables: {
-      api_token: {
+      api_tokens: {
         Row: {
-          created_at: string;
-          id: string;
-          name: string;
-          user_id: string;
-        };
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
         Insert: {
-          created_at?: string;
-          id?: string;
-          name: string;
-          user_id?: string;
-        };
+          created_at?: string
+          id?: string
+          name: string
+          user_id?: string
+        }
         Update: {
-          created_at?: string;
-          id?: string;
-          name?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
-          content: string;
-          created_at: string;
-          description: string;
-          difficulty: Database["public"]["Enums"]["difficulty_level"];
-          estimated_time: number;
-          fts: unknown | null;
-          id: string;
-          slug: string;
-          theme: string;
-          title: string;
-          updated_at: string;
-        };
+          created_at: string
+          description: string
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          estimated_time: number
+          fts: unknown | null
+          id: string
+          initial_situation: string | null
+          objective: string | null
+          slug: string
+          theme: string
+          title: string
+          updated_at: string
+        }
         Insert: {
-          content: string;
-          created_at?: string;
-          description: string;
-          difficulty: Database["public"]["Enums"]["difficulty_level"];
-          estimated_time?: number;
-          fts?: unknown | null;
-          id?: string;
-          slug: string;
-          theme: string;
-          title: string;
-          updated_at?: string;
-        };
+          created_at?: string
+          description: string
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          estimated_time?: number
+          fts?: unknown | null
+          id?: string
+          initial_situation?: string | null
+          objective?: string | null
+          slug: string
+          theme: string
+          title: string
+          updated_at?: string
+        }
         Update: {
-          content?: string;
-          created_at?: string;
-          description?: string;
-          difficulty?: Database["public"]["Enums"]["difficulty_level"];
-          estimated_time?: number;
-          fts?: unknown | null;
-          id?: string;
-          slug?: string;
-          theme?: string;
-          title?: string;
-          updated_at?: string;
-        };
+          created_at?: string
+          description?: string
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          estimated_time?: number
+          fts?: unknown | null
+          id?: string
+          initial_situation?: string | null
+          objective?: string | null
+          slug?: string
+          theme?: string
+          title?: string
+          updated_at?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "challenges_theme_fkey";
-            columns: ["theme"];
-            isOneToOne: false;
-            referencedRelation: "theme";
-            referencedColumns: ["slug"];
+            foreignKeyName: "challenges_theme_fkey"
+            columns: ["theme"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["slug"]
           },
-        ];
-      };
-      theme: {
+        ]
+      }
+      themes: {
         Row: {
-          description: string;
-          last_updated: string;
-          slug: string;
-          title: string;
-        };
+          description: string
+          last_updated: string
+          slug: string
+          title: string
+        }
         Insert: {
-          description: string;
-          last_updated?: string;
-          slug: string;
-          title: string;
-        };
+          description: string
+          last_updated?: string
+          slug: string
+          title: string
+        }
         Update: {
-          description?: string;
-          last_updated?: string;
-          slug?: string;
-          title?: string;
-        };
-        Relationships: [];
-      };
+          description?: string
+          last_updated?: string
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
-          challenge_id: string;
-          completed_at: string | null;
-          started_at: string | null;
-          status: Database["public"]["Enums"]["challenge_status"];
-          updated_at: string | null;
-          user_id: string;
-        };
+          challenge_id: string
+          completed_at: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["challenge_status"]
+          updated_at: string | null
+          user_id: string
+        }
         Insert: {
-          challenge_id: string;
-          completed_at?: string | null;
-          started_at?: string | null;
-          status?: Database["public"]["Enums"]["challenge_status"];
-          updated_at?: string | null;
-          user_id: string;
-        };
+          challenge_id: string
+          completed_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["challenge_status"]
+          updated_at?: string | null
+          user_id: string
+        }
         Update: {
-          challenge_id?: string;
-          completed_at?: string | null;
-          started_at?: string | null;
-          status?: Database["public"]["Enums"]["challenge_status"];
-          updated_at?: string | null;
-          user_id?: string;
-        };
+          challenge_id?: string
+          completed_at?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["challenge_status"]
+          updated_at?: string | null
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "user_progress_challenge_id_fkey";
-            columns: ["challenge_id"];
-            isOneToOne: false;
-            referencedRelation: "challenge_progress";
-            referencedColumns: ["id"];
+            foreignKeyName: "user_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_progress"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_progress_challenge_id_fkey";
-            columns: ["challenge_id"];
-            isOneToOne: false;
-            referencedRelation: "challenge_with_theme";
-            referencedColumns: ["id"];
+            foreignKeyName: "user_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_submissions: {
+        Row: {
+          challenge_id: string | null
+          id: number
+          payload: Json | null
+          time: string
+          user_id: string | null
+          validated: boolean | null
+          working: boolean | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          id?: number
+          payload?: Json | null
+          time?: string
+          user_id?: string | null
+          validated?: boolean | null
+          working?: boolean | null
+        }
+        Update: {
+          challenge_id?: string | null
+          id?: number
+          payload?: Json | null
+          time?: string
+          user_id?: string | null
+          validated?: boolean | null
+          working?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_progress"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_progress_challenge_id_fkey";
-            columns: ["challenge_id"];
-            isOneToOne: false;
-            referencedRelation: "challenges";
-            referencedColumns: ["id"];
+            foreignKeyName: "user_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
           },
-        ];
-      };
-    };
+          {
+            foreignKeyName: "user_submissions_user_id_challenge_id_fkey"
+            columns: ["user_id", "challenge_id"]
+            isOneToOne: false
+            referencedRelation: "user_progress"
+            referencedColumns: ["user_id", "challenge_id"]
+          },
+        ]
+      }
+    }
     Views: {
       challenge_progress: {
         Row: {
-          completed_at: string | null;
-          created_at: string | null;
-          description: string | null;
-          difficulty: Database["public"]["Enums"]["difficulty_level"] | null;
-          estimated_time: number | null;
-          fts: unknown | null;
-          id: string | null;
-          progress_updated_at: string | null;
-          slug: string | null;
-          started_at: string | null;
-          status: Database["public"]["Enums"]["challenge_status"] | null;
-          theme: string | null;
-          title: string | null;
-          updated_at: string | null;
-        };
-        Relationships: [];
-      };
-      challenge_with_theme: {
-        Row: {
-          created_at: string | null;
-          description: string | null;
-          difficulty: Database["public"]["Enums"]["difficulty_level"] | null;
-          estimated_time: number | null;
-          fts: unknown | null;
-          id: string | null;
-          slug: string | null;
-          theme: string | null;
-          title: string | null;
-          updated_at: string | null;
-        };
-        Relationships: [];
-      };
-    };
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null
+          estimated_time: number | null
+          fts: unknown | null
+          id: string | null
+          progress_updated_at: string | null
+          slug: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["challenge_status"] | null
+          theme: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+    }
     Functions: {
       create_api_token: {
-        Args: { user_id: string; name: string };
-        Returns: string;
-      };
+        Args: { user_id: string; name: string }
+        Returns: string
+      }
       slugify: {
-        Args: { text: string };
-        Returns: string;
-      };
+        Args: { text: string }
+        Returns: string
+      }
+      slugify_title: {
+        Args: { title: string }
+        Returns: string
+      }
       tid: {
-        Args: Record<PropertyKey, never>;
-        Returns: string;
-      };
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       validate_token: {
-        Args: Record<PropertyKey, never>;
-        Returns: undefined;
-      };
-    };
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+    }
     Enums: {
-      challenge_status: "not_started" | "in_progress" | "completed";
-      difficulty_level: "beginner" | "intermediate" | "advanced";
-    };
+      challenge_status: "not_started" | "in_progress" | "completed"
+      difficulty_level: "beginner" | "intermediate" | "advanced"
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
-};
+      [_ in never]: never
+    }
+  }
+}
 
-type DefaultSchema = Database[Extract<keyof Database, "public">];
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"]) | { schema: keyof Database },
+  DefaultSchemaTableNameOrOptions extends
+  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof Database
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] & Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+  ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] & Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R;
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
     }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R;
-      }
-      ? R
-      : never
-    : never;
+  ? R
+  : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+    DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"] | { schema: keyof Database },
+  DefaultSchemaTableNameOrOptions extends
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof Database
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
   ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I;
-    }
-    ? I
-    : never
+    Insert: infer I
+  }
+  ? I
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I;
-      }
-      ? I
-      : never
-    : never;
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"] | { schema: keyof Database },
+  DefaultSchemaTableNameOrOptions extends
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof Database },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof Database
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
   ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U;
-    }
-    ? U
-    : never
+    Update: infer U
+  }
+  ? U
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U;
-      }
-      ? U
-      : never
-    : never;
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"] | { schema: keyof Database },
+  DefaultSchemaEnumNameOrOptions extends
+  | keyof DefaultSchema["Enums"]
+  | { schema: keyof Database },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof Database
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+  ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  : never = never,
 > = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
   ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never;
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"] | { schema: keyof Database },
+  PublicCompositeTypeNameOrOptions extends
+  | keyof DefaultSchema["CompositeTypes"]
+  | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof Database
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+  ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+  : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never;
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {
@@ -307,4 +364,4 @@ export const Constants = {
       difficulty_level: ["beginner", "intermediate", "advanced"],
     },
   },
-} as const;
+} as const

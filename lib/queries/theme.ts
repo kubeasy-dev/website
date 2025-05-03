@@ -1,11 +1,11 @@
 import { TypedSupabaseClient } from "../supabase/client";
 
 function listChallengesTheme(client: TypedSupabaseClient) {
-  return client.from("theme").select("*").throwOnError();
+  return client.from("themes").select("*").throwOnError();
 }
 
 function getThemeBySlug(client: TypedSupabaseClient, { slug }: { slug: string }) {
-  return client.from("theme").select("*").eq("slug", slug).throwOnError().single();
+  return client.from("themes").select("*").eq("slug", slug).throwOnError().single();
 }
 
 export const theme = {

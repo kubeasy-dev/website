@@ -1,5 +1,8 @@
 # Ignoring Shadcn UI components
 components/ui/*
 
+# Ingoring auto generated files
+lib/database.types.ts
+
 # Ingore pnpm lock
 pnpm-lock.yaml

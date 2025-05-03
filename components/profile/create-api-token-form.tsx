@@ -30,7 +30,7 @@ export function CreateApiTokenForm() {
     resolver: zodResolver(createApiTokenSchema),
   });
 
-  const revalidateTokens = useRevalidateTables([{ schema: "public", table: "api_token" }]);
+  const revalidateTokens = useRevalidateTables([{ schema: "public", table: "api_tokens" }]);
 
   const { data: user } = useQuery({
     queryKey: ["user"],
