@@ -39,9 +39,14 @@ export function SiteHeader() {
   }, [getUser]);
 
   return (
-    <motion.header initial={{ y: -100 }} animate={{ y: 0 }} transition={{ duration: 0.5 }} className='fixed top-0 z-50 w-full border-b'>
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+      className='fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+    >
       <Container>
-        <div className='h-20 flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+        <div className='h-20 flex items-center justify-between'>
           <div className='flex-1'>
             <Link href='/'>
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className='text-2xl font-bold'>

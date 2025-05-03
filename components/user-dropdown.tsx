@@ -65,15 +65,6 @@ export function UserDropdown({ user }: Readonly<{ user: User }>) {
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <Icons.gitHub />
-          <span>GitHub</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <LifeBuoyIcon />
-          <span>Support</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <SunMoonIcon />
@@ -93,6 +84,15 @@ export function UserDropdown({ user }: Readonly<{ user: User }>) {
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <Icons.gitHub />
+          <span>GitHub</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <LifeBuoyIcon />
+          <span>Support</span>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => handleSignOut()}>
           <LogOutIcon />
