@@ -13,15 +13,16 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import useSupabase from "@/hooks/use-supabase";
-import { CompassIcon, GithubIcon, LifeBuoyIcon, LogOutIcon, SunMoonIcon, UserIcon } from "lucide-react";
+import { CompassIcon, LifeBuoyIcon, LogOutIcon, SunMoonIcon, UserIcon } from "lucide-react";
 import posthog from "posthog-js";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
+import { Icons } from "./icons";
 
-export function UserDropdown({ user }: { user: User }) {
+export function UserDropdown({ user }: Readonly<{ user: User }>) {
   const supabase = useSupabase();
   const { setTheme, theme } = useTheme();
 
@@ -65,7 +66,7 @@ export function UserDropdown({ user }: { user: User }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <GithubIcon />
+          <Icons.gitHub />
           <span>GitHub</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
