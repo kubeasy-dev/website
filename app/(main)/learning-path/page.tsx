@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import { queries } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
-import { ChallengesList } from "@/components/challenges/challenges-list";
+import { ChallengeList } from "@/components/challenges/challenge-list";
 import { PrefetchWrapper } from "@/components/prefetch-wrapper";
 import Loading from "@/components/loading";
 
@@ -25,7 +25,7 @@ export default async function LearningPath() {
       <div className='mx-auto items-center container flex flex-col gap-20 py-12'>
         <Suspense fallback={<Loading />}>
           <PrefetchWrapper queries={prefetchedQueries}>
-            <ChallengesList />
+            <ChallengeList />
           </PrefetchWrapper>
         </Suspense>
       </div>
