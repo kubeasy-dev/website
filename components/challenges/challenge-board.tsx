@@ -68,7 +68,7 @@ export function ChallengeBoardColumn({ label, challenges }: Readonly<{ label: st
   );
 }
 
-export function ChallengesBoard({ challenges }: Readonly<{ challenges: ChallengeProgress[] | null | undefined }>) {
+export function ChallengeBoard({ challenges }: Readonly<{ challenges: ChallengeProgress[] | null | undefined }>) {
   if (!challenges) {
     return <p>No challenge found</p>;
   }

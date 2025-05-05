@@ -2,11 +2,11 @@ import { ChallengeProgress, DifficultyLevel, UserProgressStatus } from "@/lib/ty
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { DisplayDifficultyLevel } from "../difficulty-level";
-import { formatDistanceToNow } from "date-fns";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { RelativeDateDisplay } from "../relative-date-display";
 
-export function ChallengesTable({ challenges }: { challenges: ChallengeProgress[] | null | undefined }) {
+export function ChallengeTable({ challenges }: { challenges: ChallengeProgress[] | null | undefined }) {
   const columns: ColumnDef<ChallengeProgress>[] = [
     {
       header: "Name",
@@ -21,9 +21,17 @@ export function ChallengesTable({ challenges }: { challenges: ChallengeProgress[
         const completedAt = row.original.completed_at;
         switch (status) {
           case "completed":
-            return <p className='text-primary'>{completedAt ? `Completed ${formatDistanceToNow(new Date(completedAt), { addSuffix: true })}` : "Completed"}</p>;
+            return (
+              <p className='text-primary'>
+                <RelativeDateDisplay stringDate={completedAt} />
+              </p>
+            );
           case "in_progress":
-            return <p>{startedAt ? `Started ${formatDistanceToNow(new Date(startedAt), { addSuffix: true })}` : "In progress"}</p>;
+            return (
+              <p>
+                Started <RelativeDateDisplay stringDate={startedAt} />
+              </p>
+            );
           case "not_started":
             return <p className='text-destructive'>Not Started</p>;
         }

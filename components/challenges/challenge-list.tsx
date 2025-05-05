@@ -1,21 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import useSupabase from "@/hooks/use-supabase";
 import { useQuery } from "@supabase-cache-helpers/postgrest-react-query";
 import { queries } from "@/lib/queries";
-import { useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import Loading from "@/components/loading";
 import { Input } from "@/components/ui/input";
-import { ChallengesTable } from "./challenges-table";
-import { ChallengesBoard } from "./challenges-board";
+import { ChallengeTable } from "./challenge-table";
+import { ChallengeBoard } from "./challenge-board";
 import { useViewMode } from "@/hooks/use-view-mode";
 import { Button } from "../ui/button";
 import { Columns3Icon, Grid3X3Icon } from "lucide-react";
-import { ChallengesStats } from "./challenge-stats";
+import { ChallengeStats } from "./challenge-stats";
 
-export function ChallengesList() {
+export function ChallengeList() {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Debounce search to avoid too many server requests
@@ -33,7 +32,7 @@ export function ChallengesList() {
 
   return (
     <div className='w-full flex flex-col gap-6'>
-      <ChallengesStats />
+      <ChallengeStats />
       <section>
         <h2 className='text-2xl font-bold mb-4'>Explore challenges</h2>
         <div className='flex flex-row items-center gap-4 mb-6'>
@@ -58,9 +57,9 @@ export function ChallengesList() {
           if (queryLoading) {
             content = <Loading />;
           } else if (viewMode === "table") {
-            content = <ChallengesTable challenges={challenges} />;
+            content = <ChallengeTable challenges={challenges} />;
           } else {
-            content = <ChallengesBoard challenges={challenges} />;
+            content = <ChallengeBoard challenges={challenges} />;
           }
           return <div>{content}</div>;
         })()}

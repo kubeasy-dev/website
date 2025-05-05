@@ -8,11 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import { enUS } from "date-fns/locale";
-import { formatDistanceToNow } from "date-fns";
 import { ChallengeProgress } from "@/lib/types";
+import { RelativeDateDisplay } from "../relative-date-display";
 
-function LastChallengeStartedCard({ lastStartedChallenge }: { lastStartedChallenge: ChallengeProgress | null }) {
+function LastChallengeStartedCard({ lastStartedChallenge }: Readonly<{ lastStartedChallenge: ChallengeProgress | null }>) {
   return (
     <Card className='bg-muted'>
       <CardHeader>
@@ -26,7 +25,7 @@ function LastChallengeStartedCard({ lastStartedChallenge }: { lastStartedChallen
                 {lastStartedChallenge.title}
               </Link>
               <div className='text-sm text-muted-foreground'>
-                Started {lastStartedChallenge?.started_at ? formatDistanceToNow(new Date(lastStartedChallenge.started_at), { addSuffix: true, locale: enUS }) : "recently"}
+                Started <RelativeDateDisplay stringDate={lastStartedChallenge.started_at} />
               </div>
             </div>
             <Button variant='secondary' className='ml-auto' asChild>
@@ -75,7 +74,7 @@ function LastChallengeCompletedCard({ lastCompletedChallenge }: { lastCompletedC
                 {lastCompletedChallenge.title}
               </Link>
               <div className='text-sm text-muted-foreground'>
-                Completed {lastCompletedChallenge?.completed_at ? formatDistanceToNow(new Date(lastCompletedChallenge.completed_at), { addSuffix: true, locale: enUS }) : "recently"}
+                Completed <RelativeDateDisplay stringDate={lastCompletedChallenge.completed_at} />
               </div>
             </div>
             <Button variant='secondary' className='ml-auto' asChild>
@@ -90,7 +89,7 @@ function LastChallengeCompletedCard({ lastCompletedChallenge }: { lastCompletedC
   );
 }
 
-export function ChallengesStats() {
+export function ChallengeStats() {
   const supabase = useSupabase();
 
   const { data: challenges } = useQuery(queries.challengeProgress.list(supabase, {}));

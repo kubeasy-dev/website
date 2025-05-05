@@ -9,6 +9,7 @@ import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import useSupabase from "@/hooks/use-supabase";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const supabase = useSupabase();
@@ -92,8 +93,10 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
       <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={true}>
         <Provider>
           <QueryClientProvider client={queryClient}>
-            <ReactQueryDevtools initialIsOpen={false} />
-            {children}
+            <TooltipProvider>
+              <ReactQueryDevtools initialIsOpen={false} />
+              {children}
+            </TooltipProvider>
           </QueryClientProvider>
         </Provider>
       </NextThemesProvider>
