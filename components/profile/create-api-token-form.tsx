@@ -12,7 +12,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { TriangleAlertIcon } from "lucide-react";
-import TokenDisplay from "../token-display";
+import { Terminal } from "@/components/terminal";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 const createApiTokenSchema = z.object({
@@ -86,7 +86,9 @@ export function CreateApiTokenForm() {
           <AlertTitle>API Token Created</AlertTitle>
           <AlertDescription>Here is your API token. Make sure to copy it, as you won&apos;t be able to see it again.</AlertDescription>
         </Alert>
-        <TokenDisplay token={result} />
+        <div className='flex flex-col gap-2 pt-2'>
+          <Terminal content={result} thingToCopy='Token' />
+        </div>
       </div>
     );
   }
