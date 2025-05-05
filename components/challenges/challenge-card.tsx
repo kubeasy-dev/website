@@ -5,7 +5,7 @@ import { ClockIcon } from "lucide-react";
 import { Challenge } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
-export function ChallengeCard({ challenge, showContent = true }: Readonly<{ challenge: Omit<Challenge, "content">; showContent?: boolean }>) {
+export function ChallengeCard({ challenge, showContent = true }: Readonly<{ challenge: Omit<Challenge, "objective" | "initial_situation">; showContent?: boolean }>) {
   return (
     <Link href={`/challenge/${challenge.slug}`}>
       <Card className='flex flex-col justify-between h-full'>

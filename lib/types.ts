@@ -28,3 +28,5 @@ export type ChallengeProgress = ViewRow<"challenge_progress">;
 export type UserProgressStatus = Enums["challenge_status"];
 
 export type DifficultyLevel = Enums["difficulty_level"];
+
+export type UserSubmission = TableRow<"user_submissions">;
