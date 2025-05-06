@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDeleteMutation } from "@supabase-cache-helpers/postgrest-react-query";
 import useSupabase from "@/hooks/use-supabase";
 import { Icons } from "@/components/icons";
+import { RefreshCcw } from "lucide-react";
 
 export function ResetChallengeButton({ userProgressId }: { userProgressId: string }) {
   const { toast } = useToast();
@@ -61,14 +62,17 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant='destructive' disabled={isDeleting}>
+        <Button variant='secondary' disabled={isDeleting}>
           {isDeleting ? (
             <span className='flex items-center gap-2'>
               <Icons.spinner className='h-4 w-4 animate-spin' aria-label='Loading' />
               Resetting...
             </span>
           ) : (
-            "Reset Challenge"
+            <React.Fragment>
+              <RefreshCcw className='h-4 w-4' />
+              Reset Challenge
+            </React.Fragment>
           )}
         </Button>
       </AlertDialogTrigger>

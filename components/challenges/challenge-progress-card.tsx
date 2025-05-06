@@ -96,8 +96,17 @@ export default function ChallengeProgressCard({
       </div>
     );
   } else {
-    cardTitle = `Your Progress`;
-    cardComponent = <ChallengeProgressDetailsCard userProgress={currentProgress} />;
+    cardTitle = currentProgress.status === "completed" ? "Challenge Completed" : "Challenge In Progress";
+    cardComponent = (
+      <React.Fragment>
+        <ChallengeProgressDetailsCard userProgress={currentProgress} />
+        {currentProgress?.composite_key && (
+          <div className='mt-4'>
+            <ResetChallengeButton userProgressId={currentProgress.composite_key} />
+          </div>
+        )}
+      </React.Fragment>
+    );
   }
 
   return (
@@ -113,14 +122,7 @@ export default function ChallengeProgressCard({
             <h2 className='text-2xl font-bold'>{cardTitle}</h2>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {cardComponent}
-          {currentProgress?.composite_key && (
-            <div className='mt-4'>
-              <ResetChallengeButton userProgressId={currentProgress.composite_key} />
-            </div>
-          )}
-        </CardContent>
+        <CardContent>{cardComponent}</CardContent>
         <CardFooter>
           <div className='flex flex-row items-center gap-1'>
             <span className={cn(subscriptionStatus === "SUBSCRIBED" ? "bg-primary" : "bg-destructive", "h-1.5 w-1.5 rounded-full bg-primary animate-pulse")} />

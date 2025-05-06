@@ -20,7 +20,8 @@ export function ChallengeProgressDetailsCard({ userProgress }: Readonly<{ userPr
         <span className='text-muted-foreground'>|</span>
         <p>
           {userProgress.status == "completed" ? "Completed " : "Last updated "}
-          <RelativeDateDisplay stringDate={duration ? duration.toString() : userProgress.updated_at} />
+          <RelativeDateDisplay stringDate={userProgress.completed_at || userProgress.updated_at} />
+          {duration && <span className='text-muted-foreground'> ({duration} minutes)</span>}
         </p>
       </div>
       {userProgress.composite_key && <ChallengeSubmissions userProgressId={userProgress.composite_key} />}
