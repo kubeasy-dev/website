@@ -46,6 +46,15 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
   const handleReset = () => {
     setIsDeleting(true);
     const [userId, challengeId] = userProgressId.split("+");
+    if (!userId || !challengeId) {
+      toast({
+        title: "Error",
+        description: "An error occurred while resetting the challenge.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+      return;
+    }
     deleteProgress({ user_id: userId, challenge_id: challengeId });
   };
 
