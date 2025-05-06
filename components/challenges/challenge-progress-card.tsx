@@ -8,6 +8,7 @@ import { useQuery as useCacheQuery, useSubscription } from "@supabase-cache-help
 import { queries } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { ChallengeProgressDetailsCard } from "./challenge-progress-details-card";
+import { ResetChallengeButton } from "./reset-challenge-button";
 import Loading from "../loading";
 import { User } from "@supabase/supabase-js";
 import ReactConfetti from "react-confetti";
@@ -112,7 +113,14 @@ export default function ChallengeProgressCard({
             <h2 className='text-2xl font-bold'>{cardTitle}</h2>
           </CardTitle>
         </CardHeader>
-        <CardContent>{cardComponent}</CardContent>
+        <CardContent>
+          {cardComponent}
+          {currentProgress?.composite_key && (
+            <div className='mt-4'>
+              <ResetChallengeButton userProgressId={currentProgress.composite_key} />
+            </div>
+          )}
+        </CardContent>
         <CardFooter>
           <div className='flex flex-row items-center gap-1'>
             <span className={cn(subscriptionStatus === "SUBSCRIBED" ? "bg-primary" : "bg-destructive", "h-1.5 w-1.5 rounded-full bg-primary animate-pulse")} />

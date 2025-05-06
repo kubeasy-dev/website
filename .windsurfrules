@@ -1,0 +1,28 @@
+# General Code Style & Formatting
+- Use english for code and comments.
+- Follow the Airbnb Style Guide for code formatting.
+- Use KebabCase for React component file names (e.g.user-card.tsx, not UserCard.tsx).
+- Prefer named exports for components.
+- Use TypeScript for type safety.
+
+# Project Structure & Architecture
+- Follow Next.js patterns and use the App Router.
+- Use Server Components for most of the code and wrap user specific code in client components or Suspense boundary.
+- Use PPR for prefetching.
+
+# Styling & UI
+- Use Tailwind CSS for styling.
+- Use Shadcn UI for components.
+
+# Data Fetching & Forms
+- Use Supabase for data fetching and authentication.
+- Use supabase cache helpers with Tanstack Query for data fetching and mutations in client side. I write a PrefetchWrapper component to handle prefetching in server side.
+- Use React Hook Form for form handling.
+- Use Zod for validation.
+
+# State Management & Logic
+- Use React Context for state management.
+- Use jotai for state management in client side.
+
+# Backend & Database
+- Use Supabase for database access.

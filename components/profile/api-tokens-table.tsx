@@ -1,12 +1,12 @@
 "use client";
 
 import { ApiToken } from "@/lib/types";
-import { DataTable } from "../ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { useDeleteMutation } from "@supabase-cache-helpers/postgrest-react-query";
 import useSupabase from "@/hooks/use-supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { Trash2Icon } from "lucide-react";
 
 export function ApiTokenTable({ tokens }: Readonly<{ tokens: ApiToken[] }>) {
