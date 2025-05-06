@@ -53,4 +53,8 @@
       "database_name": "kubeasy-next-tag-cache",
     },
   ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
 }
