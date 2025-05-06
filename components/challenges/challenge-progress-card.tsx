@@ -59,7 +59,6 @@ export default function ChallengeProgressCard({
     ["user_id", "challenge_id", "status"],
     {
       callback: (payload) => {
-        console.log("payload", payload);
         const updatedProgress = payload.new as UserProgress;
         if (updatedProgress.status === "completed") {
           setShowCompletionDialog(true);

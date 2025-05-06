@@ -25,7 +25,10 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
   const supabase = useSupabase();
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  const revalidateView = useRevalidateTables([{ schema: "public", table: "challenge_progress" }]);
+  const revalidateTables = useRevalidateTables([
+    { schema: "public", table: "challenge_progress" },
+    { schema: "public", table: "user_submissions" },
+  ]);
 
   const { mutateAsync: deleteProgress } = useDeleteMutation(supabase.from("user_progress"), ["user_id", "challenge_id"], "composite_key", {
     onSuccess: () => {
@@ -33,7 +36,7 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
         title: "Challenge reset",
         description: "Your progress has been successfully reset.",
       });
-      revalidateView();
+      revalidateTables();
     },
     onError: (error) => {
       console.error("Error resetting challenge:", error);

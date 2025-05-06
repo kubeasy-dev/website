@@ -37,7 +37,6 @@ export function ChallengeSubmissions({ userProgressId }: Readonly<{ userProgress
     ["id"],
     {
       callback: (payload) => {
-        console.log("[SUBMISSIONS] Subscription payload:", payload);
         if (payload.eventType === "INSERT") {
           const newSubmission = payload.new as UserSubmission;
           setSubmissions((currentSubmissions) => {
@@ -85,11 +84,11 @@ export function ChallengeSubmissions({ userProgressId }: Readonly<{ userProgress
                     <div className='flex items-center justify-center space-x-1 mr-4 gap-2'>
                       <div className='flex flex-col items-center justify-center'>
                         {sub.validated ? <CheckCircle2 className='h-4 w-4 text-green-500' /> : <XCircle className='h-4 w-4 text-red-500' />}
-                        <span className='text-xs text-muted-foreground'>Static Validation</span>
+                        <span className='text-xs text-muted-foreground mt-1'>Static Validation</span>
                       </div>
                       <div className='flex flex-col items-center justify-center'>
                         {sub.working ? <CheckCircle2 className='h-4 w-4 text-green-500' /> : <XCircle className='h-4 w-4 text-red-500' />}
-                        <span className='text-xs text-muted-foreground'>Runtime Validation</span>
+                        <span className='text-xs text-muted-foreground mt-1'>Runtime Validation</span>
                       </div>
                     </div>
                   </div>
