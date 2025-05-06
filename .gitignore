@@ -13,6 +13,7 @@ coverage
 out/
 build
 dist
+.open-next/
 
 # misc
 .DS_Store
@@ -30,6 +31,7 @@ yarn-error.log*
 # local env files
 .env*
 *.env
+*.vars
 
 # Sentry Config File
 .sentryclirc
