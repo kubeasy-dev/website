@@ -16,11 +16,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useDeleteMutation } from "@supabase-cache-helpers/postgrest-react-query";
 import useSupabase from "@/hooks/use-supabase";
+import { useRevalidateTables } from "@supabase-cache-helpers/postgrest-react-query";
 
 export function ResetAllProgressButton() {
   const { toast } = useToast();
   const supabase = useSupabase();
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const revalidateView = useRevalidateTables([{ schema: "public", table: "challenge_progress" }]);
 
   const { mutateAsync: deleteAllProgress } = useDeleteMutation(supabase.from("user_progress"), ["user_id"], "*", {
     onSuccess: () => {
@@ -28,6 +30,7 @@ export function ResetAllProgressButton() {
         title: "Success",
         description: "All your challenge progress has been successfully reset.",
       });
+      revalidateView();
     },
     onError: (error) => {
       console.error("Error resetting all progress:", error);

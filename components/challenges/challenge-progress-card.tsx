@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Challenge, UserProgress } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import useSupabase from "@/hooks/use-supabase";
-import { useQuery as useCacheQuery, useSubscription } from "@supabase-cache-helpers/postgrest-react-query";
+import { useQuery as useCacheQuery, useRevalidateTables, useSubscription } from "@supabase-cache-helpers/postgrest-react-query";
 import { queries } from "@/lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { ChallengeProgressDetailsCard } from "./challenge-progress-details-card";
@@ -50,6 +50,8 @@ export default function ChallengeProgressCard({
   const channelName = currentProgress?.composite_key ? `user_progress_${currentProgress.composite_key}` : "user_progress_disabled";
   const subscriptionFilter = currentProgress?.composite_key ? `composite_key=eq.${currentProgress.composite_key}` : undefined;
 
+  const revalidateView = useRevalidateTables([{ schema: "public", table: "challenge_progress" }]);
+
   const { status: subscriptionStatus } = useSubscription(
     supabase,
     channelName,
@@ -59,13 +61,15 @@ export default function ChallengeProgressCard({
       schema: "public",
       filter: subscriptionFilter,
     },
-    ["user_id", "challenge_id"],
+    ["user_id", "challenge_id", "status"],
     {
-      callback: (payload) => {
+      callback: async (payload) => {
+        console.log("payload", payload);
         const updatedProgress = payload.new as UserProgress;
         if (currentProgress?.status === "in_progress" && updatedProgress.status === "completed") {
           setShowConfetti(true);
         }
+        await revalidateView();
         setCurrentProgress(updatedProgress);
       },
     }

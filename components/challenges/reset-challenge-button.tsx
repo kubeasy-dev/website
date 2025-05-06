@@ -18,11 +18,14 @@ import { useDeleteMutation } from "@supabase-cache-helpers/postgrest-react-query
 import useSupabase from "@/hooks/use-supabase";
 import { Icons } from "@/components/icons";
 import { RefreshCcw } from "lucide-react";
+import { useRevalidateTables } from "@supabase-cache-helpers/postgrest-react-query";
 
 export function ResetChallengeButton({ userProgressId }: { userProgressId: string }) {
   const { toast } = useToast();
   const supabase = useSupabase();
   const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const revalidateView = useRevalidateTables([{ schema: "public", table: "challenge_progress" }]);
 
   const { mutateAsync: deleteProgress } = useDeleteMutation(supabase.from("user_progress"), ["user_id", "challenge_id"], "composite_key", {
     onSuccess: () => {
@@ -30,6 +33,7 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
         title: "Challenge reset",
         description: "Your progress has been successfully reset.",
       });
+      revalidateView();
     },
     onError: (error) => {
       console.error("Error resetting challenge:", error);
@@ -53,6 +57,7 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
         description: "An error occurred while resetting the challenge.",
         variant: "destructive",
       });
+
       setIsDeleting(false);
       return;
     }
