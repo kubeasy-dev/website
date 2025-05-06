@@ -53,11 +53,6 @@ export function ResetAllProgressButton() {
       await deleteAllProgress({ user_id: user.id });
     } catch (error) {
       console.error("Error in handleReset:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reset all progress.",
-        variant: "destructive",
-      });
       setIsDeleting(false);
     }
   };

@@ -62,7 +62,7 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
           <AlertDialogDescription>This action cannot be undone. All your submissions and progress for this challenge will be permanently deleted.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleReset} disabled={isDeleting}>
             {isDeleting ? "Resetting..." : "Yes, reset"}
           </AlertDialogAction>
