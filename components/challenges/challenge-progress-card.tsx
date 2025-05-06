@@ -10,18 +10,10 @@ import { useQuery } from "@tanstack/react-query";
 import { ChallengeProgressDetailsCard } from "./challenge-progress-details-card";
 import { ResetChallengeButton } from "./reset-challenge-button";
 import Loading from "../loading";
-import { User } from "@supabase/supabase-js";
-import ReactConfetti from "react-confetti";
-import useWindowSize from "@/hooks/use-window-size";
+import { ChallengeCompletionDialog } from "./challenge-completion-dialog";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Terminal } from "../terminal";
-
-export interface ChallengeProgressContextType {
-  challenge: Challenge;
-  userProgress: UserProgress | null | undefined;
-  user: User | null | undefined;
-}
 
 export default function ChallengeProgressCard({
   challenge,
@@ -29,8 +21,11 @@ export default function ChallengeProgressCard({
   challenge: Challenge;
 }>) {
   const supabase = useSupabase();
-  const { width, height } = useWindowSize();
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const { data } = useCacheQuery(queries.challenge.findSimilar(supabase, { theme: challenge.theme, excludeChallengeId: challenge.id }), {
+    enabled: !!showCompletionDialog && !!challenge.theme && !!challenge.id,
+  });
+  const similarChallenges = data ?? [];
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["user"],
     queryFn: () => supabase.auth.getUser(),
@@ -63,17 +58,19 @@ export default function ChallengeProgressCard({
     },
     ["user_id", "challenge_id", "status"],
     {
-      callback: async (payload) => {
+      callback: (payload) => {
         console.log("payload", payload);
         const updatedProgress = payload.new as UserProgress;
-        if (currentProgress?.status === "in_progress" && updatedProgress.status === "completed") {
-          setShowConfetti(true);
+        if (updatedProgress.status === "completed") {
+          setShowCompletionDialog(true);
         }
-        await revalidateView();
+        revalidateView();
         setCurrentProgress(updatedProgress);
       },
     }
   );
+
+  // Similar challenges are now fetched via useCacheQuery (supabase-cache-helpers)
 
   let cardTitle: string;
   let cardComponent: React.ReactElement;
@@ -115,10 +112,8 @@ export default function ChallengeProgressCard({
 
   return (
     <React.Fragment>
-      {showConfetti && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", zIndex: 9999 }}>
-          <ReactConfetti width={width} height={height} numberOfPieces={1000} recycle={false} onConfettiComplete={() => setShowConfetti(false)} />
-        </div>
+      {currentProgress && currentProgress.status === "completed" && (
+        <ChallengeCompletionDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog} challenge={challenge} userProgress={currentProgress} similarChallenges={similarChallenges} />
       )}
       <Card className='w-full'>
         <CardHeader>
