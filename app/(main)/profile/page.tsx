@@ -13,6 +13,7 @@ import { PlusIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { DialogTitle, DialogTrigger } from "@radix-ui/react-dialog";
 import { CreateApiTokenForm } from "@/components/profile/create-api-token-form";
+import { ResetAllProgressButton } from "@/components/profile/reset-all-progress-button";
 
 export async function generateMetadata() {
   return {
@@ -41,6 +42,16 @@ export default async function Profile() {
     <Container className='py-12 md:py-24 lg:py-32'>
       <ProfileHeader avatarUrl={avatarUrl} fullName={fullName} email={user.email || ""} />
       <div className='mx-auto mt-12 max-w-4xl flex flex-col gap-8'>
+        <Card>
+          <CardHeader>
+            <CardTitle>Challenge Progress</CardTitle>
+            <CardDescription>Manage your challenge progress and submissions.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResetAllProgressButton />
+          </CardContent>
+        </Card>
+
         <Dialog>
           <Card>
             <CardHeader>
