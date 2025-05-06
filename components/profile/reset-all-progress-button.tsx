@@ -26,7 +26,7 @@ export function ResetAllProgressButton() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "All your progress has been successfully reset.",
+        description: "All your challenge progress has been successfully reset.",
       });
     },
     onError: (error) => {

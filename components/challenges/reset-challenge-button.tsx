@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useDeleteMutation } from "@supabase-cache-helpers/postgrest-react-query";
 import useSupabase from "@/hooks/use-supabase";
+import { Icons } from "@/components/icons";
 
 export function ResetChallengeButton({ userProgressId }: { userProgressId: string }) {
   const { toast } = useToast();
@@ -23,8 +24,7 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const { mutateAsync: deleteProgress } = useDeleteMutation(supabase.from("user_progress"), ["user_id", "challenge_id"], "composite_key", {
-    onSuccess: (data) => {
-      console.log(data);
+    onSuccess: () => {
       toast({
         title: "Challenge reset",
         description: "Your progress has been successfully reset.",
@@ -61,8 +61,15 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant='secondary' className='mt-4' disabled={isDeleting}>
-          {isDeleting ? "Resetting..." : "Reset Challenge"}
+        <Button variant='destructive' disabled={isDeleting}>
+          {isDeleting ? (
+            <span className='flex items-center gap-2'>
+              <Icons.spinner className='h-4 w-4 animate-spin' aria-label='Loading' />
+              Resetting...
+            </span>
+          ) : (
+            "Reset Challenge"
+          )}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -73,7 +80,14 @@ export function ResetChallengeButton({ userProgressId }: { userProgressId: strin
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleReset} disabled={isDeleting}>
-            {isDeleting ? "Resetting..." : "Yes, reset"}
+            {isDeleting ? (
+              <span className='flex items-center gap-2'>
+                <Icons.spinner className='h-4 w-4 animate-spin' aria-label='Loading' />
+                Resetting...
+              </span>
+            ) : (
+              "Yes, reset"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
