@@ -75,6 +75,9 @@ importers:
       autoprefixer:
         specifier: 10.4.15
         version: 10.4.15(postcss@8.4.30)
+      axios:
+        specifier: ''
+        version: 1.9.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -106,8 +109,8 @@ importers:
         specifier: ^1.236.4
         version: 1.236.4
       posthog-node:
-        specifier: ^4.17.1
-        version: 4.17.1
+        specifier: 5.0.0-alpha.1
+        version: 5.0.0-alpha.1
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -4056,9 +4059,9 @@ packages:
       rrweb-snapshot:
         optional: true
 
-  posthog-node@4.17.1:
-    resolution: {integrity: sha512-cVlQPOwOPjakUnrueKRCQe1m2Ku+XzKaOos7Tn/zDZkkZFeBT/byP7tbNf7LiwhaBRWFBRowZZb/MsTtSRaorg==}
-    engines: {node: '>=15.0.0'}
+  posthog-node@5.0.0-alpha.1:
+    resolution: {integrity: sha512-FJ9WVba69Qk+aQEUyr75G2aNNLt4gDZ1SVfeRRpgSL1gd4BSf5fy1OpHnlbUNTg63PyMwdl8PSloiVlz2dG6cw==}
+    engines: {node: '>=18.0.0'}
 
   preact@10.26.5:
     resolution: {integrity: sha512-fmpDkgfGU6JYux9teDWLhj9mKN55tyepwYbxHgQuIxbWQzgFg5vk7Mrrtfx7xRxq798ynkY4DDDxZr235Kk+4w==}
@@ -9727,11 +9730,7 @@ snapshots:
       preact: 10.26.5
       web-vitals: 4.2.4
 
-  posthog-node@4.17.1:
-    dependencies:
-      axios: 1.9.0
-    transitivePeerDependencies:
-      - debug
+  posthog-node@5.0.0-alpha.1: {}
 
   preact@10.26.5: {}
 
