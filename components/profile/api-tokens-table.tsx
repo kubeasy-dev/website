@@ -8,12 +8,14 @@ import useSupabase from "@/hooks/use-supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Trash2Icon } from "lucide-react";
+import posthog from "posthog-js";
 
 export function ApiTokenTable({ tokens }: Readonly<{ tokens: ApiToken[] }>) {
   const supabase = useSupabase();
   const { toast } = useToast();
   const { mutateAsync: deleteToken } = useDeleteMutation(supabase.from("api_tokens"), ["id"], "name", {
     onSuccess: () => {
+      posthog.capture("api_token_deleted");
       toast({
         title: "Success",
         description: "Token deleted successfully",

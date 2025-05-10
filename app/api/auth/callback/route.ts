@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
 import { createClient } from "@/lib/supabase/server";
+import PostHogClient from "@/lib/posthog";
+import { differenceInSeconds } from "date-fns";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -10,7 +12,33 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.exchangeCodeForSession(code);
+    if (user) {
+      const posthog = PostHogClient();
+      const isNew = differenceInSeconds(new Date(), new Date(user.created_at)) < 10;
+      if (isNew) {
+        posthog.capture({
+          distinctId: user.id,
+          event: "user_signup",
+          properties: {
+            provider: user.app_metadata.provider,
+            next: next,
+          },
+        });
+      } else {
+        posthog.capture({
+          distinctId: user.id,
+          event: "user_login",
+          properties: {
+            provider: user.app_metadata.provider,
+            next: next,
+          },
+        });
+      }
+    }
     if (!error) {
       const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === "development";

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
-import posthog from "posthog-js";
 import useSupabase from "@/hooks/use-supabase";
 
 export function LoginForm() {
@@ -15,10 +14,6 @@ export function LoginForm() {
 
   const handleLogin = async (provider: "github" | "azure" | "google") => {
     setIsLoading(true);
-    posthog.capture("Login", {
-      Provider: provider,
-      Redirect: next ?? "/",
-    });
     await supabase.auth.signInWithOAuth({
       provider,
       options: {

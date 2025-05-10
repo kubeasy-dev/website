@@ -27,7 +27,7 @@ export function UserDropdown({ user }: Readonly<{ user: User }>) {
   const { setTheme, theme } = useTheme();
 
   const handleSignOut = async () => {
-    posthog.capture("Logout");
+    posthog.capture("user_logout");
     window.location.reload();
     await supabase.auth.signOut();
   };

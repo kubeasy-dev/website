@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TriangleAlertIcon } from "lucide-react";
 import { Terminal } from "@/components/terminal";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import posthog from "posthog-js";
 
 const createApiTokenSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -66,6 +67,7 @@ export function CreateApiTokenForm() {
       }
       if (token) {
         setResult(token);
+        posthog.capture("api_token_created");
         revalidateTokens();
       }
     } catch (error) {
