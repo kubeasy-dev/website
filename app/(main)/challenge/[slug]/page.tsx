@@ -40,7 +40,11 @@ export async function generateStaticParams() {
 // The reason is that createClient() relies on cookies (a dynamic API), which prevents Static Generation.
 async function AuthWrapper({ challenge }: { challenge: Challenge }) {
   const authenticatedClient = await createClient();
-  const prefetchedQueries = [queries.userProgress.get(authenticatedClient, { challengeId: challenge.id }), queries.userSubmission.list(authenticatedClient, { challengeId: challenge.id })];
+  const prefetchedQueries = [
+    queries.userProgress.get(authenticatedClient, { challengeId: challenge.id }),
+    queries.userSubmission.list(authenticatedClient, { challengeId: challenge.id }),
+    queries.challenge.findSimilar(authenticatedClient, { theme: challenge.theme, excludeChallengeId: challenge.id }),
+  ];
 
   return (
     <PrefetchWrapper queries={prefetchedQueries}>

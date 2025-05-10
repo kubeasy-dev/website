@@ -17,8 +17,6 @@ type ViewRow<T extends keyof Views> = Views[T]["Row"];
 
 export type Challenge = TableRow<"challenges">;
 
-export type Theme = TableRow<"themes">;
-
 export type UserProgress = TableRow<"user_progress">;
 
 export type ApiToken = TableRow<"api_tokens">;

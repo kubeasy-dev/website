@@ -2,7 +2,7 @@ import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useMounted } from "@/hooks/use-mounted";
 
-export type ViewMode = "board" | "table";
+type ViewMode = "board" | "table";
 
 const viewModeAtom = atomWithStorage<ViewMode>("challengesViewMode", "board");
 

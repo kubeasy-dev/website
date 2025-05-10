@@ -11,7 +11,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import useSupabase from "@/hooks/use-supabase";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-export function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const supabase = useSupabase();
 
   useEffect(() => {

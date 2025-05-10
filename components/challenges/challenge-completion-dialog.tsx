@@ -9,20 +9,25 @@ import { queries } from "@/lib/queries";
 import useSupabase from "@/hooks/use-supabase";
 import { ChallengeCard } from "./challenge-card";
 
-export interface ChallengeCompletionDialogProps {
+interface ChallengeCompletionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   challenge: Challenge;
   userProgress: UserProgress;
-  similarChallenges: Challenge[];
 }
 
-export function ChallengeCompletionDialog({ open, onOpenChange, challenge, userProgress, similarChallenges }: ChallengeCompletionDialogProps) {
+export function ChallengeCompletionDialog({ open, onOpenChange, challenge, userProgress }: ChallengeCompletionDialogProps) {
   const supabase = useSupabase();
   const duration = React.useMemo(() => {
     return Math.round((new Date(userProgress.completed_at || "").getTime() - new Date(userProgress.started_at || "").getTime()) / (1000 * 60));
   }, [userProgress]);
+
+  const { data: similarChallenges } = useCacheQuery(queries.challenge.findSimilar(supabase, { theme: challenge.theme, excludeChallengeId: challenge.id }), {
+    enabled: !!challenge.theme && !!challenge.id,
+  });
+
   const { data: submissions } = useCacheQuery(queries.userSubmission.list(supabase, { challengeId: challenge.id }));
+
   const submissionCount = submissions ? submissions.length : 0;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,7 +51,7 @@ export function ChallengeCompletionDialog({ open, onOpenChange, challenge, userP
             </ul>
           </div>
 
-          {similarChallenges.length === 0 ? (
+          {!similarChallenges || similarChallenges.length === 0 ? (
             <span className='text-muted-foreground text-sm'>No similar challenges found.</span>
           ) : (
             <div className='pt-4'>

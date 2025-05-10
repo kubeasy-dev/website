@@ -15,17 +15,9 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Terminal } from "../terminal";
 
-export default function ChallengeProgressCard({
-  challenge,
-}: Readonly<{
-  challenge: Challenge;
-}>) {
+export default function ChallengeProgressCard({ challenge }: Readonly<{ challenge: Challenge }>) {
   const supabase = useSupabase();
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
-  const { data } = useCacheQuery(queries.challenge.findSimilar(supabase, { theme: challenge.theme, excludeChallengeId: challenge.id }), {
-    enabled: !!showCompletionDialog && !!challenge.theme && !!challenge.id,
-  });
-  const similarChallenges = data ?? [];
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["user"],
     queryFn: () => supabase.auth.getUser(),
@@ -69,8 +61,6 @@ export default function ChallengeProgressCard({
     }
   );
 
-  // Similar challenges are now fetched via useCacheQuery (supabase-cache-helpers)
-
   let cardTitle: string;
   let cardComponent: React.ReactElement;
   if (userLoading || progressLoading) {
@@ -112,7 +102,7 @@ export default function ChallengeProgressCard({
   return (
     <React.Fragment>
       {currentProgress && currentProgress.status === "completed" && (
-        <ChallengeCompletionDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog} challenge={challenge} userProgress={currentProgress} similarChallenges={similarChallenges} />
+        <ChallengeCompletionDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog} challenge={challenge} userProgress={currentProgress} />
       )}
       <Card className='w-full'>
         <CardHeader>

@@ -20,5 +20,5 @@
       "src/pages/**/*.{js,jsx,ts,tsx}"
     ]
   },
-  "ignore": ["components/ui/**", "lib/database.types.ts"]
+  "ignore": ["components/ui/**", "lib/database.types.ts", "open-next.config.ts", "hooks/use-toast.ts"]
 }

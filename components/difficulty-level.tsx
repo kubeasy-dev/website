@@ -7,6 +7,12 @@ const DIFFICULTY_MAP: Record<DifficultyLevel, { color: string; height: string }>
   advanced: { color: "bg-red-500", height: "h-3" },
 };
 
+const DIFFICULTY_LABELS: Record<DifficultyLevel, string> = {
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+};
+
 export function DisplayDifficultyLevel({ level, showLabel }: Readonly<{ level: DifficultyLevel; showLabel?: boolean }>) {
   const difficulties = Object.keys(DIFFICULTY_MAP) as DifficultyLevel[];
   const levelIndex = difficulties.indexOf(level);
@@ -20,7 +26,7 @@ export function DisplayDifficultyLevel({ level, showLabel }: Readonly<{ level: D
           return <div key={key} className={cn("w-1 transition-all duration-300 ease-in-out", height, isActive ? barColor : "bg-slate-300")} />;
         })}
       </div>
-      {showLabel && <span className='text-xs text-gray-600 capitalize'>{level}</span>}
+      {showLabel && <span className='text-xs text-gray-600 capitalize'>{DIFFICULTY_LABELS[level]}</span>}
     </div>
   );
 }
