@@ -5,24 +5,29 @@ import { Container } from "../ui/container";
 
 const howItWorks = [
   {
-    title: "Install CLI",
-    description: "Install the Kubeasy CLI tool",
+    title: "Install the CLI",
+    description: "Install the Kubeasy command-line tool on your machine.",
     command: "npm install -g kubeasy-cli",
   },
   {
-    title: "Setup Cluster",
-    description: "Login and set up your local cluster",
-    command: "kubeasy login && kubeasy setup",
+    title: "Authenticate",
+    description: "Generate an API token and log in to your Kubeasy account.",
+    command: "kubeasy login",
   },
   {
-    title: "Start Challenge",
-    description: "Begin a new Kubernetes challenge",
-    command: "kubeasy start <challenge-name>",
+    title: "Prepare Your Environment",
+    description: "Set up a local Kubernetes cluster to run challenges.",
+    command: "kubeasy cluster setup",
   },
   {
-    title: "Practice & Validate",
-    description: "Complete the challenge and verify your solution",
-    command: "kubeasy verify <challenge-name>",
+    title: "Start a Challenge",
+    description: "Launch a challenge and get your initial setup.",
+    command: "kubeasy challenge start",
+  },
+  {
+    title: "Solve & Submit",
+    description: "Solve the challenge, then run validation to check your solution.",
+    command: "kubeasy challenge submit",
   },
 ] as const;
 
@@ -37,9 +42,9 @@ export function HowItWorksSection() {
         className='mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center'
       >
         <h2 className='text-3xl font-bold leading-[1.1] sm:text-3xl md:text-5xl'>How It Works</h2>
-        <p className='max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7'>Get started with Kubeasy in just a few simple steps - no cost, no catch!</p>
+        <p className='max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7'>Start learning Kubernetes with hands-on challenges — fast, free, and effective.</p>
       </motion.div>
-      <div className='mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4'>
+      <div className='mt-12 grid grid-cols-1 gap-y-12 md:grid-cols-5'>
         {howItWorks.map((step, index) => (
           <motion.div
             key={index}
@@ -47,12 +52,12 @@ export function HowItWorksSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className='flex flex-col items-center text-center'
+            className='flex flex-col items-center text-center min-h-[250px]' // ajuste si besoin
           >
-            <div className='mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground'>{index + 1}</div>
-            <h3 className='mb-2 text-lg font-semibold'>{step.title}</h3>
-            <p className='text-sm text-muted-foreground'>{step.description}</p>
-            <code className='mt-2 rounded bg-muted p-2 text-sm rounded-sm'>{step.command}</code>
+            <div className='mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium'>{index + 1}</div>
+            <h3 className='mb-1 text-base font-semibold'>{step.title}</h3>
+            <p className='mb-2 text-sm text-muted-foreground min-h-[48px]'>{step.description}</p>
+            <code className='rounded bg-muted px-2 py-1 text-sm font-mono'>{step.command}</code>
           </motion.div>
         ))}
       </div>

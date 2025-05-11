@@ -6,3 +6,5 @@ lib/database.types.ts
 
 # Ingore pnpm lock
 pnpm-lock.yaml
+
+# Ingore wrangler.jsonc
