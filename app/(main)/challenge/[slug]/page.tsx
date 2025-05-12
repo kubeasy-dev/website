@@ -16,24 +16,12 @@ import { Separator } from "@/components/ui/separator";
 import { DisplayDifficultyLevel } from "@/components/difficulty-level";
 import { PrefetchWrapper } from "@/components/prefetch-wrapper";
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
 export async function generateMetadata({ params }: Readonly<{ params: Promise<Params> }>) {
   const awaitedParams = await params;
   const { slug } = awaitedParams as { slug: string };
   return {
     title: `${slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())} - Kubeasy Challenge`,
   };
-}
-
-export async function generateStaticParams() {
-  const supabase = createStaticClient();
-  const { data: challenges } = await supabase.from("challenges").select();
-  const challengesData: Challenge[] = challenges || [];
-  return challengesData.map((challenge) => ({
-    slug: String(challenge.slug),
-  }));
 }
 
 // This component must be separated from the page to enable Partial Prerendering (PPR).
