@@ -3,8 +3,7 @@ import Link from "next/link";
 import { Container } from "./ui/container";
 
 export function SiteFooter() {
-  const number = performance.now();
-  const date = new Date(number);
+  const date = new Date();
 
   return (
     <footer className='border-t bg-background'>

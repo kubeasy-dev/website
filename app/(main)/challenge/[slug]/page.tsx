@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { createClient, createStaticClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/server";
 import { Params } from "next/dist/server/request/params";
 import { Challenge } from "@/lib/types";
 import { queries } from "@/lib/queries";
@@ -14,7 +14,9 @@ import { Container } from "@/components/ui/container";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { DisplayDifficultyLevel } from "@/components/difficulty-level";
-import { PrefetchWrapper } from "@/components/prefetch-wrapper";
+
+export const revalidate = 3600;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Readonly<{ params: Promise<Params> }>) {
   const awaitedParams = await params;
@@ -24,21 +26,13 @@ export async function generateMetadata({ params }: Readonly<{ params: Promise<Pa
   };
 }
 
-// This component must be separated from the page to enable Partial Prerendering (PPR).
-// The reason is that createClient() relies on cookies (a dynamic API), which prevents Static Generation.
-async function AuthWrapper({ challenge }: { challenge: Challenge }) {
-  const authenticatedClient = await createClient();
-  const prefetchedQueries = [
-    queries.userProgress.get(authenticatedClient, { challengeId: challenge.id }),
-    queries.userSubmission.list(authenticatedClient, { challengeId: challenge.id }),
-    queries.challenge.findSimilar(authenticatedClient, { theme: challenge.theme, excludeChallengeId: challenge.id }),
-  ];
-
-  return (
-    <PrefetchWrapper queries={prefetchedQueries}>
-      <ChallengeProgressCard challenge={challenge} />
-    </PrefetchWrapper>
-  );
+export async function generateStaticParams() {
+  const supabase = createStaticClient();
+  const { data: challenges } = await supabase.from("challenges").select();
+  const challengesData: Challenge[] = challenges || [];
+  return challengesData.map((challenge) => ({
+    slug: String(challenge.slug),
+  }));
 }
 
 export default async function ChallengePage({ params }: Readonly<{ params: Promise<Params> }>) {
@@ -104,7 +98,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
         </Card>
 
         <Suspense fallback={<Loading />}>
-          <AuthWrapper challenge={challenge} />
+          <ChallengeProgressCard challenge={challenge} />
         </Suspense>
       </div>
     </Container>
