@@ -51,6 +51,10 @@ export default function ChallengeProgressCard({ challenge }: Readonly<{ challeng
     ["user_id", "challenge_id", "status"],
     {
       callback: (payload) => {
+        if (payload.eventType === "DELETE") {
+          setCurrentProgress(null);
+          return;
+        }
         const updatedProgress = payload.new as UserProgress;
         if (updatedProgress.status === "completed") {
           setShowCompletionDialog(true);
