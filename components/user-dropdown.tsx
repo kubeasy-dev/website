@@ -17,12 +17,13 @@ import { CompassIcon, LifeBuoyIcon, LogOutIcon, SunMoonIcon, UserIcon } from "lu
 import posthog from "posthog-js";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
 import { Icons } from "./icons";
+import { useQuery } from "@supabase-cache-helpers/postgrest-react-query";
+import { queries } from "@/lib/queries";
 
-export function UserDropdown({ user }: Readonly<{ user: User }>) {
+export function UserDropdown() {
   const supabase = useSupabase();
   const { setTheme, theme } = useTheme();
 
@@ -39,12 +40,14 @@ export function UserDropdown({ user }: Readonly<{ user: User }>) {
     [setTheme]
   );
 
+  const { data: profile } = useQuery(queries.profile.get(supabase));
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost'>
           <UserIcon />
-          {user.user_metadata.full_name.split(" ")[0]}
+          {profile?.name.split(" ")[0]}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-56'>

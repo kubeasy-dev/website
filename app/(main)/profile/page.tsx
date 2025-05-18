@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { DialogTitle, DialogTrigger } from "@radix-ui/react-dialog";
 import { CreateApiTokenForm } from "@/components/profile/create-api-token-form";
 import { ResetAllProgressButton } from "@/components/profile/reset-all-progress-button";
+import { ProfileForm } from "@/components/profile/profile-form";
 
 export async function generateMetadata() {
   return {
@@ -33,25 +34,19 @@ export default async function Profile() {
     redirect("/login");
   }
 
-  const avatarUrl = user.user_metadata?.avatar_url;
-  const fullName = user.user_metadata?.full_name || "Anonymous User";
-
-  const prefetchedQueries = [queries.apiToken.list(supabase)];
-
   return (
     <Container className='py-12 md:py-24 lg:py-32'>
-      <ProfileHeader avatarUrl={avatarUrl} fullName={fullName} email={user.email || ""} />
+      <ProfileHeader user={user} />
       <div className='mx-auto mt-12 max-w-4xl flex flex-col gap-8'>
         <Card>
           <CardHeader>
-            <CardTitle>Challenge Progress</CardTitle>
-            <CardDescription>Manage your challenge progress and submissions.</CardDescription>
+            <CardTitle>Profile</CardTitle>
+            <CardDescription>Manage your profile settings.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResetAllProgressButton />
+            <ProfileForm />
           </CardContent>
         </Card>
-
         <Dialog>
           <Card>
             <CardHeader>
@@ -69,7 +64,7 @@ export default async function Profile() {
             </CardHeader>
             <CardContent>
               <Suspense fallback={<Loading />}>
-                <PrefetchWrapper queries={prefetchedQueries}>
+                <PrefetchWrapper queries={[queries.apiToken.list(supabase)]}>
                   <ApiTokensList />
                 </PrefetchWrapper>
               </Suspense>
@@ -82,6 +77,15 @@ export default async function Profile() {
             <CreateApiTokenForm />
           </DialogContent>
         </Dialog>
+        <Card>
+          <CardHeader>
+            <CardTitle>Danger Zone</CardTitle>
+            <CardDescription>Be careful with these actions.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResetAllProgressButton />
+          </CardContent>
+        </Card>
       </div>
     </Container>
   );

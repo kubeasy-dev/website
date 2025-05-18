@@ -1,42 +1,27 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LogInIcon } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
 import { ModeSwitcher } from "./mode-switcher";
 import { Container } from "./ui/container";
-import { tryCatch } from "@/lib/try-catch";
-import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { UserDropdown } from "./user-dropdown";
 import useSupabase from "@/hooks/use-supabase";
+import { useQuery } from "@tanstack/react-query";
 
 export function SiteHeader() {
   const supabase = useSupabase();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
 
-  const getUser = useCallback(async () => {
-    const { data: user, error } = await tryCatch(supabase.auth.getUser());
-    if (error) {
-      console.error("Error fetching user:", error);
-      setUser(null);
-    }
-    if (user?.data.user) {
-      setUser(user.data.user);
-    } else {
-      setUser(null);
-    }
-  }, [supabase]);
-
-  useEffect(() => {
-    getUser();
-    return () => {
-      setUser(null);
-    };
-  }, [getUser]);
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: () => supabase.auth.getUser(),
+    select: (res) => res.data.user,
+    refetchOnWindowFocus: true,
+  });
 
   return (
     <motion.header
@@ -70,7 +55,7 @@ export function SiteHeader() {
           </div>
           <div className='flex-1 flex justify-end'>
             {user ? (
-              <UserDropdown user={user} />
+              <UserDropdown />
             ) : (
               <div className='flex items-center space-x-2'>
                 <Button variant='ghost' onClick={() => router.push("/login")}>
