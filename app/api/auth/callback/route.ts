@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import PostHogClient from "@/lib/posthog";
 import { differenceInSeconds } from "date-fns";
-import { queries } from "@/lib/queries";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -28,10 +27,6 @@ export async function GET(request: Request) {
             provider: user.app_metadata.provider,
             next: next,
           },
-        });
-        await queries.profile.create(supabase, {
-          name: user.user_metadata?.full_name ?? "Anonymous user",
-          userId: user.id,
         });
       } else {
         posthog.capture({

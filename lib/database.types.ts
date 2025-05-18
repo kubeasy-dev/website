@@ -83,24 +83,74 @@ export type Database = {
           },
         ]
       }
-      profiles: {
+      email_category: {
         Row: {
+          audienceId: string
           created_at: string
+          description: string
           id: number
           name: string
+        }
+        Insert: {
+          audienceId: string
+          created_at?: string
+          description: string
+          id?: number
+          name: string
+        }
+        Update: {
+          audienceId?: string
+          created_at?: string
+          description?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      email_subscriptions: {
+        Row: {
+          category_id: number
+          subscribed: boolean
+          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string
-          id?: number
-          name: string
+          category_id: number
+          subscribed?: boolean
+          updated_at?: string
           user_id: string
         }
         Update: {
-          created_at?: string
-          id?: number
-          name?: string
+          category_id?: number
+          subscribed?: boolean
+          updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_subscription_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "email_category"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
         }
         Relationships: []
       }
