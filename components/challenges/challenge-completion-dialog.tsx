@@ -4,7 +4,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Challenge, UserProgress } from "@/lib/types";
-import { useQuery as useCacheQuery } from "@supabase-cache-helpers/postgrest-react-query";
+import { useQuery } from "@supabase-cache-helpers/postgrest-react-query";
 import { queries } from "@/lib/queries";
 import useSupabase from "@/hooks/use-supabase";
 import { ChallengeCard } from "./challenge-card";
@@ -22,11 +22,11 @@ export function ChallengeCompletionDialog({ open, onOpenChange, challenge, userP
     return Math.round((new Date(userProgress.completed_at || "").getTime() - new Date(userProgress.started_at || "").getTime()) / (1000 * 60));
   }, [userProgress]);
 
-  const { data: similarChallenges } = useCacheQuery(queries.challenge.findSimilar(supabase, { theme: challenge.theme, excludeChallengeId: challenge.id }), {
+  const { data: similarChallenges } = useQuery(queries.challenge.findSimilar(supabase, { theme: challenge.theme, excludeChallengeId: challenge.id }), {
     enabled: !!challenge.theme && !!challenge.id,
   });
 
-  const { data: submissions } = useCacheQuery(queries.userSubmission.list(supabase, { challengeId: challenge.id }));
+  const { data: submissions } = useQuery(queries.userSubmission.list(supabase, { challengeId: challenge.id }));
 
   const submissionCount = submissions ? submissions.length : 0;
   return (

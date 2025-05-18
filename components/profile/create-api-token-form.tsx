@@ -10,11 +10,11 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } fr
 import { useRevalidateTables } from "@supabase-cache-helpers/postgrest-react-query";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { useQuery } from "@tanstack/react-query";
 import { TriangleAlertIcon } from "lucide-react";
 import { Terminal } from "@/components/terminal";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import posthog from "posthog-js";
+import { useUser } from "@/hooks/use-user";
 
 const createApiTokenSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -33,12 +33,7 @@ export function CreateApiTokenForm() {
 
   const revalidateTokens = useRevalidateTables([{ schema: "public", table: "api_tokens" }]);
 
-  const { data: user } = useQuery({
-    queryKey: ["user"],
-    queryFn: () => supabase.auth.getUser(),
-    select: (res) => res.data.user,
-    refetchOnWindowFocus: true,
-  });
+  const { data: user } = useUser();
 
   if (!user) {
     return (

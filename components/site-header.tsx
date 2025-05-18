@@ -9,19 +9,11 @@ import { ModeSwitcher } from "./mode-switcher";
 import { Container } from "./ui/container";
 import { useRouter } from "next/navigation";
 import { UserDropdown } from "./user-dropdown";
-import useSupabase from "@/hooks/use-supabase";
-import { useQuery } from "@tanstack/react-query";
+import { useUser } from "@/hooks/use-user";
 
 export function SiteHeader() {
-  const supabase = useSupabase();
   const router = useRouter();
-
-  const { data: user } = useQuery({
-    queryKey: ["user"],
-    queryFn: () => supabase.auth.getUser(),
-    select: (res) => res.data.user,
-    refetchOnWindowFocus: true,
-  });
+  const { data: user } = useUser();
 
   return (
     <motion.header

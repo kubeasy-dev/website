@@ -17,10 +17,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useDeleteMutation } from "@supabase-cache-helpers/postgrest-react-query";
 import useSupabase from "@/hooks/use-supabase";
 import { useRevalidateTables } from "@supabase-cache-helpers/postgrest-react-query";
+import { useUser } from "@/hooks/use-user";
 
 export function ResetAllProgressButton() {
   const { toast } = useToast();
   const supabase = useSupabase();
+  const { data: user } = useUser();
   const [isDeleting, setIsDeleting] = React.useState(false);
   const revalidateTables = useRevalidateTables([
     { schema: "public", table: "challenge_progress" },
@@ -51,9 +53,6 @@ export function ResetAllProgressButton() {
   const handleReset = async () => {
     setIsDeleting(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error("User not found");
 
       await deleteAllProgress({ user_id: user.id });

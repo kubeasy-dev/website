@@ -4,10 +4,10 @@ import React, { useState, useEffect } from "react";
 import { Challenge, UserProgress } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import useSupabase from "@/hooks/use-supabase";
-import { useQuery as useCacheQuery, useRevalidateTables, useSubscription } from "@supabase-cache-helpers/postgrest-react-query";
+import { useQuery, useRevalidateTables, useSubscription } from "@supabase-cache-helpers/postgrest-react-query";
 import { queries } from "@/lib/queries";
-import { useQuery } from "@tanstack/react-query";
 import { ChallengeProgressDetailsCard } from "./challenge-progress-details-card";
+import { useUser } from "@/hooks/use-user";
 import { ResetChallengeButton } from "./reset-challenge-button";
 import Loading from "../loading";
 import { ChallengeCompletionDialog } from "./challenge-completion-dialog";
@@ -18,13 +18,8 @@ import { Terminal } from "../terminal";
 export default function ChallengeProgressCard({ challenge }: Readonly<{ challenge: Challenge }>) {
   const supabase = useSupabase();
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ["user"],
-    queryFn: () => supabase.auth.getUser(),
-    select: (res) => res.data.user,
-    refetchOnWindowFocus: true,
-  });
-  const { data: initialProgress, isLoading: progressLoading } = useCacheQuery(queries.userProgress.get(supabase, { challengeId: challenge.id }), {
+  const { data: user, isLoading: userLoading } = useUser();
+  const { data: initialProgress, isLoading: progressLoading } = useQuery(queries.userProgress.get(supabase, { challengeId: challenge.id }), {
     enabled: !!user,
   });
 

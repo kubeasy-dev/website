@@ -4,15 +4,15 @@ import { Suspense, useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Provider } from "jotai";
+import { Provider as JotaiProvider } from "jotai";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
-import useSupabase from "@/hooks/use-supabase";
+import { useUser } from "@/hooks/use-user";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
-  const supabase = useSupabase();
+  const { data: user } = useUser();
 
   useEffect(() => {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
@@ -26,18 +26,15 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then((res) => {
-      if (res.data?.user) {
-        const user = res.data.user;
-        posthog.identify(user.id, {
-          email: user.email,
-          name: user.user_metadata.full_name,
-        });
-      } else {
-        posthog.reset(); // clears identity if user logs out
-      }
-    });
-  }, [supabase]);
+    if (user) {
+      posthog.identify(user.id, {
+        email: user.email,
+        name: user.user_metadata.full_name,
+      });
+    } else {
+      posthog.reset(); // clears identity if user logs out
+    }
+  }, [user]);
 
   return (
     <PHProvider client={posthog}>
@@ -89,17 +86,17 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
   );
 
   return (
-    <PostHogProvider>
-      <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={true}>
-        <Provider>
-          <QueryClientProvider client={queryClient}>
+    <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={true}>
+      <QueryClientProvider client={queryClient}>
+        <PostHogProvider>
+          <JotaiProvider>
             <TooltipProvider>
               <ReactQueryDevtools initialIsOpen={false} />
               {children}
             </TooltipProvider>
-          </QueryClientProvider>
-        </Provider>
-      </NextThemesProvider>
-    </PostHogProvider>
+          </JotaiProvider>
+        </PostHogProvider>
+      </QueryClientProvider>
+    </NextThemesProvider>
   );
 }
