@@ -5,6 +5,7 @@ import { apiToken } from "./api_token";
 import { theme } from "./theme";
 import { userSubmission } from "./user-submission";
 import { profile } from "./profile";
+import { emailSubscriptions } from "./email_subscription";
 
 export const queries = {
   challenge,
@@ -14,4 +15,5 @@ export const queries = {
   challengeProgress,
   apiToken,
   profile,
+  emailSubscriptions,
 };

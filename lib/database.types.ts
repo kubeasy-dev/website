@@ -85,23 +85,26 @@ export type Database = {
       }
       email_category: {
         Row: {
-          audienceId: string
+          audience_id: string | null
           created_at: string
           description: string
+          force_subscription: boolean
           id: number
           name: string
         }
         Insert: {
-          audienceId: string
+          audience_id?: string | null
           created_at?: string
           description: string
+          force_subscription?: boolean
           id?: number
           name: string
         }
         Update: {
-          audienceId?: string
+          audience_id?: string | null
           created_at?: string
           description?: string
+          force_subscription?: boolean
           id?: number
           name?: string
         }
@@ -110,18 +113,21 @@ export type Database = {
       email_subscriptions: {
         Row: {
           category_id: number
+          contactId: string | null
           subscribed: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           category_id: number
+          contactId?: string | null
           subscribed?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           category_id?: number
+          contactId?: string | null
           subscribed?: boolean
           updated_at?: string
           user_id?: string
