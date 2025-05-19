@@ -18,6 +18,7 @@ export function LoginForm() {
       provider,
       options: {
         redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}`,
+        ...(provider === "azure" ? { scopes: "email" } : {}),
       },
     });
     setIsLoading(false);
