@@ -17,11 +17,13 @@ export function ProfileHeader({ user }: { user: User }) {
 
   return (
     <div className='mx-auto flex flex-col items-center justify-center gap-4 text-center'>
-      <Image src={user?.user_metadata?.avatar_url ?? "/placeholder.svg"} alt={profile.full_name || "Profile"} width={100} height={100} className='rounded-full' priority />
+      <Image src={profile.avatar_url ?? "/placeholder.svg"} alt={profile.id} width={100} height={100} className='rounded-full' priority />
       <div className='flex flex-row gap-4 items-baseline'>
-        <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>{profile.full_name}</h1>
+        <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>
+          {profile.first_name} {profile.last_name}
+        </h1>
       </div>
-      <p className='text-muted-foreground'>{user?.email}</p>
+      <p className='text-muted-foreground'>{user.email}</p>
     </div>
   );
 }

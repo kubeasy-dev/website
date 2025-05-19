@@ -12,10 +12,12 @@ import { Button } from "../ui/button";
 import { FormField } from "../ui/form";
 import { Form, FormControl, FormDescription, FormItem, FormLabel } from "../ui/form";
 import { Input } from "../ui/input";
+import posthog from "posthog-js";
 
 const updateProfileSchema = z.object({
   id: z.string().uuid(),
-  full_name: z.string().min(1, { message: "Name is required" }),
+  first_name: z.string().min(1, { message: "First name is required" }),
+  last_name: z.string().min(1, { message: "Last name is required" }),
 });
 
 type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
@@ -30,19 +32,27 @@ export function ProfileForm() {
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
       id: "",
-      full_name: "",
+      first_name: "",
+      last_name: "",
     },
   });
 
   useEffect(() => {
     if (profile) {
       form.setValue("id", profile.id);
-      form.setValue("full_name", profile.full_name);
+      form.setValue("first_name", profile.first_name);
+      form.setValue("last_name", profile.last_name);
     }
   }, [profile, form]);
 
-  const { mutateAsync: updateProfile } = useUpdateMutation(supabase.from("profiles"), ["id"], "full_name", {
-    onSuccess: () => {
+  const { mutateAsync: updateProfile } = useUpdateMutation(supabase.from("profiles"), ["id"], "id, first_name, last_name", {
+    onSuccess: (data) => {
+      if (!data) {
+        return;
+      }
+      const { id, first_name, last_name } = data;
+      posthog.capture("profile_updated", { first_name, last_name });
+      posthog.identify(id, { name: `${first_name} ${last_name}` });
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -59,8 +69,8 @@ export function ProfileForm() {
   });
 
   const onSubmit = async (data: UpdateProfileFormValues) => {
-    const { full_name, id } = data;
-    updateProfile({ full_name, id });
+    const { id, first_name, last_name } = data;
+    updateProfile({ id, first_name, last_name });
   };
 
   return (
@@ -68,10 +78,23 @@ export function ProfileForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <FormField
           control={form.control}
-          name='full_name'
+          name='first_name'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>First Name</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormDescription>This name will be used to identify you in the platform.</FormDescription>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name='last_name'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Name</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>

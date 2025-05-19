@@ -47,7 +47,7 @@ export function UserDropdown() {
       <DropdownMenuTrigger asChild>
         <Button variant='ghost'>
           <UserIcon />
-          {profile?.full_name.split(" ")[0]}
+          {profile?.first_name}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-56'>
