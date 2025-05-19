@@ -95,9 +95,9 @@
     "onlyBuiltDependencies": [
       "core-js",
       "core-js-pure",
+      "esbuild",
       "sharp",
       "supabase",
-      "esbuild",
       "workerd"
     ]
   }
