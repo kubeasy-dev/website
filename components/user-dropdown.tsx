@@ -75,11 +75,11 @@ export function UserDropdown() {
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
             <DropdownMenuSubContent>
-              <DropdownMenuCheckboxItem checked={theme === "dark"} onCheckedChange={() => toggleTheme("dark")}>
-                Dark
-              </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked={theme === "light"} onCheckedChange={() => toggleTheme("light")}>
                 Light
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={theme === "dark"} onCheckedChange={() => toggleTheme("dark")}>
+                Dark
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked={theme === "system"} onCheckedChange={() => toggleTheme("system")}>
                 System
