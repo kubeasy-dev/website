@@ -51,7 +51,7 @@ export default async function Profile() {
           />
         </aside>
         <div className='flex-1 flex flex-col gap-8'>
-          <Card id='profile'>
+          <Card id='profile' className='scroll-mt-24'>
             <CardHeader>
               <CardTitle>Profile</CardTitle>
               <CardDescription>Manage your profile settings.</CardDescription>
@@ -61,7 +61,7 @@ export default async function Profile() {
             </CardContent>
           </Card>
           <Dialog>
-            <Card id='api-tokens'>
+            <Card id='api-tokens' className='scroll-mt-24'>
               <CardHeader>
                 <div className='flex items-center justify-between'>
                   <div className='flex flex-col gap-1'>
@@ -90,7 +90,7 @@ export default async function Profile() {
               <CreateApiTokenForm />
             </DialogContent>
           </Dialog>
-          <Card id='email-preferences'>
+          <Card id='email-preferences' className='scroll-mt-24'>
             <CardHeader>
               <CardTitle>Email Preferences</CardTitle>
               <CardDescription>Manage your email preferences.</CardDescription>
@@ -103,7 +103,7 @@ export default async function Profile() {
               </Suspense>
             </CardContent>
           </Card>
-          <Card id='danger-zone'>
+          <Card id='danger-zone' className='scroll-mt-24'>
             <CardHeader>
               <CardTitle>Danger Zone</CardTitle>
               <CardDescription>Be careful with these actions.</CardDescription>
