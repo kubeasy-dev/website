@@ -9,6 +9,7 @@ import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "../ui/separator";
 import React from "react";
+import posthog from "posthog-js";
 
 export function EmailPreferencesList() {
   const supabase = useSupabase();
@@ -19,6 +20,10 @@ export function EmailPreferencesList() {
 
   const { mutateAsync: updateEmailSubscription } = useUpdateMutation(supabase.from("email_subscriptions"), ["user_id", "category_id"], "subscribed,category_id", {
     onSuccess: (result) => {
+      posthog.capture("email_preferences_updated", {
+        category_id: result?.category_id,
+        subscribed: result?.subscribed,
+      });
       toast({
         title: "Success",
         description: `${result?.subscribed ? "Subscribed" : "Unsubscribed"} to ${emailSubscriptions?.find((emailSubscription) => emailSubscription.category_id === result?.category_id)?.email_category?.name}`,
