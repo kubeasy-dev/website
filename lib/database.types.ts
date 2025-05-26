@@ -237,28 +237,28 @@ export type Database = {
       }
       user_submissions: {
         Row: {
+          dynamic_validation: boolean
           id: number
           payload: Json
+          static_validation: boolean
           time: string
           user_progress: string
-          validated: boolean
-          working: boolean
         }
         Insert: {
+          dynamic_validation?: boolean
           id?: number
           payload?: Json
+          static_validation?: boolean
           time?: string
           user_progress: string
-          validated: boolean
-          working: boolean
         }
         Update: {
+          dynamic_validation?: boolean
           id?: number
           payload?: Json
+          static_validation?: boolean
           time?: string
           user_progress?: string
-          validated?: boolean
-          working?: boolean
         }
         Relationships: [
           {
