@@ -1,24 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, XCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { UserSubmission } from "@/lib/types";
+import { UserSubmission, SubmissionPayload } from "@/lib/types";
 import useSupabase from "@/hooks/use-supabase";
 import { useSubscription, useQuery } from "@supabase-cache-helpers/postgrest-react-query";
 import { queries } from "@/lib/queries";
 import { RelativeDateDisplay } from "@/components/relative-date-display";
 import { useParams } from "next/navigation";
 import { Terminal } from "../terminal";
-
-const accordionItemVariants = {
-  initial: { opacity: 0, height: 0 },
-  animate: { opacity: 1, height: "auto", transition: { duration: 0.3 } },
-  exit: { opacity: 0, height: 0, transition: { duration: 0.2 } },
-};
+import { SubmissionPayloadViewer } from "./submission-payload-viewer";
 
 export function ChallengeSubmissions({ userProgressId }: Readonly<{ userProgressId: string }>) {
+  const [activeTab, setActiveTab] = useState<string>("static");
   const { slug } = useParams<{ slug: string }>();
   const [submissions, setSubmissions] = useState<UserSubmission[]>([]);
 
@@ -73,7 +69,14 @@ export function ChallengeSubmissions({ userProgressId }: Readonly<{ userProgress
       {submissions.length > 0 ? (
         <Accordion type='single' collapsible className='w-full'>
           {submissions.map((sub, index) => (
-            <motion.div key={sub.id} layout variants={accordionItemVariants} initial='initial' animate='animate' exit='exit'>
+            <motion.div
+              key={sub.id}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 24 }}
+              transition={{ duration: 0.28, ease: [0.87, 0, 0.13, 1] }}
+              style={{ willChange: "opacity, transform" }}
+            >
               <AccordionItem value={sub.id.toString()} className='border-b'>
                 <AccordionTrigger className='hover:no-underline'>
                   <div className='flex w-full justify-between items-center'>
@@ -94,10 +97,9 @@ export function ChallengeSubmissions({ userProgressId }: Readonly<{ userProgress
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className='flex justify-between items-center mb-2'>
-                    <span className='text-muted-foreground'>JSON Payload</span>
+                  <div className='flex w-full justify-end'>
+                    <SubmissionPayloadViewer payload={sub.payload as unknown as SubmissionPayload} activeTab={activeTab} onTabChange={setActiveTab} />
                   </div>
-                  <Terminal content={JSON.stringify(sub.payload, null, 2)} thingToCopy='JSON Payload' />
                 </AccordionContent>
               </AccordionItem>
             </motion.div>

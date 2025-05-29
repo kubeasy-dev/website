@@ -8,7 +8,6 @@ import { useQuery, useRevalidateTables, useSubscription } from "@supabase-cache-
 import { queries } from "@/lib/queries";
 import { ChallengeProgressDetailsCard } from "./challenge-progress-details-card";
 import { useUser } from "@/hooks/use-user";
-import { ResetChallengeButton } from "./reset-challenge-button";
 import Loading from "../loading";
 import { ChallengeCompletionDialog } from "./challenge-completion-dialog";
 import { cn } from "@/lib/utils";
@@ -89,11 +88,6 @@ export default function ChallengeProgressCard({ challenge }: Readonly<{ challeng
     cardComponent = (
       <React.Fragment>
         <ChallengeProgressDetailsCard userProgress={currentProgress} />
-        {currentProgress?.composite_key && (
-          <div className='mt-4'>
-            <ResetChallengeButton userProgressId={currentProgress.composite_key} />
-          </div>
-        )}
       </React.Fragment>
     );
   }
