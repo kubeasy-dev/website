@@ -159,5 +159,3 @@ export function SubmissionPayloadViewer({ payload, activeTab, onTabChange }: Sub
     </Tabs>
   );
 }
-
-export default SubmissionPayloadViewer;

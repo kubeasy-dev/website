@@ -2,7 +2,7 @@ import * as React from "react";
 import { CheckCircle2, Copy, Search, Terminal } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
-export interface CopyActionCellProps {
+interface CopyActionCellProps {
   message: string;
   objectRef: string;
 }
