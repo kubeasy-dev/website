@@ -4,8 +4,6 @@ import { Params } from "next/dist/server/request/params";
 import { Challenge } from "@/lib/types";
 import { queries } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import ChallengeProgressCard from "@/components/challenges/challenge-progress-card";
@@ -80,18 +78,14 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
             <div className='grid grid-cols-1 sm:grid-cols-11 p-4 justify-between rounded-md space-y-4 md:space-y-0'>
               <div className='flex flex-col gap-4 col-span-5'>
                 <h3 className='text-lg font-bold'>Initial Situation</h3>
-                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>
-                  {challenge.initial_situation}
-                </div>
+                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>{challenge.initial_situation}</div>
               </div>
               <div className='items-center justify-self-center'>
                 <Separator orientation='vertical' />
               </div>
               <div className='flex flex-col gap-4 col-span-5'>
                 <h3 className='text-lg font-bold '>Objective</h3>
-                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>
-                  {challenge.objective}
-                </div>
+                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>{challenge.objective}</div>
               </div>
             </div>
           </CardContent>
