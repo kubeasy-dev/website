@@ -22,7 +22,7 @@ export function ChallengeCard({ challenge, showContent = true }: Readonly<{ chal
               <Badge variant='secondary' className='min-w-0 truncate'>
                 {challenge.theme}
               </Badge>
-              <div className='flex flex-row items-center gap-0.5 text-sm text-muted-foreground flex-shrink-0'>
+              <div className='flex flex-row items-center gap-0.5 text-sm text-muted-foreground shrink-0'>
                 <ClockIcon className='h-4 w-4' />
                 <span>{challenge.estimated_time} min.</span>
               </div>

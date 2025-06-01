@@ -50,7 +50,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
 
   return (
     <Container className='py-12 md:py-24 lg:py-32'>
-      <div className='mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-6 text-center'>
+      <div className='mx-auto flex max-w-232 flex-col items-center justify-center gap-6 text-center'>
         <div className='flex flex-col items-center space-y-4 w-full'>
           <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>{challenge.title}</h1>
           <div className='flex flex-row items-center gap-4 text-sm font-medium mt-2'>

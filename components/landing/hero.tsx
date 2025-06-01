@@ -9,14 +9,14 @@ export function HeroSection() {
   return (
     <section className='relative flex min-h-screen flex-col items-center justify-center space-y-10 py-24 overflow-hidden bg-background'>
       {/* Gradient background effect adapté dark mode */}
-      <div className='pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-primary/5 via-background to-secondary/10 dark:from-primary/10 dark:via-background dark:to-secondary/20' />
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-primary/5 via-background to-secondary/10 dark:from-primary/10 dark:via-background dark:to-secondary/20' />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className='container flex flex-col items-center gap-8 py-16 md:py-32'>
         <motion.a
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
           href='#'
-          className='inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary shadow-sm ring-1 ring-primary/20 hover:bg-primary/20 transition-colors'
+          className='inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary shadow-xs ring-1 ring-primary/20 hover:bg-primary/20 transition-colors'
         >
           <Gift className='mr-2 h-4 w-4 text-primary' />
           100% Free Learning Platform
@@ -30,7 +30,7 @@ export function HeroSection() {
         >
           Master Kubernetes Through
           <br />
-          <span className='bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent'>Interactive Challenges</span>
+          <span className='bg-linear-to-r from-primary to-accent bg-clip-text text-transparent'>Interactive Challenges</span>
         </motion.h1>
         {/* Subtitle */}
         <motion.span initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className='max-w-[750px] text-center text-lg sm:text-xl text-muted-foreground'>
