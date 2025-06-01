@@ -41,11 +41,11 @@ export function ChallengeList() {
           </div>
           <div className='space-x-2'>
             <div className='flex items-center space-x-2'>
-              <Button variant={viewMode === "board" ? "default" : "outline-solid"} size='sm' onClick={() => setViewMode("board")} className='flex items-center gap-1'>
+              <Button variant={viewMode === "board" ? "default" : "outline"} size='sm' onClick={() => setViewMode("board")} className='flex items-center gap-1'>
                 <Columns3Icon />
                 Board
               </Button>
-              <Button variant={viewMode === "table" ? "default" : "outline-solid"} size='sm' onClick={() => setViewMode("table")} className='flex items-center gap-1'>
+              <Button variant={viewMode === "table" ? "default" : "outline"} size='sm' onClick={() => setViewMode("table")} className='flex items-center gap-1'>
                 <Grid3X3Icon />
                 Table
               </Button>
