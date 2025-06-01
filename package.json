@@ -75,9 +75,6 @@
   "overrides": {
     "eslint": "$eslint"
   },
-  "peerDependencies": {
-    "axios": ""
-  },
   "pnpm": {
     "overrides": {
       "@types/react": "19.1.6",
