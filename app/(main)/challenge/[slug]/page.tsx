@@ -81,7 +81,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
               <div className='flex flex-col gap-4 col-span-5'>
                 <h3 className='text-lg font-bold'>Initial Situation</h3>
                 <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>
-                  <Markdown remarkPlugins={[remarkGfm]}>{challenge.initial_situation}</Markdown>
+                  {challenge.initial_situation}
                 </div>
               </div>
               <div className='items-center justify-self-center'>
@@ -90,7 +90,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
               <div className='flex flex-col gap-4 col-span-5'>
                 <h3 className='text-lg font-bold '>Objective</h3>
                 <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>
-                  <Markdown remarkPlugins={[remarkGfm]}>{challenge.objective}</Markdown>
+                  {challenge.objective}
                 </div>
               </div>
             </div>
