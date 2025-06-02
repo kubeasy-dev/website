@@ -78,7 +78,7 @@ export function CreateApiTokenForm() {
   if (result) {
     return (
       <div className='flex flex-col gap-1 mt-4'>
-        <Alert variant='danger'>
+        <Alert variant='destructive'>
           <TriangleAlertIcon className='h-4 w-4 text-yellow-800 dark:text-yellow-900' />
           <AlertTitle>API Token Created</AlertTitle>
           <AlertDescription>Here is your API token. Make sure to copy it, as you won&apos;t be able to see it again.</AlertDescription>

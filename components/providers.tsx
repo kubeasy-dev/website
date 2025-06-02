@@ -9,7 +9,6 @@ import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const { data: user } = useUser();
@@ -90,10 +89,8 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
       <QueryClientProvider client={queryClient}>
         <PostHogProvider>
           <JotaiProvider>
-            <TooltipProvider>
-              <ReactQueryDevtools initialIsOpen={false} />
-              {children}
-            </TooltipProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+            {children}
           </JotaiProvider>
         </PostHogProvider>
       </QueryClientProvider>
