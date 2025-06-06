@@ -8,13 +8,13 @@ import { Container } from "../ui/container";
 
 export function OpenSourceSection() {
   return (
-    <Container className='py-12 md:py-24 lg:py-32'>
+    <Container className='py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className='mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-8 text-center'
+        className='mx-auto flex max-w-232 flex-col items-center justify-center gap-8 text-center'
       >
         <HandHeart className='h-16 w-16 text-primary' />
         <h2 className='text-3xl font-bold leading-[1.1] sm:text-3xl md:text-5xl'>Open Source & Community-Driven</h2>

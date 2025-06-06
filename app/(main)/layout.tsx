@@ -12,7 +12,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <PrefetchWrapper queries={prefetchQueries}>
       <div className='flex flex-col min-h-screen'>
         <SiteHeader />
-        <main className='flex-grow'>{children}</main>
+        <main className='grow'>{children}</main>
         <Toaster />
         <SiteFooter />
       </div>

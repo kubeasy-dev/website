@@ -9,7 +9,7 @@ export function ChallengeCard({ challenge, showContent = true }: Readonly<{ chal
   return (
     <Link href={`/challenge/${challenge.slug}`}>
       <Card className='flex flex-col justify-between h-full'>
-        <CardHeader className='px-4 pt-4 pb-1'>
+        <CardHeader>
           <CardTitle className='font-medium flex flex-row gap-1.5 items-baseline'>
             <DisplayDifficultyLevel level={challenge.difficulty} />
             {challenge.title}
@@ -17,12 +17,12 @@ export function ChallengeCard({ challenge, showContent = true }: Readonly<{ chal
           <CardDescription>{challenge.description}</CardDescription>
         </CardHeader>
         {showContent && (
-          <CardContent className='p-4'>
+          <CardContent>
             <div className='flex items-center justify-between min-w-0'>
               <Badge variant='secondary' className='min-w-0 truncate'>
                 {challenge.theme}
               </Badge>
-              <div className='flex flex-row items-center gap-0.5 text-sm text-muted-foreground flex-shrink-0'>
+              <div className='flex flex-row items-center gap-0.5 text-sm text-muted-foreground shrink-0'>
                 <ClockIcon className='h-4 w-4' />
                 <span>{challenge.estimated_time} min.</span>
               </div>

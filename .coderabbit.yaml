@@ -1,0 +1,4 @@
+reviews:
+  path_instructions:
+    - path: "components/ui/*"
+      instructions: "These are Shadcn components, do not review them"

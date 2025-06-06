@@ -35,13 +35,13 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <Container className='py-12 md:py-24 lg:py-32'>
+    <Container className='py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className='mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-6 text-center'
+        className='mx-auto flex max-w-232 flex-col items-center justify-center gap-6 text-center'
       >
         <span className='inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary mb-2'>Testimonials</span>
         <h2 className='text-3xl font-bold leading-[1.1] sm:text-3xl md:text-5xl'>Trusted by Teams & Loved by Users</h2>
@@ -75,7 +75,7 @@ export function TestimonialsSection() {
           >
             <p className='flex-1 text-muted-foreground'>{testimonial.content}</p>
             <div className='mt-4 flex items-center'>
-              <Image src={testimonial.avatar} alt={testimonial.name} width={40} height={40} className='h-10 w-10 rounded-full border-2 border-indigo-200 shadow-sm object-cover' loading='lazy' />
+              <Image src={testimonial.avatar} alt={testimonial.name} width={40} height={40} className='h-10 w-10 rounded-full border-2 border-indigo-200 shadow-xs object-cover' loading='lazy' />
               <div className='ml-4'>
                 <p className='text-sm font-semibold'>{testimonial.name}</p>
                 <p className='text-sm text-muted-foreground'>{testimonial.title}</p>

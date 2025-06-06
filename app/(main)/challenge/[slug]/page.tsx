@@ -4,8 +4,6 @@ import { Params } from "next/dist/server/request/params";
 import { Challenge } from "@/lib/types";
 import { queries } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import ChallengeProgressCard from "@/components/challenges/challenge-progress-card";
@@ -49,8 +47,8 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
   const { data: theme } = await queries.theme.get(supabase, { slug: challenge?.theme });
 
   return (
-    <Container className='py-12 md:py-24 lg:py-32'>
-      <div className='mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-6 text-center'>
+    <Container className='py-24 lg:py-32'>
+      <div className='mx-auto flex max-w-232 flex-col items-center justify-center gap-6 text-center'>
         <div className='flex flex-col items-center space-y-4 w-full'>
           <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>{challenge.title}</h1>
           <div className='flex flex-row items-center gap-4 text-sm font-medium mt-2'>
@@ -80,18 +78,14 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
             <div className='grid grid-cols-1 sm:grid-cols-11 p-4 justify-between rounded-md space-y-4 md:space-y-0'>
               <div className='flex flex-col gap-4 col-span-5'>
                 <h3 className='text-lg font-bold'>Initial Situation</h3>
-                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>
-                  <Markdown remarkPlugins={[remarkGfm]}>{challenge.initial_situation}</Markdown>
-                </div>
+                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>{challenge.initial_situation}</div>
               </div>
               <div className='items-center justify-self-center'>
                 <Separator orientation='vertical' />
               </div>
               <div className='flex flex-col gap-4 col-span-5'>
                 <h3 className='text-lg font-bold '>Objective</h3>
-                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>
-                  <Markdown remarkPlugins={[remarkGfm]}>{challenge.objective}</Markdown>
-                </div>
+                <div className='text-left prose prose-p:text-base prose-ol:list-disc max-w-none mb-2'>{challenge.objective}</div>
               </div>
             </div>
           </CardContent>

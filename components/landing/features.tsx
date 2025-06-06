@@ -53,13 +53,13 @@ const features: Feature[] = [
 
 export function FeaturesSection() {
   return (
-    <Container className='space-y-16 py-16 md:py-28 lg:py-36'>
+    <Container className='space-y-16 py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className='mx-auto flex max-w-[62rem] flex-col items-center justify-center gap-6 text-center'
+        className='mx-auto flex max-w-248 flex-col items-center justify-center gap-6 text-center'
       >
         <span className='inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary mb-2'>Features</span>
         <h2 className='text-4xl font-extrabold leading-tight tracking-tight sm:text-4xl md:text-6xl'>Everything you need to master Kubernetes</h2>
@@ -84,12 +84,12 @@ export function FeaturesSection() {
           >
             {/* Badge if present */}
             {feature.badge && (
-              <span className='absolute top-4 right-4 z-10 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground shadow group-hover:bg-primary group-hover:text-primary-foreground transition-colors'>
+              <span className='absolute top-4 right-4 z-10 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground shadow-sm group-hover:bg-primary group-hover:text-primary-foreground transition-colors'>
                 {feature.badge}
               </span>
             )}
             {/* Icon in colored circle */}
-            <span className={`mb-4 flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-sm ${feature.color}`}>
+            <span className={`mb-4 flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-xs ${feature.color}`}>
               <feature.icon className='h-7 w-7' />
             </span>
             <h3 className='mb-2 text-lg font-bold text-foreground'>{feature.name}</h3>
