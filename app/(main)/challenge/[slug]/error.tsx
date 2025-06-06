@@ -10,7 +10,7 @@ export default function ChallengeError({ error, reset }: { error: Error & { dige
   }, [error]);
 
   return (
-    <Container className='py-32'>
+    <Container className='py-24 lg:py-32'>
       <h2 className='text-xl font-semibold text-destructive mb-4'>Something went wrong loading the challenge progress!</h2>
       <p className='text-muted-foreground mb-4'>An unexpected error occurred. Please try again.</p>
       <Button onClick={() => reset()}>Try again</Button>

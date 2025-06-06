@@ -22,8 +22,8 @@ export default async function ChallengesPage() {
   }
 
   return (
-    <Container>
-      <section className='py-12 md:py-24 lg:py-32'>
+    <Container className='py-24 lg:py-32'>
+      <section>
         <div className='mx-auto flex max-w-232 flex-col items-center justify-center gap-4 text-center'>
           <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>Kubernetes Challenges</h1>
           <p className='max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7'>

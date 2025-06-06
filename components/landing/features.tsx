@@ -53,7 +53,7 @@ const features: Feature[] = [
 
 export function FeaturesSection() {
   return (
-    <Container className='space-y-16 py-16 md:py-28 lg:py-36'>
+    <Container className='space-y-16 py-24 lg:py-32'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

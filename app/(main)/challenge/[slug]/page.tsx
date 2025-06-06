@@ -47,7 +47,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
   const { data: theme } = await queries.theme.get(supabase, { slug: challenge?.theme });
 
   return (
-    <Container className='py-12 md:py-24 lg:py-32'>
+    <Container className='py-24 lg:py-32'>
       <div className='mx-auto flex max-w-232 flex-col items-center justify-center gap-6 text-center'>
         <div className='flex flex-col items-center space-y-4 w-full'>
           <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>{challenge.title}</h1>

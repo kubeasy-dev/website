@@ -37,7 +37,7 @@ export default async function Profile() {
   }
 
   return (
-    <Container className='py-12 md:py-24 lg:py-32 space-y-8'>
+    <Container className='py-24 lg:py-32 space-y-8'>
       <ProfileHeader user={user} />
       <div className='w-full max-w-5xl mx-auto flex gap-8'>
         <aside className='hidden md:flex flex-col min-w-[180px] sticky top-32 self-start'>

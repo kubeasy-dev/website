@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export function CTASection() {
   return (
-    <Container className='relative py-12 md:py-24 lg:py-32 overflow-hidden bg-background dark:bg-muted/70 rounded-xl shadow-lg dark:shadow-md mb-24 ring-2 ring-primary/30 dark:ring-muted/60 transition-all duration-200 hover:shadow-2xl dark:hover:shadow-lg'>
+    <Container className='relative py-24 lg:py-32 overflow-hidden bg-background dark:bg-muted/70 rounded-xl shadow-lg dark:shadow-md mb-24 ring-2 ring-primary/30 dark:ring-muted/60 transition-all duration-200 hover:shadow-2xl dark:hover:shadow-lg'>
       {/* Gradient décoratif animé */}
       <div className='pointer-events-none absolute inset-0 -z-10 bg-linear-45 from-primary/10 via-background to-secondary/10 dark:from-primary dark:via-accent dark:to-background/80 opacity-90' />
       <motion.div
