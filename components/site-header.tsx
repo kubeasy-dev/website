@@ -35,7 +35,7 @@ export function SiteHeader() {
             <Link href='/challenges' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
               Challenges
             </Link>
-            <Link href='/documentation' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
+            <Link href='/docs' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>
               Documentation
             </Link>
             <Link href='/blog' className='hover:underline underline-offset-8 decoration-2 decoration-primary'>

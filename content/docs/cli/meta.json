@@ -1,0 +1,6 @@
+{
+  "root": true,
+  "title": "Kubeasy CLI",
+  "description": "The CLI tool for playing challenges on Kubeasy",
+  "icon": "Terminal"
+}
