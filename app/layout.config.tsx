@@ -2,7 +2,7 @@ import { type LinkItemType } from "fumadocs-ui/layouts/docs";
 import { Album, Home, PenSquare } from "lucide-react";
 import Image from "next/image";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import logo from "../public/logo.png";
+import logo from "@/app/assets/logo.png";
 
 export const linkItems: LinkItemType[] = [
   {
