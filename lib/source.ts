@@ -1,6 +1,6 @@
 // .source folder will be generated when you run `next dev`
 import { docs, blogPosts } from "@/.source";
-import { loader } from "fumadocs-core/source";
+import { InferPageType, loader } from "fumadocs-core/source";
 import { createMDXSource } from "fumadocs-mdx";
 
 export const source = loader({
@@ -12,3 +12,5 @@ export const blog = loader({
   baseUrl: "/blog",
   source: createMDXSource(blogPosts),
 });
+
+export type BlogPage = InferPageType<typeof blog>;
