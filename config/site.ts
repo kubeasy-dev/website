@@ -7,4 +7,9 @@ export const siteConfig = {
     github: "https://github.com/kubeasy-dev",
     twitter: "https://twitter.com/kubeasy_dev",
   },
+  github: {
+    owner: "kubeasy-dev",
+    repo: "website",
+    url: "https://github.com/kubeasy-dev/website",
+  },
 };

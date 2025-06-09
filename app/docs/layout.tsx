@@ -4,13 +4,14 @@ import type { ReactNode } from "react";
 import { baseOptions } from "@/app/layout.config";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { IconName } from "lucide-react/dynamic";
+import { siteConfig } from "@/config/site";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <DocsLayout
       tree={source.pageTree}
       {...baseOptions}
-      githubUrl='https://github.com/kubeasy-dev/website'
+      githubUrl={siteConfig.github.url}
       sidebar={{
         tabs: {
           transform(option, node) {

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/mdx-components";
 import { GitHubLink } from "@/components/github-link";
 import { getGithubLastEdit } from "fumadocs-core/server";
+import { siteConfig } from "@/config/site";
 export default async function Page(props: { params: Promise<{ slug?: string[] }> }) {
   const params = await props.params;
   const page = source.getPage(params.slug);
@@ -11,17 +12,21 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
   const MDX = page.data.body;
   const path = `/content/docs/${page.file.path}`;
   const time = await getGithubLastEdit({
-    owner: "kubeasy-dev",
-    repo: "website",
+    owner: siteConfig.github.owner,
+    repo: siteConfig.github.repo,
     path: `content/docs/${page.file.path}`,
   });
+
+  // VERCEL_BRANCH_URL Example: *-git-*.vercel.app
+  const branch = process.env.NODE_ENV === "development" ? "main" : process.env.VERCEL_BRANCH_URL?.split("-git-")[1].split(".")[0] || "main";
+
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <div className='flex flex-row gap-2 items-center mb-8 border-b pb-6'>
         <span className='text-sm text-muted-foreground'>Last updated: {time ? new Date(time).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Unknown"}</span>
-        <GitHubLink url={`https://github.com/kubeasy-dev/website/blob/main/${path}`} />
+        <GitHubLink url={`${siteConfig.github.url}/blob/${branch}/${path}`} />
       </div>
       <DocsBody>
         <MDX components={getMDXComponents()} />
