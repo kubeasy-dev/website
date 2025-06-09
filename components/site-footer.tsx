@@ -26,7 +26,7 @@ export function SiteFooter() {
           </div>
           <div className='flex flex-col gap-4'>
             <h3 className='text-lg font-semibold'>Resources</h3>
-            <Link href='/documentation' className='text-sm text-muted-foreground hover:text-foreground'>
+            <Link href='/docs/user' className='text-sm text-muted-foreground hover:text-foreground'>
               Documentation
             </Link>
             <Link href='/challenges' className='text-sm text-muted-foreground hover:text-foreground'>

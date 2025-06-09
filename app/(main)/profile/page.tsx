@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Container } from "@/components/ui/container";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { Suspense } from "react";
 import { ApiTokensList } from "@/components/profile/api-tokens-list";
@@ -37,7 +36,7 @@ export default async function Profile() {
   }
 
   return (
-    <Container className='py-24 lg:py-32 space-y-8'>
+    <section className='space-y-8'>
       <ProfileHeader user={user} />
       <div className='w-full max-w-5xl mx-auto flex gap-8'>
         <aside className='hidden md:flex flex-col min-w-[180px] sticky top-32 self-start'>
@@ -114,6 +113,6 @@ export default async function Profile() {
           </Card>
         </div>
       </div>
-    </Container>
+    </section>
   );
 }

@@ -1,0 +1,103 @@
+---
+title: Getting Started
+description: Install the Kubeasy CLI, set up your environment, and solve your first challenge in minutes.
+---
+
+Ready to dive into your first Kubernetes challenge with Kubeasy?  
+This guide will walk you through the full setup — from prerequisites to your first submission.
+
+## Prerequisites
+
+Make sure you have the following installed on your machine:
+
+- [Docker](https://www.docker.com/) (used to run the local Kubernetes cluster) or other container runtime compatible with [Kind](https://kind.sigs.k8s.io/)
+- [Node.js](https://nodejs.org/) (for installing the CLI via npm)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) (used to inspect and interact with your cluster)
+
+## Step-by-step Setup
+
+### 1. Install the Kubeasy CLI
+
+```bash
+npm install -g kubeasy-cli
+```
+
+This will install the kubeasy command globally.
+
+### 2. Generate your API Token
+
+Go to your Kubeasy profile and generate a personal access token.
+This token allows the CLI to fetch available challenges and submit your results.
+
+### 3. Login to Kubeasy
+
+```bash
+kubeasy login
+```
+
+Paste the token when prompted. You’re now authenticated.
+
+### 4. Set up the local environment
+
+```bash
+kubeasy setup
+```
+
+This will:
+
+- Create a Kind Kubernetes cluster (if it doesn't exist yet)
+- Install required components (validators, policies, etc.)
+
+You only need to run this once on a machine.
+
+### 5. Pick a challenge
+
+Visit the [challenge list](/challenges) and choose one that interests you.
+Each challenge comes with a short description, difficulty, and estimated time.
+
+### 6. Start the challenge
+
+```bash
+kubeasy challenge start <challenge-name>
+```
+
+This command will:
+
+- Apply the initial manifests (representing the broken scenario)
+- Create a dedicated namespace for the challenge
+- Automatically switch your kubectl context to that namespace
+
+### 7. Play and fix the challenge
+
+Use kubectl, logs, and events to investigate what’s wrong.
+
+You can edit objects, apply new resources, and debug freely — just like in a real cluster.
+
+### 8. Submit your solution
+
+```bash
+kubeasy challenge submit <challenge-name>
+```
+
+The CLI will:
+
+- Run a series of validations (static and dynamic)
+- Upload your submission result to the platform
+
+### 9. Review your submission
+
+Go to the web platform to see:
+
+- Which tests passed or failed
+- Helpful messages for failed checks
+- Whether the challenge is considered complete
+
+### 10. (optional) Clean up
+
+```bash
+kubeasy challenge clean <challenge-name>
+```
+
+This removes all resources created for the challenge — including the namespace.
+
+That’s it! You’re ready to start learning Kubernetes by solving real problems.

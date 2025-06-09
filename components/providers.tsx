@@ -21,6 +21,7 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
       capture_pageleave: true, // Enable pageleave capture
       person_profiles: "identified_only",
       debug: process.env.NODE_ENV === "development",
+      disable_session_recording: process.env.NODE_ENV === "development",
     });
   }, []);
 

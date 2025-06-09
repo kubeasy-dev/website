@@ -8,7 +8,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   return generateOGImage({
     title: page.data.title,
     description: page.data.description,
-    site: "My App",
+    site: "Kubeasy Documentation",
   });
 }
 export function generateStaticParams() {

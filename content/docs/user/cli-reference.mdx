@@ -1,0 +1,92 @@
+---
+title: Kubeasy CLI Reference
+description: Full reference of all available Kubeasy CLI commands to manage your challenges, cluster, and configuration.
+---
+
+The `kubeasy-cli` is the main tool to interact with Kubeasy locally: start challenges, submit solutions, reset environments, and more.
+
+You can install it globally with:
+
+```bash
+npm install -g kubeasy-cli
+```
+
+## 🔐 Authentication
+
+### `kubeasy-cli login`
+
+Authenticate the CLI by pasting your personal API token (generated from the [profile page](/profile)).  
+Your token is stored locally to allow secure access to challenge data and submission features.
+
+## ⚙️ Setup
+
+### `kubeasy-cli setup`
+
+Prepare your local environment for Kubeasy. This command:
+
+- Creates a local Kind cluster (if one doesn't exist)
+- Installs the required components (validators, policies, etc.)
+
+Usually run once per machine before starting challenges.
+
+## 🧩 Challenge management
+
+All challenge-related actions are available under the `challenge` subcommand.
+
+### `kubeasy-cli challenge start <challenge>`
+
+Start a challenge. This command:
+
+- Applies the initial manifests into a new dedicated namespace
+- Switches your `kubectl` context to that namespace
+- Prepares everything to begin solving the problem
+
+### `kubeasy-cli challenge submit <challenge>`
+
+Submit your solution for validation.
+
+- Runs all defined static and dynamic checks
+- Uploads the results to the Kubeasy platform
+- You can then review validation results and feedback via the web interface
+
+### `kubeasy-cli challenge get <challenge>`
+
+View details about a specific challenge, such as:
+
+- Description
+- Objective
+- Estimated time
+- Theme or category
+
+### `kubeasy-cli challenge reset <challenge>`
+
+Reset the challenge environment by reapplying the initial manifests. This is will also reset your progress and delete your submission on the platform.
+Use this if you're stuck or want to start fresh.
+
+### `kubeasy-cli challenge clean <challenge>`
+
+Clean up all Kubernetes resources related to the challenge, including its namespace.  
+This does **not** affect your challenge progress on the platform.
+
+## 🧠 Shell autocompletion
+
+### `kubeasy-cli completion`
+
+Generate completion scripts for your shell:
+
+- Bash
+- Zsh
+- Fish
+- PowerShell
+
+Example:
+
+```bash
+kubeasy-cli completion bash | tee -a ~/.bashrc
+```
+
+Or for zsh:
+
+```bash
+kubeasy-cli completion zsh | tee -a ~/.zshrc
+```

@@ -71,7 +71,7 @@ export default function ChallengeProgressCard({ challenge }: Readonly<{ challeng
         <div>
           <p>
             👉 If it&apos;s your first time here, please follow this{" "}
-            <Link href='/docs/setup-local-environment'>
+            <Link href='/docs/user/getting-started'>
               <span className='text-primary hover:underline'>documentation</span>
             </Link>{" "}
             to set up your local environment.

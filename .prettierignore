@@ -9,3 +9,6 @@ pnpm-lock.yaml
 
 # Ingore .source
 .source/*
+
+# MdX files
+content/**/*.{md,mdx}

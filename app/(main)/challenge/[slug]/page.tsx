@@ -8,7 +8,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import ChallengeProgressCard from "@/components/challenges/challenge-progress-card";
 import Loading from "@/components/loading";
-import { Container } from "@/components/ui/container";
+
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { DisplayDifficultyLevel } from "@/components/difficulty-level";
@@ -47,7 +47,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
   const { data: theme } = await queries.theme.get(supabase, { slug: challenge?.theme });
 
   return (
-    <Container className='py-24 lg:py-32'>
+    <section>
       <div className='mx-auto flex max-w-232 flex-col items-center justify-center gap-6 text-center'>
         <div className='flex flex-col items-center space-y-4 w-full'>
           <h1 className='text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]'>{challenge.title}</h1>
@@ -95,6 +95,6 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
           <ChallengeProgressCard challenge={challenge} />
         </Suspense>
       </div>
-    </Container>
+    </section>
   );
 }
