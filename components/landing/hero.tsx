@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export function HeroSection() {
   return (
-    <section className='relative flex min-h-screen flex-col items-center justify-center space-y-10 py-24 overflow-hidden bg-background'>
+    <section className='relative flex min-h-screen flex-col items-center justify-center space-y-10 overflow-hidden bg-background'>
       {/* Gradient background effect adapté dark mode */}
       <div className='pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-primary/5 via-background to-secondary/10 dark:from-primary/10 dark:via-background dark:to-secondary/20' />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className='container flex flex-col items-center gap-8 py-16 md:py-32'>

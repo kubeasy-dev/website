@@ -1,0 +1,92 @@
+---
+title: Why I Built Kubeasy ?
+description: Kubernetes is powerful — but still too hard to learn for developers. Kubeasy is my attempt to fix that through interactive, local challenges.
+date: 2025-06-09
+author: Paul Brissaud
+category: foundation
+---
+
+Kubernetes is everywhere. And yet, for many developers, it still feels like a black box.
+
+While it has become the backbone of modern infrastructure — powering microservices, jobs, APIs, and real-time applications across the globe — most developers never really get comfortable with it. They use it indirectly, through CI pipelines or deployment platforms, but don’t always understand what happens after the code is pushed.
+
+For a technology this central, that’s a big problem.
+
+## Kubernetes is meant for more than Ops
+
+Kubernetes was not designed to be exclusive to operations teams. From the beginning, it introduced concepts that clearly separate infrastructure concerns from application concerns — and exposes powerful abstractions that developers can safely use.
+
+Objects like `IngressClass`, `StorageClass`, `ConfigMap`, or `Service` exist precisely so that devs don’t have to know the full complexity of the underlying network or storage layer. They’re meant to give autonomy, to let teams move fast without depending on infrastructure engineers for every detail.
+
+But in practice, we’ve often gone the opposite way.
+
+Kubernetes has been handed over almost entirely to platform and ops teams, while developers are told to "just apply this YAML file" — without much explanation. If something breaks, they escalate. If something doesn’t behave as expected, they wait.
+
+This creates a deep disconnect. Developers write the code that runs in Kubernetes, but they rarely feel any ownership over how it behaves once deployed. That disconnect slows down teams, increases friction, and erodes confidence.
+
+## Documentation is not enough
+
+Don’t get me wrong — Kubernetes has fantastic documentation. It’s structured, complete, and deeply detailed.
+
+But learning a complex system like Kubernetes requires more than good docs. It requires **practice**. You have to break things. Fix them. Read logs. Check events. Try something, fail, and learn from it. That’s how you develop intuition — and it’s that intuition that makes the difference between someone who knows Kubernetes and someone who uses it passively.
+
+Unfortunately, most tutorials or workshops don’t simulate real-world complexity. They work perfectly if you follow the steps. But they don’t teach you what to do when a Pod is stuck in `CrashLoopBackOff`, or when traffic doesn’t reach your backend, or when your RBAC rules silently block access.
+
+That’s where the idea for **Kubeasy** came from.
+
+## What is Kubeasy?
+
+Kubeasy is a learning platform that puts developers in front of **realistic Kubernetes problems** — and lets them figure it out.
+
+Each challenge is designed like a miniature incident. You’re dropped into a local cluster where something isn’t working: a Job fails, a Deployment is misconfigured, a NetworkPolicy blocks traffic, a healthcheck crashes the app. You get a bit of context — just like in a real team — and then you’re on your own to solve it.
+
+There’s no guided path. No script to follow. Only a problem, the cluster, and your tools.
+
+You explore the situation with `kubectl`, maybe look at logs, describe resources, test hypotheses, and try to fix the issue. Once you think you’ve got it, you run `kubeasy verify`, which uses a combination of static policies (Rego, Kyverno) and dynamic checks (status, logs, runtime conditions) to confirm whether your solution meets the expected outcome.
+
+## Everything runs locally
+
+Kubeasy is 100% local. When you start a challenge, it automatically sets up a [Kind](https://kind.sigs.k8s.io/) cluster on your machine, prepares the resources, installs validation policies, and runs everything inside an isolated namespace.
+
+Each challenge has its own environment, so nothing leaks between them. You have full access to the cluster — you can use `kubectl`, dashboards like Lens, port-forwarding, anything. It’s the closest you can get to production debugging — without breaking anything.
+
+There’s no cloud billing, no waiting for clusters to start, no signup or vendor lock-in. You just run `kubeasy challenge start` and start solving.
+
+## It’s not about turning devs into SREs
+
+The goal of Kubeasy isn’t to replace your platform team. It’s to make sure developers feel confident enough to:
+
+- Understand what’s happening inside the cluster
+- Know how to debug their own applications
+- Fix common misconfigurations
+- Handle basic runtime issues on their own
+
+In short, to operate Kubernetes at **level one**.
+
+And that’s not just nice to have — it’s essential.
+
+As more code gets written by AI, developers will be judged less by what they can write and more by what they can understand, debug, and ship with confidence. Owning what happens **after deploy** is a huge part of that.
+
+## Built from experience
+
+Kubeasy isn’t a weekend hack or a side project made in isolation. It’s the result of real-world experience — years spent managing Kubernetes clusters in production, debugging issues at 2AM, onboarding dev teams who had never seen a Pod, and building internal tools to simplify life for both devs and ops.
+
+Over time, I realized that what people needed wasn’t more tooling. It was better **understanding**. And that only comes with exposure and repetition — the kind you get when something breaks, and you’re the one who has to fix it.
+
+So I built Kubeasy to create that kind of learning environment — safely, locally, and repeatably.
+
+## Open source by design
+
+Finally, Kubeasy is open source because it should be.
+
+Learning infrastructure shouldn’t be a black box. You should be able to inspect how a challenge works, how a verification is written, how policies are applied. You should be able to suggest new challenges based on real bugs you’ve seen, or adapt existing ones to match your stack.
+
+Open source also brings trust. You know there’s no hidden logic, no data being collected, no dark patterns. Just a CLI and some YAML files designed to help people learn.
+
+If Kubeasy grows, it will be thanks to the community: contributors, testers, writers, and engineers who want to make Kubernetes more accessible — not just more powerful.
+
+If any of this resonates with you — whether you’re a dev trying to learn Kubernetes, an SRE tired of answering the same questions, or a team lead looking to level up your engineers — I’d love for you to try Kubeasy.
+
+And if you’ve got feedback or want to contribute, come say hi.
+
+Let’s make Kubernetes less mysterious — one challenge at a time.

@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Code, Trophy, Laptop, Users, Terminal, Rocket } from "lucide-react";
-import { Container } from "@/components/ui/container";
 
 type Feature = {
   name: string;
@@ -53,7 +52,7 @@ const features: Feature[] = [
 
 export function FeaturesSection() {
   return (
-    <Container className='space-y-16 py-24 lg:py-32'>
+    <section className='space-y-16'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -97,6 +96,6 @@ export function FeaturesSection() {
           </motion.div>
         ))}
       </div>
-    </Container>
+    </section>
   );
 }

@@ -1,0 +1,7 @@
+{
+  "root": true,
+  "title": "Kubeasy User Guide",
+  "description": "How to use Kubeasy",
+  "icon": "user",
+  "pages": ["---Introduction---", "index", "what-is-kubeasy", "getting-started", "---Website---", "kubernetes-journey", "---CLI---", "cli-reference"]
+}

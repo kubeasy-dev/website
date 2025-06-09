@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Container } from "../ui/container";
 import Image from "next/image";
 
 const logos = [
@@ -35,7 +34,7 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <Container className='py-24 lg:py-32'>
+    <section>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -84,6 +83,6 @@ export function TestimonialsSection() {
           </motion.div>
         ))}
       </div>
-    </Container>
+    </section>
   );
 }

@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 import type React from "react";
+import { RootProvider } from "fumadocs-ui/provider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang='en' suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <RootProvider>{children}</RootProvider>
+        </Providers>
       </body>
     </html>
   );
