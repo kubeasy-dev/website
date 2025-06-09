@@ -17,8 +17,8 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
     path: `content/docs/${page.file.path}`,
   });
 
-  // VERCEL_BRANCH_URL Example: *-git-*.vercel.app
-  const branch = process.env.NODE_ENV === "development" ? "main" : process.env.VERCEL_BRANCH_URL?.split("-git-")[1].split(".")[0] || "main";
+  // Use the git ref for the preview environment, otherwise use main for production and development
+  const branch = process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_GIT_COMMIT_REF : "main";
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
