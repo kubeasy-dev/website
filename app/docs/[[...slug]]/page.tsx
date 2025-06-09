@@ -11,14 +11,13 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
   if (!page) notFound();
   const MDX = page.data.body;
   const path = `/content/docs/${page.file.path}`;
+  const branch = process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_GIT_COMMIT_REF : "main";
   const time = await getGithubLastEdit({
     owner: siteConfig.github.owner,
     repo: siteConfig.github.repo,
+    sha: branch,
     path: `content/docs/${page.file.path}`,
   });
-
-  // Use the git ref for the preview environment, otherwise use main for production and development
-  const branch = process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_GIT_COMMIT_REF : "main";
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
