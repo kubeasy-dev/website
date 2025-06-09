@@ -40,6 +40,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "feed": "^5.1.0",
     "framer-motion": "^12.4.0",
     "fumadocs-core": "^15.5.1",
     "fumadocs-mdx": "^11.6.7",

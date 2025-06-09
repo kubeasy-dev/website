@@ -35,7 +35,7 @@ export async function generateStaticParams() {
 export async function generateMetadata(props: { params: Promise<{ slug?: string[] }> }) {
   const params = await props.params;
   const page = source.getPage(params.slug);
-  const { slug = [] } = await params;
+  const { slug = [] } = params;
   if (!page) notFound();
   const image = ["/docs-og", ...slug, "image.png"].join("/");
   return {

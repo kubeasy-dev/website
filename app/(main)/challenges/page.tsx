@@ -32,7 +32,7 @@ export default async function ChallengesPage() {
       <div className='flex flex-row justify-end py-12'>
         <Button variant='secondary' asChild>
           <Link href='/learning-path'>
-            <BarChart2 className='mr-2 h-4 w-4w' />
+            <BarChart2 className='mr-2 size-4' />
             My Kubernetes Journey
           </Link>
         </Button>
