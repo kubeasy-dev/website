@@ -66,12 +66,7 @@ export default async function Page(props: { params: Promise<{ slug: string }> })
 }
 
 export function generateStaticParams(): { slug: string }[] {
-  return blog
-    .getPages()
-    .filter((page) => page.slugs.length > 0)
-    .map((page) => ({
-      slug: page.slugs[0],
-    }));
+  return blog.getPages().flatMap((page) => page.slugs.map((slug) => ({ slug })));
 }
 
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {

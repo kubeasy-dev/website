@@ -6,7 +6,7 @@ export function createMetadata(override: Metadata): Metadata {
     openGraph: {
       title: override.title ?? undefined,
       description: override.description ?? undefined,
-      url: new URL("/blog/rss.xml", baseUrl).toString(),
+      url: baseUrl.toString(),
       images: "/banner.png",
       siteName: "Kubeasy",
       ...override.openGraph,
