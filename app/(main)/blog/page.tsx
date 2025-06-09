@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { blog, BlogPage } from "@/lib/source";
+import { Badge } from "@/components/ui/badge";
 
 function getPostDate(post: BlogPage): Date | null {
   const { date } = post.data;
@@ -26,29 +27,29 @@ export default function Page(): React.ReactElement {
           <p className='text-lg opacity-90'>Explore captivating articles on Kubernetes, DevOps, and Cloud Native.</p>
         </div>
 
-        {/* Posts Timeline */}
+        {/* Posts Grid */}
         {posts.length === 0 ? (
           <div className='text-center py-12'>
             <p className='text-muted-foreground'>No blog posts available yet.</p>
           </div>
         ) : (
-          <div className='relative border-l border-border pl-8 space-y-12' role='feed' aria-label='Blog posts timeline'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' role='feed' aria-label='Blog posts'>
             {posts.map((post) => (
-              <div key={post.url} className='relative grid grid-cols-[auto_1fr] gap-x-12 items-start'>
-                <div className='flex flex-col items-end space-y-1'>
-                  <time className='text-sm text-muted-foreground' dateTime={post._parsedDate!.toISOString()}>
-                    {post._parsedDate!.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}
-                  </time>
-                  {post.data.category && <span className='text-sm font-medium text-secondary-foreground'>{post.data.category}</span>}
-                </div>
-                <div className='relative'>
-                  <span className='absolute -left-4 top-2 w-3 h-3 bg-primary rounded-full border border-background'></span>
-                  <h2 className='text-xl font-semibold'>{post.data.title}</h2>
-                  <p className='my-2 text-base text-muted-foreground'>{post.data.description}</p>
-                  <Link href={post.url} className='text-primary font-medium' aria-label={`Read more about ${post.data.title}`}>
-                    Read more →
-                  </Link>
-                </div>
+              <div key={post.url} className='h-full flex'>
+                <Link
+                  href={post.url}
+                  className='flex-1 flex flex-col group rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-shadow focus-visible:ring-2 focus-visible:ring-primary/50 outline-none'
+                >
+                  <div className='flex flex-row justify-between items-center gap-2 mb-4'>
+                    <time className='text-sm text-muted-foreground' dateTime={post._parsedDate!.toISOString()}>
+                      {post._parsedDate!.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}
+                    </time>
+                    <Badge>{post.data.category.toUpperCase()}</Badge>
+                  </div>
+                  <h2 className='text-xl font-bold mb-2 group-hover:text-primary transition-colors'>{post.data.title}</h2>
+                  <p className='mb-4 text-base text-muted-foreground line-clamp-3'>{post.data.description}</p>
+                  <span className='mt-auto text-primary font-medium text-sm group-hover:underline'>Read more →</span>
+                </Link>
               </div>
             ))}
           </div>
