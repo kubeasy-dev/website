@@ -1,0 +1,42 @@
+/* Fade + smooth height for accordion */
+@keyframes accordion-down {
+  from {
+    height: 0;
+    opacity: 0.7;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0.7;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.35s cubic-bezier(0.87, 0, 0.13, 1);
+}
+.animate-accordion-up {
+  animation: accordion-up 0.28s cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+/* Fade for tab content */
+@keyframes fade-tab-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-tab-in {
+  animation: fade-tab-in 0.25s ease;
+}

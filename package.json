@@ -95,7 +95,8 @@
       "esbuild",
       "sharp",
       "supabase",
-      "workerd"
+      "workerd",
+      "unrs-resolver"
     ]
   },
   "lint-staged": {
