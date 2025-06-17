@@ -6,7 +6,7 @@ const howItWorks = [
   {
     title: "Install the CLI",
     description: "Install the Kubeasy command-line tool on your machine.",
-    command: "npm install -g kubeasy-cli",
+    command: "npm install -g @kubeasy-dev/kubeasy-cli",
   },
   {
     title: "Authenticate",
