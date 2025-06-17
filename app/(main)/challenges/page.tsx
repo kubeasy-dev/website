@@ -10,6 +10,9 @@ export const metadata = {
   title: "Kubernetes Challenges - Kubeasy",
 };
 
+export const dynamic = "force-static";
+export const revalidate = 3600;
+
 export default async function ChallengesPage() {
   const supabase = createStaticClient();
   const { data: themes } = await queries.theme.list(supabase);

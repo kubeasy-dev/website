@@ -6,6 +6,8 @@ import { OpenSourceSection } from "@/components/landing/open-source";
 import { TestimonialsSection } from "@/components/landing/testimonials";
 import { CTASection } from "@/components/landing/cta";
 
+export const dynamic = "force-static";
+
 export const metadata = {
   title: "Kubeasy - Kubernetes Learning Platform",
   description: "Kubeasy is a Kubernetes learning platform that offers interactive challenges, a CLI tool, and a community-driven approach to mastering Kubernetes.",
