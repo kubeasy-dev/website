@@ -17,11 +17,9 @@ import { ProfileForm } from "@/components/profile/profile-form";
 import { EmailPreferencesList } from "@/components/profile/email-preferences-list";
 import { ProfileSidebarNav } from "@/components/profile/profile-sidebar-nav";
 
-export async function generateMetadata() {
-  return {
-    title: "Profile - Kubeasy",
-  };
-}
+export const metadata = {
+  title: "Profile - Kubeasy",
+};
 
 export default async function Profile() {
   const supabase = await createClient();

@@ -6,11 +6,9 @@ import Link from "next/link";
 import { BarChart2 } from "lucide-react";
 import Loading from "@/components/loading";
 
-export async function generateMetadata() {
-  return {
-    title: "Kubernetes Challenges - Kubeasy",
-  };
-}
+export const metadata = {
+  title: "Kubernetes Challenges - Kubeasy",
+};
 
 export default async function ChallengesPage() {
   const supabase = createStaticClient();

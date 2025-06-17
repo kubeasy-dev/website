@@ -6,12 +6,10 @@ import { OpenSourceSection } from "@/components/landing/open-source";
 import { TestimonialsSection } from "@/components/landing/testimonials";
 import { CTASection } from "@/components/landing/cta";
 
-export async function generateMetadata() {
-  return {
-    title: "Kubeasy - Kubernetes Learning Platform",
-    description: "Kubeasy is a Kubernetes learning platform that offers interactive challenges, a CLI tool, and a community-driven approach to mastering Kubernetes.",
-  };
-}
+export const metadata = {
+  title: "Kubeasy - Kubernetes Learning Platform",
+  description: "Kubeasy is a Kubernetes learning platform that offers interactive challenges, a CLI tool, and a community-driven approach to mastering Kubernetes.",
+};
 
 export default function Home() {
   return (

@@ -5,11 +5,9 @@ import { ChallengeList } from "@/components/challenges/challenge-list";
 import { PrefetchWrapper } from "@/components/prefetch-wrapper";
 import Loading from "@/components/loading";
 
-export async function generateMetadata() {
-  return {
-    title: "Learning Path - Kubeasy",
-  };
-}
+export const metadata = {
+  title: "Learning Path - Kubeasy",
+};
 
 export default async function LearningPath() {
   const supabase = await createClient();
