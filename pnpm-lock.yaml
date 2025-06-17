@@ -152,8 +152,8 @@ importers:
         specifier: 4.1.10
         version: 4.1.10
       '@types/node':
-        specifier: 20.19.0
-        version: 20.19.0
+        specifier: 22.15.31
+        version: 22.15.31
       '@typescript-eslint/eslint-plugin':
         specifier: 8.34.0
         version: 8.34.0(@typescript-eslint/parser@8.34.0(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3)
@@ -177,7 +177,7 @@ importers:
         version: 8.0.3
       knip:
         specifier: 5.61.0
-        version: 5.61.0(@types/node@20.19.0)(typescript@5.8.3)
+        version: 5.61.0(@types/node@22.15.31)(typescript@5.8.3)
       prettier:
         specifier: 3.5.3
         version: 3.5.3
@@ -1569,8 +1569,8 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
-  '@types/node@20.19.0':
-    resolution: {integrity: sha512-hfrc+1tud1xcdVTABC2JiomZJEklMcXYNTVtZLAeqTVWD+qL5jkHKT+1lOtqDdGxt+mB53DTtiz673vfjU8D1Q==}
+  '@types/node@22.15.31':
+    resolution: {integrity: sha512-jnVe5ULKl6tijxUhvQeNbQG/84fHfg+yMak02cT8QVhBx/F05rAVxCGBYYTh2EKz22D6JF5ktXuNwdx7b9iEGw==}
 
   '@types/phoenix@1.6.6':
     resolution: {integrity: sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A==}
@@ -5208,7 +5208,7 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
-  '@types/node@20.19.0':
+  '@types/node@22.15.31':
     dependencies:
       undici-types: 6.21.0
 
@@ -5228,7 +5228,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 20.19.0
+      '@types/node': 22.15.31
 
   '@typescript-eslint/eslint-plugin@8.34.0(@typescript-eslint/parser@8.30.1(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3)':
     dependencies:
@@ -6659,10 +6659,10 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knip@5.61.0(@types/node@20.19.0)(typescript@5.8.3):
+  knip@5.61.0(@types/node@22.15.31)(typescript@5.8.3):
     dependencies:
       '@nodelib/fs.walk': 1.2.8
-      '@types/node': 20.19.0
+      '@types/node': 22.15.31
       fast-glob: 3.3.3
       formatly: 0.2.4
       jiti: 2.4.2
