@@ -1,12 +1,10 @@
 import { Separator } from "@/components/ui/separator";
+import { CTASection } from "@/components/landing/cta";
 import { HeroSection } from "@/components/landing/hero";
 import { FeaturesSection } from "@/components/landing/features";
 import { HowItWorksSection } from "@/components/landing/how-it-works";
 import { OpenSourceSection } from "@/components/landing/open-source";
 import { TestimonialsSection } from "@/components/landing/testimonials";
-import { CTASection } from "@/components/landing/cta";
-
-export const dynamic = "force-static";
 
 export const metadata = {
   title: "Kubeasy - Kubernetes Learning Platform",
