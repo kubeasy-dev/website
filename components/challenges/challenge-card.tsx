@@ -4,11 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { ClockIcon } from "lucide-react";
 import { Challenge } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-export function ChallengeCard({ challenge, showContent = true }: Readonly<{ challenge: Omit<Challenge, "objective" | "initial_situation">; showContent?: boolean }>) {
+export function ChallengeCard({ challenge, showContent = true, className }: Readonly<{ challenge: Omit<Challenge, "objective" | "initial_situation">; showContent?: boolean; className?: string }>) {
   return (
     <Link href={`/challenge/${challenge.slug}`}>
-      <Card className='flex flex-col justify-between h-full'>
+      <Card className={cn(className, "flex flex-col justify-between h-full")}>
         <CardHeader>
           <CardTitle className='font-medium flex flex-row gap-1.5 items-baseline'>
             <DisplayDifficultyLevel level={challenge.difficulty} />
