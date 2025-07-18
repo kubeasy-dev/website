@@ -38,13 +38,12 @@ export default async function Image({ params }: { params: { slug: string } }) {
           backgroundColor: "#fff",
         }}
       >
-        <img src='https://kubeasy.dev/logo.png' width='100' style={{ marginBottom: 20 }} />
+        <img src='https://kubeasy.dev/logo.png' width='100' style={{ marginBottom: 20 }} alt='Kubeasy logo' />
         <h1 style={{ fontSize: 40, fontWeight: 600, marginBottom: 10 }}>{challenge.title}</h1>
         <p style={{ fontSize: 20, color: "#666", marginBottom: 20 }}>{challenge.description}</p>
         <span style={{ fontSize: 20, color: "#337ab7" }}>Play this challenge on kubeasy.dev</span>
       </div>
     ),
-
     // ImageResponse options
     {
       // For convenience, we can re-use the exported opengraph-image

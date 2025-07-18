@@ -16,6 +16,7 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
   useEffect(() => {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
       api_host: "/ingest",
+      persistence: "localStorage+cookie",
       ui_host: "https://eu.i.posthog.com",
       capture_pageview: false, // We capture pageviews manually
       capture_pageleave: true, // Enable pageleave capture
@@ -86,7 +87,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
   );
 
   return (
-    <NextThemesProvider attribute='class' defaultTheme='dark' enableSystem={true}>
+    <NextThemesProvider attribute='class' enableSystem={true}>
       <QueryClientProvider client={queryClient}>
         <PostHogProvider>
           <JotaiProvider>

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { CopyToClipboardStep } from "./copy-to-clipboard-step";
 
 const howItWorks = [
   {
@@ -32,31 +33,46 @@ const howItWorks = [
 
 export function HowItWorksSection() {
   return (
-    <section>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className='mx-auto flex max-w-232 flex-col items-center justify-center gap-4 text-center'
-      >
-        <h2 className='text-3xl font-bold leading-[1.1] sm:text-3xl md:text-5xl'>How It Works</h2>
-        <p className='max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7'>Start learning Kubernetes with hands-on challenges — fast, free, and effective.</p>
-      </motion.div>
-      <div className='mt-12 grid grid-cols-1 gap-y-12 md:grid-cols-5'>
+    <section className='py-16 px-4'>
+      <div className='text-center'>
+        <h2 className='text-lg text-primary mb-2 tracking-wider'>How It Works</h2>
+        <h2 className='ext-3xl md:text-4xl font-bold mb-4'>Resolve your first challenge in 5 minutes</h2>
+        <p className='text-xl text-muted-foreground mb-8 max-w-2xl mx-auto'>
+          Follow the steps below to start your first Kubernetes challenge with Kubeasy. In less than five minutes, you’ll be ready to solve your first scenario and explore the world of Kubernetes on
+          your own.
+        </p>
+      </div>
+      <div className='w-full flex justify-center my-6'>
+        <div className='h-1 w-24 bg-primary/20 rounded-full' />
+      </div>
+      <div className='mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2'>
         {howItWorks.map((step, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className='flex flex-col items-center text-center min-h-[250px]' // ajuste si besoin
+            transition={{ duration: 0.5, delay: index * 0.08 }}
+            className={index === howItWorks.length - 1 && howItWorks.length % 2 === 1 ? "md:col-span-2 md:mx-auto md:w-1/2" : ""}
           >
-            <div className='mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium'>{index + 1}</div>
-            <h3 className='mb-1 text-base font-semibold'>{step.title}</h3>
-            <p className='mb-2 text-sm text-muted-foreground min-h-[48px]'>{step.description}</p>
-            <code className='rounded bg-muted px-2 py-1 text-sm font-mono'>{step.command}</code>
+            <div className='bg-card rounded-xl flex flex-col items-start gap-1 h-full overflow-hidden shadow-lg'>
+              <div className='p-6'>
+                <div className='flex items-center gap-3 mb-2'>
+                  <div className='flex h-10 w-10 items-center justify-center bg-primary text-primary-foreground text-lg font-bold'>{index + 1}</div>
+                  <h3 className='text-lg font-semibold leading-tight'>{step.title}</h3>
+                </div>
+                <p className='text-sm text-muted-foreground mb-0 min-h-[40px]'>{step.description}</p>
+              </div>
+              <div className='flex items-center w-full'>
+                <code className='flex justify-between bg-muted px-3 py-2 text-sm font-mono w-full rounded-b-xl'>
+                  <div className='flex items-center gap-1'>
+                    <span className='text-muted-foreground'>&gt;</span>
+                    {step.command}
+                  </div>
+                  <CopyToClipboardStep value={step.command} />
+                </code>
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>

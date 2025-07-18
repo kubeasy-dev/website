@@ -1,10 +1,11 @@
 import { Separator } from "@/components/ui/separator";
-import { CTASection } from "@/components/landing/cta";
+
 import { HeroSection } from "@/components/landing/hero";
 import { FeaturesSection } from "@/components/landing/features";
 import { HowItWorksSection } from "@/components/landing/how-it-works";
 import { OpenSourceSection } from "@/components/landing/open-source";
 import { TestimonialsSection } from "@/components/landing/testimonials";
+import { FAQSection } from "@/components/landing/faq";
 
 export const metadata = {
   title: "Kubeasy - Kubernetes Learning Platform",
@@ -23,7 +24,8 @@ export default function Home() {
       <OpenSourceSection />
       <Separator className='my-12' />
       <TestimonialsSection />
-      <CTASection />
+      <Separator className='my-12' />
+      <FAQSection />
     </section>
   );
 }

@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { User } from "@supabase/supabase-js";
 import useSupabase from "./use-supabase";
 
 export function useUser() {

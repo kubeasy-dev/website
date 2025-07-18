@@ -15,51 +15,52 @@ interface ReviewProps {
 const reviewList: ReviewProps[] = [
   {
     image: "https://github.com/shadcn.png",
-    name: "Alex Kim",
-    userName: "Cloud Architect",
-    comment: "The hands-on labs are incredibly practical and the feedback is instant. Highly recommend for anyone learning K8s!",
+    name: "John Doe",
+    userName: "Product Manager",
+    comment: "Wow NextJs + Shadcn is awesome!. This template lets me change colors, fonts and images to match my brand identity. ",
     rating: 5.0,
   },
   {
     image: "https://github.com/shadcn.png",
-    name: "Priya Singh",
-    userName: "Platform Engineer",
-    comment: "I love how Kubeasy lets me practice with real-world Kubernetes scenarios on my own laptop. It’s the missing piece in my DevOps learning journey.",
+    name: "Sophia Collins",
+    userName: "Cybersecurity Analyst",
+    comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna. ",
+    rating: 4.8,
+  },
+
+  {
+    image: "https://github.com/shadcn.png",
+    name: "Adam Johnson",
+    userName: "Chief Technology Officer",
+    comment: "Lorem ipsum dolor sit amet,exercitation. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
     rating: 4.9,
   },
   {
     image: "https://github.com/shadcn.png",
-    name: "Samuel Lee",
-    userName: "Software Engineer",
-    comment: "The challenge-based approach makes learning Kubernetes fun and effective. Kubeasy’s community is active and supportive, which helps a lot!",
-    rating: 4.8,
-  },
-  {
-    image: "https://github.com/shadcn.png",
-    name: "Maria Garcia",
-    userName: "SRE Lead",
-    comment: "Our team adopted Kubeasy for onboarding new hires. Tracking progress and the practical labs have sped up our ramp time dramatically.",
+    name: "Ethan Parker",
+    userName: "Data Scientist",
+    comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod labore et dolore magna aliqua. Ut enim ad minim veniam.",
     rating: 5.0,
   },
   {
     image: "https://github.com/shadcn.png",
-    name: "Jake Miller",
-    userName: "DevOps Consultant",
-    comment: "Finally, a platform that’s not just theoretical! Kubeasy’s local-first experience means I can experiment safely and really learn.",
+    name: "Ava Mitchell",
+    userName: "IT Project Manager",
+    comment: "Lorem ipsum dolor sit amet, tempor incididunt  aliqua. Ut enim ad minim veniam, quis nostrud incididunt consectetur adipiscing elit.",
     rating: 5.0,
   },
   {
     image: "https://github.com/shadcn.png",
-    name: "Linh Tran",
-    userName: "Kubernetes Enthusiast",
-    comment: "Kubeasy’s challenges helped me prepare for the CKA exam. The hands-on tasks and instant validation are game changers.",
+    name: "Isabella Reed",
+    userName: "DevOps Engineer",
+    comment: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     rating: 4.9,
   },
 ];
 
-export function TestimonialsSection() {
+export const TestimonialSection = () => {
   return (
-    <section id='testimonials' className='container py-16'>
+    <section id='testimonials' className='container py-24 sm:py-32'>
       <div className='text-center mb-8'>
         <h2 className='text-lg text-primary text-center mb-2 tracking-wider'>Testimonials</h2>
 
@@ -109,4 +110,4 @@ export function TestimonialsSection() {
       </Carousel>
     </section>
   );
-}
+};
