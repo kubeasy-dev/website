@@ -6,7 +6,11 @@ import { Challenge } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export function ChallengeCard({ challenge, showContent = true, className }: Readonly<{ challenge: Omit<Challenge, "objective" | "initial_situation">; showContent?: boolean; className?: string }>) {
+export function ChallengeCard({
+  challenge,
+  showContent = true,
+  className,
+}: Readonly<{ challenge: Omit<Challenge, "objective" | "initial_situation" | "of_the_week">; showContent?: boolean; className?: string }>) {
   return (
     <Link href={`/challenge/${challenge.slug}`}>
       <Card className={cn(className, "flex flex-col justify-between h-full")}>
