@@ -13,7 +13,8 @@ import posthog from "posthog-js";
 export function ApiTokenTable({ tokens }: Readonly<{ tokens: ApiToken[] }>) {
   const supabase = useSupabase();
   const { toast } = useToast();
-  const { mutateAsync: deleteToken } = useDeleteMutation(supabase.from("api_tokens"), ["id"], "name", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { mutateAsync: deleteToken } = useDeleteMutation(supabase.from("api_tokens") as any, ["id"], "name", {
     onSuccess: () => {
       posthog.capture("api_token_deleted");
       toast({

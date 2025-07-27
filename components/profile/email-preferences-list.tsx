@@ -18,7 +18,8 @@ export function EmailPreferencesList() {
   const { data: user } = useUser();
   const { toast } = useToast();
 
-  const { mutateAsync: updateEmailSubscription } = useUpdateMutation(supabase.from("email_subscriptions"), ["user_id", "category_id"], "subscribed,category_id", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { mutateAsync: updateEmailSubscription } = useUpdateMutation(supabase.from("email_subscriptions") as any, ["user_id", "category_id"], "subscribed,category_id", {
     onSuccess: (result) => {
       posthog.capture("email_preferences_updated", {
         category_id: result?.category_id,

@@ -29,7 +29,8 @@ export function ResetAllProgressButton() {
     { schema: "public", table: "user_submissions" },
   ]);
 
-  const { mutateAsync: deleteAllProgress } = useDeleteMutation(supabase.from("user_progress"), ["user_id"], "*", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { mutateAsync: deleteAllProgress } = useDeleteMutation(supabase.from("user_progress") as any, ["user_id"], "*", {
     onSuccess: () => {
       toast({
         title: "Success",

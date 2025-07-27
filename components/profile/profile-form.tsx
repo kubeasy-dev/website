@@ -45,7 +45,8 @@ export function ProfileForm() {
     }
   }, [profile, form]);
 
-  const { mutateAsync: updateProfile } = useUpdateMutation(supabase.from("profiles"), ["id"], "id, first_name, last_name", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { mutateAsync: updateProfile } = useUpdateMutation(supabase.from("profiles") as any, ["id"], "id, first_name, last_name", {
     onSuccess: (data) => {
       if (!data) {
         return;
