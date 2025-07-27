@@ -12,6 +12,8 @@ import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import { UserDropdown } from "./user-dropdown";
 import { FeaturedChallenges } from "./challenges/featured-challenges";
+import { Container } from "@/components/ui/container";
+import { cn } from "@/lib/utils";
 
 interface RouteProps {
   href: string;
@@ -45,83 +47,130 @@ export function SiteHeader() {
 
   const [isOpen, setIsOpen] = React.useState(false);
   return (
-    <header className='shadow-inner bg-opacity-15 w-[90%] md:w-[70%] lg:w-[75%] lg:max-w-screen-xl top-5 mx-auto sticky border border-secondary z-40 rounded-2xl flex justify-between items-center p-2 bg-background'>
-      <Link href='/' className='font-bold text-lg flex items-center text-xl'>
-        Kubeasy
-      </Link>
-      {/* <!-- Mobile --> */}
-      <div className='flex items-center lg:hidden'>
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Menu onClick={() => setIsOpen(!isOpen)} className='cursor-pointer lg:hidden' />
-          </SheetTrigger>
+    <div className='sticky top-0 z-50 w-full'>
+      <div className='absolute inset-0 bg-background/80 backdrop-blur-md border-b' />
+      <Container className='relative'>
+        <header className='flex h-16 items-center justify-between'>
+          {/* Logo */}
+          <Link href='/' className='flex items-center space-x-2 font-bold text-xl transition-colors hover:text-primary'>
+            <span>Kubeasy</span>
+          </Link>
 
-          <SheetContent side='left' className='flex flex-col justify-between rounded-tr-2xl rounded-br-2xl bg-card border-secondary'>
-            <div>
-              <SheetHeader className='mb-4 ml-4'>
-                <SheetTitle className='flex items-center'>
-                  <Link href='/' className='flex items-center text-xl'>
-                    Kubeasy
-                  </Link>
-                </SheetTitle>
-              </SheetHeader>
+          {/* Mobile Menu */}
+          <div className='flex items-center lg:hidden'>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant='ghost' size='icon' className='lg:hidden'>
+                  <Menu className='h-5 w-5' />
+                  <span className='sr-only'>Toggle menu</span>
+                </Button>
+              </SheetTrigger>
 
-              <div className='flex flex-col gap-2'>
-                {routeList.map(({ href, label }) => (
-                  <Button key={href} onClick={() => setIsOpen(false)} asChild variant='ghost' className='justify-start text-base'>
-                    <Link href={href}>{label}</Link>
-                  </Button>
-                ))}
-              </div>
-            </div>
+              <SheetContent side='left' className='w-80'>
+                <div className='flex flex-col h-full'>
+                  <SheetHeader className='border-b pb-4'>
+                    <SheetTitle>
+                      <Link href='/' className='flex items-center space-x-2 text-xl font-bold'>
+                        <span>Kubeasy</span>
+                      </Link>
+                    </SheetTitle>
+                  </SheetHeader>
 
-            <SheetFooter className='flex-col sm:flex-col justify-start items-start'>
-              <Separator className='mb-2' />
-              <ModeSwitcher />
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      </div>
+                  <nav className='flex-1 py-4'>
+                    <div className='flex flex-col space-y-1'>
+                      {routeList.map(({ href, label }) => (
+                        <Button key={href} onClick={() => setIsOpen(false)} asChild variant='ghost' className='justify-start h-auto py-2 px-3 font-normal'>
+                          <Link href={href}>{label}</Link>
+                        </Button>
+                      ))}
+                    </div>
+                  </nav>
 
-      {/* <!-- Desktop --> */}
-      <NavigationMenu className='hidden lg:block mx-auto'>
-        <NavigationMenuList>
-          {routeList.map(({ href, label, content }) => (
-            <NavigationMenuItem key={href}>
-              {content ? (
-                <NavigationMenuTrigger>
-                  <Link href={href} className='text-base px-2 font-normal'>
-                    {label}
-                  </Link>
-                </NavigationMenuTrigger>
-              ) : (
-                <NavigationMenuLink href={href} className='text-base px-2'>
-                  {label}
-                </NavigationMenuLink>
-              )}
-              {content && (
-                <NavigationMenuContent>
-                  <Suspense fallback={<div>Loading...</div>}>{content}</Suspense>
-                </NavigationMenuContent>
-              )}
-            </NavigationMenuItem>
-          ))}
-        </NavigationMenuList>
-      </NavigationMenu>
-
-      <div className='hidden lg:flex'>
-        {user ? (
-          <UserDropdown />
-        ) : (
-          <div className='flex items-center space-x-2'>
-            <Button variant='ghost' onClick={() => router.push("/login")}>
-              <LogInIcon />
-              Sign In
-            </Button>
-            <ModeSwitcher />
+                  <SheetFooter className='border-t pt-4'>
+                    <div className='flex w-full items-center justify-between'>
+                      {user ? (
+                        <UserDropdown />
+                      ) : (
+                        <Button
+                          variant='outline'
+                          onClick={() => {
+                            setIsOpen(false);
+                            router.push("/login");
+                          }}
+                          className='w-full'
+                        >
+                          <LogInIcon className='mr-2 h-4 w-4' />
+                          Sign In
+                        </Button>
+                      )}
+                      <div className='ml-4'>
+                        <ModeSwitcher />
+                      </div>
+                    </div>
+                  </SheetFooter>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
-        )}
-      </div>
-    </header>
+
+          {/* Desktop Navigation */}
+          <NavigationMenu className='hidden lg:flex'>
+            <NavigationMenuList>
+              {routeList.map(({ href, label, content }) => (
+                <NavigationMenuItem key={href}>
+                  {content ? (
+                    <NavigationMenuTrigger className='h-9 px-4 py-2'>
+                      <Link href={href} className='font-medium'>
+                        {label}
+                      </Link>
+                    </NavigationMenuTrigger>
+                  ) : (
+                    <NavigationMenuLink
+                      href={href}
+                      className={cn(
+                        "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                      )}
+                    >
+                      {label}
+                    </NavigationMenuLink>
+                  )}
+                  {content && (
+                    <NavigationMenuContent>
+                      <Suspense
+                        fallback={
+                          <div className='w-[400px] p-4'>
+                            <div className='animate-pulse space-y-2'>
+                              <div className='h-4 bg-muted rounded w-3/4'></div>
+                              <div className='h-4 bg-muted rounded w-1/2'></div>
+                            </div>
+                          </div>
+                        }
+                      >
+                        {content}
+                      </Suspense>
+                    </NavigationMenuContent>
+                  )}
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          {/* Desktop Actions */}
+          <div className='hidden lg:flex items-center space-x-2'>
+            {user ? (
+              <UserDropdown />
+            ) : (
+              <div className='flex items-center space-x-2'>
+                <Button variant='ghost' onClick={() => router.push("/login")} className='h-9'>
+                  <LogInIcon className='mr-2 h-4 w-4' />
+                  Sign In
+                </Button>
+                <ModeSwitcher />
+              </div>
+            )}
+          </div>
+        </header>
+      </Container>
+    </div>
   );
 }
