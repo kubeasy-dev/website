@@ -5,9 +5,10 @@ export const docs = defineDocs({
   dir: "content/docs",
 });
 
-const blogSchema = frontmatterSchema.extend({
-  author: z.string(),
+const blogSchema = z.object({
+  title: z.string(),
   description: z.string(),
+  author: z.string(),
   date: z.string().date().or(z.date()),
   category: z.string(),
 });
