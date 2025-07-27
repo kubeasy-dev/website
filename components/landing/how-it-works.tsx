@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
 import { CopyToClipboardStep } from "./copy-to-clipboard-step";
 
 const howItWorks = [
@@ -36,10 +33,10 @@ export function HowItWorksSection() {
     <section className='py-16 px-4'>
       <div className='text-center'>
         <h2 className='text-lg text-primary mb-2 tracking-wider'>How It Works</h2>
-        <h2 className='ext-3xl md:text-4xl font-bold mb-4'>Resolve your first challenge in 5 minutes</h2>
+        <h2 className='text-3xl md:text-4xl font-bold mb-4'>Resolve your first challenge in 5 minutes</h2>
         <p className='text-xl text-muted-foreground mb-8 max-w-2xl mx-auto'>
-          Follow the steps below to start your first Kubernetes challenge with Kubeasy. In less than five minutes, you’ll be ready to solve your first scenario and explore the world of Kubernetes on
-          your own.
+          Follow the steps below to start your first Kubernetes challenge with Kubeasy. In less than five minutes, you&apos;ll be ready to solve your first scenario and explore the world of Kubernetes
+          on your own.
         </p>
       </div>
       <div className='w-full flex justify-center my-6'>
@@ -47,14 +44,7 @@ export function HowItWorksSection() {
       </div>
       <div className='mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2'>
         {howItWorks.map((step, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.08 }}
-            className={index === howItWorks.length - 1 && howItWorks.length % 2 === 1 ? "md:col-span-2 md:mx-auto md:w-1/2" : ""}
-          >
+          <div key={index} className={index === howItWorks.length - 1 && howItWorks.length % 2 === 1 ? "md:col-span-2 md:mx-auto md:w-1/2" : ""}>
             <div className='bg-card rounded-xl flex flex-col items-start gap-1 h-full overflow-hidden shadow-lg'>
               <div className='p-6'>
                 <div className='flex items-center gap-3 mb-2'>
@@ -73,7 +63,7 @@ export function HowItWorksSection() {
                 </code>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </section>
