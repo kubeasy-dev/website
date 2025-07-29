@@ -12,6 +12,7 @@ import Loading from "@/components/loading";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { DisplayDifficultyLevel } from "@/components/difficulty-level";
+import { DiscussionButton } from "@/components/challenges/discussion-button";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -90,6 +91,8 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
             </div>
           </CardContent>
         </Card>
+
+        <DiscussionButton challengeTitle={challenge.title} />
 
         <Suspense fallback={<Loading />}>
           <ChallengeProgressCard challenge={challenge} />
