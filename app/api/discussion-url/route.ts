@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     const octokit = await app.getInstallationOctokit(installation.id);
 
     // Search for discussions in the challenges repository using GraphQL API
-    // Expected title format: "💬 [Challenge Name] - Challenge Discussion for challenge"
-    const expectedTitle = `💬 ${challengeTitle} - Challenge Discussion for challenge`;
+    // Expected title format: "💬 [Challenge Name] - Challenge Discussion"
+    const expectedTitle = `💬 ${challengeTitle} - Challenge Discussion`;
 
     // Use GraphQL to query discussions since REST API might not have discussions endpoint
     const query = `
