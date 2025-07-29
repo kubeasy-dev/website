@@ -66,6 +66,7 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
               <DisplayDifficultyLevel level={challenge.difficulty} />
               {challenge.difficulty.charAt(0).toUpperCase() + challenge.difficulty.slice(1)}
             </Badge>
+            <DiscussionButton challengeTitle={challenge.title} />
           </div>
         </div>
 
@@ -91,8 +92,6 @@ export default async function ChallengePage({ params }: Readonly<{ params: Promi
             </div>
           </CardContent>
         </Card>
-
-        <DiscussionButton challengeTitle={challenge.title} />
 
         <Suspense fallback={<Loading />}>
           <ChallengeProgressCard challenge={challenge} />

@@ -3,7 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 interface DiscussionButtonProps {
   challengeTitle: string;
@@ -49,11 +49,9 @@ export function DiscussionButton({ challengeTitle }: DiscussionButtonProps) {
 
   return (
     <Button variant='outline' size='default' asChild className='gap-2'>
-      <a href={discussion.url} target='_blank' rel='noopener noreferrer' className='flex items-center'>
-        <MessageCircle className='h-4 w-4' />
+      <Link href={discussion.url} target='_blank' rel='noopener noreferrer'>
         💬 Join the Discussion
-        <ExternalLink className='h-3 w-3' />
-      </a>
+      </Link>
     </Button>
   );
 }
