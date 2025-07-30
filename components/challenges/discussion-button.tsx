@@ -48,7 +48,7 @@ export function DiscussionButton({ challengeTitle }: DiscussionButtonProps) {
   }
 
   return (
-    <Button variant='outline' size='default' asChild className='gap-2'>
+    <Button variant='ghost' size='sm' asChild className='text-muted-foreground hover:text-primary'>
       <Link href={discussion.url} target='_blank' rel='noopener noreferrer'>
         💬 Join the Discussion
       </Link>
