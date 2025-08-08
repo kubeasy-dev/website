@@ -11,7 +11,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <DocsLayout
       tree={source.pageTree}
       {...baseOptions}
-      githubUrl={siteConfig.github.url}
+      githubUrl={`https://github.com/${siteConfig.github.owner}/${siteConfig.github.repo}`}
       sidebar={{
         tabs: {
           transform(option, node) {

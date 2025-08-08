@@ -1,3 +1,4 @@
+import { siteConfig } from "@/config/site";
 import { NextRequest, NextResponse } from "next/server";
 import { App } from "octokit";
 
@@ -25,16 +26,17 @@ export async function GET(request: NextRequest) {
       privateKey,
     });
 
-    // Get installation ID for the kubeasy-dev organization
+    // Get installation ID for the configured organization
+    const org = siteConfig.github.owner;
     const { data: installations } = await app.octokit.rest.apps.listInstallations();
-    const installation = installations.find((inst) => inst.account?.login === "kubeasy-dev");
+    const installation = installations.find((inst) => inst.account?.login === org);
 
     if (!installation) {
-      console.error("GitHub App not installed on kubeasy-dev organization");
+      console.error(`GitHub App not installed on ${org} organization`);
       return NextResponse.json({ error: "GitHub App not installed" }, { status: 500 });
     }
 
-    // Get the Octokit instance for the installation
+    // Get the Octokit instance for the installations
     const octokit = await app.getInstallationOctokit(installation.id);
 
     // Search for discussions in the challenges repository using GraphQL API

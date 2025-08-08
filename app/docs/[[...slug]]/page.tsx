@@ -25,7 +25,7 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
       <DocsDescription>{page.data.description}</DocsDescription>
       <div className='flex flex-row gap-2 items-center mb-8 border-b pb-6'>
         <span className='text-sm text-muted-foreground'>Last updated: {time ? new Date(time).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Unknown"}</span>
-        <GitHubLink url={`${siteConfig.github.url}/blob/${branch}/${path}`} />
+        <GitHubLink url={`https://github.com/${siteConfig.github.owner}/${siteConfig.github.repo}/blob/${branch}/${path}`} />
       </div>
       <DocsBody>
         <MDX components={getMDXComponents()} />
