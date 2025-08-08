@@ -10,13 +10,13 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
   const page = source.getPage(params.slug);
   if (!page) notFound();
   const MDX = page.data.body;
-  const path = `/content/docs/${page.file.path}`;
+  const path = `/content/docs/${page.path}`;
   const branch = process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_GIT_COMMIT_REF : "main";
   const time = await getGithubLastEdit({
     owner: siteConfig.github.owner,
     repo: siteConfig.github.repo,
     sha: branch,
-    path: `content/docs/${page.file.path}`,
+    path: path,
   });
 
   return (
