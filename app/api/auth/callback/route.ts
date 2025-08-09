@@ -3,13 +3,18 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import PostHogClient from "@/lib/posthog";
 import { differenceInSeconds } from "date-fns";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get("next") ?? "/";
-  const distinctId = searchParams.get("ph_distinct_id");
+
+  const cookieName = "ph_" + process.env.NEXT_PUBLIC_POSTHOG_KEY + "_posthog";
+  const cookieStore = await cookies();
+  const cookieValue = cookieStore.get(cookieName)?.value;
+  const distinctId = cookieValue ? JSON.parse(cookieValue).distinct_id : "placeholder";
 
   if (code) {
     const supabase = await createClient();
@@ -22,7 +27,7 @@ export async function GET(request: Request) {
       const isNew = differenceInSeconds(new Date(), new Date(user.created_at)) < 10;
       if (isNew) {
         posthog.capture({
-          distinctId: distinctId || user.id,
+          distinctId: distinctId,
           event: "user_signup",
           properties: {
             provider: user.app_metadata.provider,
@@ -32,7 +37,7 @@ export async function GET(request: Request) {
         });
       } else {
         posthog.capture({
-          distinctId: distinctId || user.id,
+          distinctId: distinctId,
           event: "user_login",
           properties: {
             provider: user.app_metadata.provider,

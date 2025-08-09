@@ -12,14 +12,13 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
   const supabase = useSupabase();
-  const distinctId = posthog.get_distinct_id();
 
   const handleLogin = async (provider: "github" | "azure" | "google") => {
     setIsLoading(true);
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}&ph_distinct_id=${distinctId}`,
+        redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}`,
         ...(provider === "azure" ? { scopes: "email profile" } : {}),
       },
     });
