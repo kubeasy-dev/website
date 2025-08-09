@@ -20,7 +20,7 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
       ui_host: "https://eu.i.posthog.com",
       capture_pageview: false, // We capture pageviews manually
       capture_pageleave: true, // Enable pageleave capture
-      person_profiles: "identified_only",
+      person_profiles: "always",
       debug: process.env.NODE_ENV === "development",
       disable_session_recording: process.env.NODE_ENV === "development",
     });
