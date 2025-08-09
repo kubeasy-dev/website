@@ -11,10 +11,22 @@ export async function GET(request: Request) {
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get("next") ?? "/";
 
+  // get PostHog distinct ID from query
+  const phDidFromQuery = searchParams.get("ph_did") ?? undefined;
+
+  // get PostHog distinct ID from cookie
   const cookieName = "ph_" + process.env.NEXT_PUBLIC_POSTHOG_KEY + "_posthog";
   const cookieStore = await cookies();
-  const cookieValue = cookieStore.get(cookieName)?.value;
-  const distinctId = cookieValue ? JSON.parse(cookieValue).distinct_id : "placeholder";
+  const rawCookieValue = cookieStore.get(cookieName)?.value;
+  let cookieDistinctId: string | undefined;
+  if (rawCookieValue) {
+    const decoded = decodeURIComponent(rawCookieValue);
+    const parsed = JSON.parse(decoded);
+    cookieDistinctId = parsed?.distinct_id;
+  }
+
+  // Priority to client-provided distinct_id, then cookie
+  const preAuthDistinctId = phDidFromQuery || cookieDistinctId;
 
   if (code) {
     const supabase = await createClient();
@@ -25,27 +37,25 @@ export async function GET(request: Request) {
     if (user) {
       const posthog = PostHogClient();
       const isNew = differenceInSeconds(new Date(), new Date(user.created_at)) < 10;
-      if (isNew) {
-        posthog.capture({
-          distinctId: distinctId,
-          event: "user_signup",
-          properties: {
-            provider: user.app_metadata.provider,
-            next: next,
-            used_fallback_distinct_id: !distinctId,
-          },
-        });
-      } else {
-        posthog.capture({
-          distinctId: distinctId,
-          event: "user_login",
-          properties: {
-            provider: user.app_metadata.provider,
-            next: next,
-            used_fallback_distinct_id: !distinctId,
-          },
+      //
+      if (preAuthDistinctId && preAuthDistinctId !== user.id) {
+        await posthog.alias({
+          distinctId: user.id,
+          alias: preAuthDistinctId,
         });
       }
+
+      // Capture l'événement avec l'ID final (utilisateur)
+      posthog.capture({
+        distinctId: user.id,
+        event: isNew ? "user_signup" : "user_login",
+        properties: {
+          provider: user.app_metadata.provider,
+          next: next,
+          merged_from_anon: Boolean(preAuthDistinctId),
+          ph_did_source: phDidFromQuery ? "query" : cookieDistinctId ? "cookie" : "none",
+        },
+      });
       await posthog.shutdown();
     }
     if (!error) {

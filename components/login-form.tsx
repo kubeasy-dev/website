@@ -15,10 +15,16 @@ export function LoginForm() {
 
   const handleLogin = async (provider: "github" | "azure" | "google") => {
     setIsLoading(true);
+    const ph_did = posthog.get_distinct_id();
+
+    const url = new URL(`${window.location.origin}/api/auth/callback`);
+    url.searchParams.set("next", next ?? "/");
+    url.searchParams.set("ph_did", ph_did);
+
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}`,
+        redirectTo: url.toString(),
         ...(provider === "azure" ? { scopes: "email profile" } : {}),
       },
     });
