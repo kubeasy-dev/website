@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider as JotaiProvider } from "jotai";
 import posthog from "posthog-js";
-import { PostHogProvider as PHProvider } from "posthog-js/react";
+import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { useUser } from "@/hooks/use-user";
+import { usePathname, useSearchParams } from "next/navigation";
 
 function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const { data: user } = useUser();
@@ -24,7 +25,7 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
           api_host: "/ingest",
           persistence: "localStorage+cookie",
           ui_host: "https://eu.i.posthog.com",
-          capture_pageview: true,
+          capture_pageview: false,
           capture_pageleave: true,
           person_profiles: "always",
           debug: process.env.NODE_ENV === "development",
@@ -46,7 +47,39 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
     }
   }, [user]);
 
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return (
+    <PHProvider client={posthog}>
+      <SuspendedPostHogPageView />
+      {children}
+    </PHProvider>
+  );
+}
+
+function PostHogPageView() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    if (pathname && posthog) {
+      let url = window.origin + pathname;
+      const search = searchParams.toString();
+      if (search) {
+        url += "?" + search;
+      }
+      posthog.capture("$pageview", { $current_url: url });
+    }
+  }, [pathname, searchParams, posthog]);
+
+  return null;
+}
+
+function SuspendedPostHogPageView() {
+  return (
+    <Suspense fallback={null}>
+      <PostHogPageView />
+    </Suspense>
+  );
 }
 
 export function Providers({ children }: Readonly<{ children: React.ReactNode }>) {
