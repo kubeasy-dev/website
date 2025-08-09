@@ -32,8 +32,6 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
         email: user.email,
         name: user.user_metadata.full_name,
       });
-    } else {
-      posthog.reset(); // clears identity if user logs out
     }
   }, [user]);
 

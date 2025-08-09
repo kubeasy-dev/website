@@ -29,6 +29,7 @@ export function UserDropdown() {
 
   const handleSignOut = async () => {
     posthog.capture("user_logout");
+    posthog.reset(); // clears identity if user logs out
     window.location.reload();
     await supabase.auth.signOut();
   };
