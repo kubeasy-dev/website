@@ -9,6 +9,7 @@ import posthog from "posthog-js";
 import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
+import { tr } from "date-fns/locale";
 
 function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const { data: user } = useUser();
@@ -18,8 +19,8 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
       api_host: "/ingest",
       persistence: "localStorage+cookie",
       ui_host: "https://eu.i.posthog.com",
-      capture_pageview: false, // We capture pageviews manually
-      capture_pageleave: true, // Enable pageleave capture
+      capture_pageview: true,
+      capture_pageleave: true,
       person_profiles: "always",
       debug: process.env.NODE_ENV === "development",
       disable_session_recording: process.env.NODE_ENV === "development",
@@ -35,39 +36,7 @@ function PostHogProvider({ children }: Readonly<{ children: React.ReactNode }>) 
     }
   }, [user]);
 
-  return (
-    <PHProvider client={posthog}>
-      <SuspendedPostHogPageView />
-      {children}
-    </PHProvider>
-  );
-}
-
-function PostHogPageView() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const posthog = usePostHog();
-
-  useEffect(() => {
-    if (pathname && posthog) {
-      let url = window.origin + pathname;
-      const search = searchParams.toString();
-      if (search) {
-        url += "?" + search;
-      }
-      posthog.capture("$pageview", { $current_url: url });
-    }
-  }, [pathname, searchParams, posthog]);
-
-  return null;
-}
-
-function SuspendedPostHogPageView() {
-  return (
-    <Suspense fallback={null}>
-      <PostHogPageView />
-    </Suspense>
-  );
+  return <PHProvider client={posthog}>{children}</PHProvider>;
 }
 
 export function Providers({ children }: Readonly<{ children: React.ReactNode }>) {
