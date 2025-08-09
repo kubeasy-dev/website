@@ -9,6 +9,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get("next") ?? "/";
+  const distinctId = searchParams.get("ph_distinct_id");
 
   if (code) {
     const supabase = await createClient();
@@ -21,20 +22,22 @@ export async function GET(request: Request) {
       const isNew = differenceInSeconds(new Date(), new Date(user.created_at)) < 10;
       if (isNew) {
         posthog.capture({
-          distinctId: user.id,
+          distinctId: distinctId || user.id,
           event: "user_signup",
           properties: {
             provider: user.app_metadata.provider,
             next: next,
+            used_fallback_distinct_id: !distinctId,
           },
         });
       } else {
         posthog.capture({
-          distinctId: user.id,
+          distinctId: distinctId || user.id,
           event: "user_login",
           properties: {
             provider: user.app_metadata.provider,
             next: next,
+            used_fallback_distinct_id: !distinctId,
           },
         });
       }

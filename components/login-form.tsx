@@ -5,19 +5,21 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import useSupabase from "@/hooks/use-supabase";
+import posthog from "posthog-js";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
   const supabase = useSupabase();
+  const distinctId = posthog.get_distinct_id();
 
   const handleLogin = async (provider: "github" | "azure" | "google") => {
     setIsLoading(true);
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}`,
+        redirectTo: `${window.location.origin}/api/auth/callback?next=${next ?? "/"}&ph_distinct_id=${distinctId}`,
         ...(provider === "azure" ? { scopes: "email profile" } : {}),
       },
     });
