@@ -11,9 +11,11 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
   disable_session_recording: process.env.NODE_ENV === "development",
 });
 
+
 export function onRouterTransitionStart(
   url: string,
   navigationType: 'push' | 'replace' | 'traverse'
 ) {
+  console.log(`Navigation started: ${navigationType} to ${url}`)
   posthog.capture('$pageview', { $current_url: url, $navigation_type: navigationType });
 }
