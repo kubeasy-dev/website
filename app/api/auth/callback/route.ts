@@ -37,13 +37,6 @@ export async function GET(request: Request) {
     if (user) {
       const posthog = PostHogClient();
       const isNew = differenceInSeconds(new Date(), new Date(user.created_at)) < 10;
-      //
-      if (preAuthDistinctId && preAuthDistinctId !== user.id) {
-        await posthog.alias({
-          distinctId: user.id,
-          alias: preAuthDistinctId,
-        });
-      }
 
       // Capture l'événement avec l'ID final (utilisateur)
       posthog.capture({
