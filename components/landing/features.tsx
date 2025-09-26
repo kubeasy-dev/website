@@ -7,8 +7,6 @@ type Feature = {
   name: string;
   description: string;
   icon: React.ElementType;
-  color: string;
-  badge?: string;
 };
 
 const featuresLists: Feature[] = [
@@ -16,25 +14,21 @@ const featuresLists: Feature[] = [
     name: "Practical Learning",
     description: "Learn through hands-on challenges that simulate real-world scenarios and best practices.",
     icon: Code,
-    color: "bg-primary/10 text-primary",
   },
   {
     name: "Track Progress",
     description: "Monitor your learning journey and see your improvements over time.",
     icon: Trophy,
-    color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-300",
   },
   {
     name: "Local Environment",
     description: "Your computer, your text editor, your terminal. Practice Kubernetes without leaving your machine.",
     icon: Laptop,
-    color: "bg-secondary/40 text-secondary-foreground dark:bg-secondary/60",
   },
   {
     name: "Community Driven",
     description: "Join a vibrant community. Learn, share, and grow together with open source challenges.",
     icon: Users,
-    color: "bg-accent/40 text-accent-foreground dark:bg-accent/60",
   },
 ];
 
@@ -53,7 +47,7 @@ export const FeaturesSection = () => {
 
         <div className='grid lg:grid-cols-2 gap-4 w-full'>
           {featuresLists.map((feature) => (
-            <Card key={feature.name} className='bg-muted/50 dark:bg-card hover:bg-background transition-all delay-75 group/number'>
+            <Card key={feature.name} className='bg-white dark:bg-card hover:bg-white/20 dark:hover:bg-card/60 cursor-pointer transition-all delay-75 group/number'>
               <CardHeader>
                 <div className='flex justify-between'>
                   <feature.icon />
