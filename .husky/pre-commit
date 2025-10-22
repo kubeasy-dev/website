@@ -1,0 +1,5 @@
+# Run lint-staged (Biome checks on staged files)
+pnpm exec lint-staged
+
+# Run typecheck on entire project
+pnpm typecheck
