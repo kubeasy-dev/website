@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site";
 
 export function CTASection() {
   return (
@@ -32,7 +33,7 @@ export function CTASection() {
                 className="text-base font-bold bg-secondary text-foreground hover:bg-secondary/90 neo-border-thick neo-shadow-lg border-foreground"
                 asChild
               >
-                <Link href="https://github.com" target="_blank">
+                <Link href={siteConfig.links.github} target="_blank">
                   View Documentation
                 </Link>
               </Button>

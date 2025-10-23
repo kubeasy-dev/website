@@ -3,6 +3,7 @@
 import { Terminal } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site";
 import { trackCtaClicked } from "@/lib/analytics";
 import { Icons } from "./icons";
 import { InteractiveTerminal } from "./interactive-terminal";
@@ -54,10 +55,10 @@ export function HeroSection() {
                 asChild
               >
                 <Link
-                  href="https://github.com"
+                  href={siteConfig.links.github}
                   target="_blank"
                   onClick={() =>
-                    handleCtaClick("View on GitHub", "https://github.com")
+                    handleCtaClick("View on GitHub", siteConfig.links.github)
                   }
                 >
                   <Icons.gitHub className="mr-2 h-5 w-5" />

@@ -8,6 +8,7 @@ import { DashboardChart } from "@/components/dashboard-chart";
 import { DashboardRecentGains } from "@/components/dashboard-recent-gains";
 import { DashboardStats } from "@/components/dashboard-stats";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site";
 import { auth } from "@/lib/auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
@@ -158,7 +159,7 @@ export default async function DashboardPage() {
                 className="neo-border neo-shadow font-black h-auto py-6 flex-col gap-2"
                 asChild
               >
-                <Link href="https://github.com" target="_blank">
+                <Link href={siteConfig.links.github} target="_blank">
                   <Trophy className="w-8 h-8" />
                   <span>View on GitHub</span>
                 </Link>

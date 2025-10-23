@@ -10,6 +10,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { siteConfig } from "@/config/site";
 import { auth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { UserDropdown } from "./user-dropdown";
@@ -25,12 +26,12 @@ export async function Header() {
         <Link href="/" className="flex items-center gap-3">
           <Image
             src="/logo.png"
-            alt="Kubeasy"
+            alt={siteConfig.name}
             width={40}
             height={40}
             className="h-10 w-10"
           />
-          <span className="text-2xl font-black">Kubeasy</span>
+          <span className="text-2xl font-black">{siteConfig.name}</span>
         </Link>
         <NavigationMenu>
           <NavigationMenuList>

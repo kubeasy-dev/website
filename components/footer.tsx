@@ -1,6 +1,7 @@
 import { Github, Twitter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { siteConfig } from "@/config/site";
 
 export function Footer() {
   return (
@@ -11,17 +12,14 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/logo.png"
-                alt="Kubeasy"
+                alt={siteConfig.name}
                 width={32}
                 height={32}
                 className="h-8 w-8"
               />
-              <span className="text-xl font-black">Kubeasy</span>
+              <span className="text-xl font-black">{siteConfig.name}</span>
             </Link>
-            <p className="text-sm font-medium">
-              Learn Kubernetes through interactive CLI challenges. Free and open
-              source.
-            </p>
+            <p className="text-sm font-medium">{siteConfig.description}</p>
           </div>
 
           <div>
@@ -53,7 +51,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm font-medium">
               <li>
                 <Link
-                  href="https://github.com"
+                  href={siteConfig.links.github}
                   target="_blank"
                   className="hover:text-primary transition-colors"
                 >
@@ -87,7 +85,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-primary transition-colors">
+                <Link
+                  href={`${siteConfig.links.github}/website/blob/main/LICENSE`}
+                  target="_blank"
+                  className="hover:text-primary transition-colors"
+                >
                   License
                 </Link>
               </li>
@@ -97,18 +99,18 @@ export function Footer() {
 
         <div className="pt-8 border-t-2 border-border flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm font-bold">
-            © 2025 Kubeasy. Open source under MIT License.
+            © 2025 {siteConfig.name}. Open source under Apache License 2.0.
           </p>
           <div className="flex items-center gap-4">
             <Link
-              href="https://github.com"
+              href={siteConfig.links.github}
               target="_blank"
               className="hover:text-primary transition-colors"
             >
               <Github className="h-5 w-5" />
             </Link>
             <Link
-              href="https://twitter.com"
+              href={siteConfig.links.twitter}
               target="_blank"
               className="hover:text-primary transition-colors"
             >
