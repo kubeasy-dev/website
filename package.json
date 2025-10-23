@@ -15,7 +15,8 @@
     "preview": "next build && next start",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate:go-types": "npx tsx scripts/generate-go-types.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "3.10.0",
