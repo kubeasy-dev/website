@@ -100,6 +100,10 @@ type ErrorResponse struct {
 	Error   string  \`json:"error"\`
 	Details *string \`json:"details,omitempty"\`
 }
+
+// Type aliases for backward compatibility with existing CLI code
+type UserProfile = UserResponse
+type ChallengeEntity = ChallengeResponse
 `;
 
 // Get output file from command line args
