@@ -127,14 +127,35 @@ export function HeaderClient({ user }: HeaderClientProps) {
               <nav className="flex-1 py-4">
                 <div className="flex flex-col space-y-2">
                   {routeList.map(({ href, label, external, subRoutes }) => (
-                    <div key={href} className="space-y-1">
-                      {subRoutes ? (
-                        <>
-                          {/* Parent label (non-clickable) */}
-                          <div className="px-3 py-2 text-sm font-black text-foreground/60 uppercase tracking-wide">
+                    <div key={href}>
+                      <Button
+                        onClick={() => {
+                          if (!subRoutes) {
+                            setIsOpen(false);
+                            if (external) {
+                              window.open(href, "_blank");
+                            } else {
+                              router.push(href);
+                            }
+                          }
+                        }}
+                        asChild={!subRoutes}
+                        variant="ghost"
+                        className="justify-start h-auto py-2 px-3 font-bold w-full"
+                      >
+                        {subRoutes ? (
+                          <span>{label}</span>
+                        ) : (
+                          <Link
+                            href={href}
+                            target={external ? "_blank" : undefined}
+                          >
                             {label}
-                          </div>
-                          {/* Sub-routes directly visible */}
+                          </Link>
+                        )}
+                      </Button>
+                      {subRoutes && (
+                        <div className="ml-4 mt-1 space-y-1">
                           {subRoutes.map((subRoute) => (
                             <Button
                               key={subRoute.href}
@@ -143,54 +164,23 @@ export function HeaderClient({ user }: HeaderClientProps) {
                                 router.push(subRoute.href);
                               }}
                               variant="ghost"
-                              className="justify-start h-auto py-2.5 px-4 font-bold text-base w-full"
+                              className="justify-start h-auto py-2 px-3 font-medium text-sm w-full"
                               asChild
                             >
                               <Link href={subRoute.href}>{subRoute.label}</Link>
                             </Button>
                           ))}
-                        </>
-                      ) : (
-                        <Button
-                          onClick={() => {
-                            setIsOpen(false);
-                            if (external) {
-                              window.open(href, "_blank");
-                            } else {
-                              router.push(href);
-                            }
-                          }}
-                          asChild
-                          variant="ghost"
-                          className="justify-start h-auto py-2.5 px-4 font-bold text-base w-full"
-                        >
-                          <Link
-                            href={href}
-                            target={external ? "_blank" : undefined}
-                          >
-                            {label}
-                          </Link>
-                        </Button>
+                        </div>
                       )}
                     </div>
                   ))}
                 </div>
               </nav>
 
-              <SheetFooter className="border-t pt-4">
+              <SheetFooter className="pt-4">
                 <div className="flex w-full flex-col gap-2">
                   {user ? (
                     <>
-                      {/* User info section */}
-                      <div className="px-3 py-2 border-b">
-                        <p className="text-sm font-bold leading-none">
-                          {user.name}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground mt-1">
-                          {user.email}
-                        </p>
-                      </div>
-
                       {/* User menu items directly visible */}
                       <div className="flex flex-col gap-1">
                         <Button
@@ -215,6 +205,18 @@ export function HeaderClient({ user }: HeaderClientProps) {
                         >
                           <Link href="/profile">Profile</Link>
                         </Button>
+                      </div>
+
+                      {/* User info section */}
+                      <div className="px-3 py-2 border-t flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-bold leading-none">
+                            {user.name}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground mt-1">
+                            {user.email}
+                          </p>
+                        </div>
                         <Button
                           variant="ghost"
                           onClick={async () => {
@@ -224,35 +226,22 @@ export function HeaderClient({ user }: HeaderClientProps) {
                             );
                             await signOut();
                           }}
-                          className="justify-start font-bold text-destructive hover:text-destructive w-full"
+                          className="text-destructive"
                         >
                           <LogOut className="mr-2 h-4 w-4" />
-                          Logout
                         </Button>
                       </div>
                     </>
                   ) : (
-                    <>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setIsOpen(false);
-                          router.push("/login");
-                        }}
-                        className="w-full font-bold"
-                      >
-                        Sign In
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setIsOpen(false);
-                          router.push("/challenges");
-                        }}
-                        className="w-full neo-border neo-shadow font-bold"
-                      >
-                        Get Started
-                      </Button>
-                    </>
+                    <Button
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push("/login");
+                      }}
+                      className="w-full neo-border neo-shadow font-bold"
+                    >
+                      Get Started
+                    </Button>
                   )}
                 </div>
               </SheetFooter>
