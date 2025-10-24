@@ -125,37 +125,16 @@ export function HeaderClient({ user }: HeaderClientProps) {
               </SheetHeader>
 
               <nav className="flex-1 py-4">
-                <div className="flex flex-col space-y-1">
+                <div className="flex flex-col space-y-2">
                   {routeList.map(({ href, label, external, subRoutes }) => (
-                    <div key={href}>
-                      <Button
-                        onClick={() => {
-                          if (!subRoutes) {
-                            setIsOpen(false);
-                            if (external) {
-                              window.open(href, "_blank");
-                            } else {
-                              router.push(href);
-                            }
-                          }
-                        }}
-                        asChild={!subRoutes}
-                        variant="ghost"
-                        className="justify-start h-auto py-2 px-3 font-bold w-full"
-                      >
-                        {subRoutes ? (
-                          <span>{label}</span>
-                        ) : (
-                          <Link
-                            href={href}
-                            target={external ? "_blank" : undefined}
-                          >
+                    <div key={href} className="space-y-1">
+                      {subRoutes ? (
+                        <>
+                          {/* Parent label (non-clickable) */}
+                          <div className="px-3 py-2 text-sm font-black text-foreground/60 uppercase tracking-wide">
                             {label}
-                          </Link>
-                        )}
-                      </Button>
-                      {subRoutes && (
-                        <div className="ml-4 mt-1 space-y-1">
+                          </div>
+                          {/* Sub-routes directly visible */}
                           {subRoutes.map((subRoute) => (
                             <Button
                               key={subRoute.href}
@@ -164,13 +143,34 @@ export function HeaderClient({ user }: HeaderClientProps) {
                                 router.push(subRoute.href);
                               }}
                               variant="ghost"
-                              className="justify-start h-auto py-2 px-3 font-medium text-sm w-full"
+                              className="justify-start h-auto py-2.5 px-4 font-bold text-base w-full"
                               asChild
                             >
                               <Link href={subRoute.href}>{subRoute.label}</Link>
                             </Button>
                           ))}
-                        </div>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            setIsOpen(false);
+                            if (external) {
+                              window.open(href, "_blank");
+                            } else {
+                              router.push(href);
+                            }
+                          }}
+                          asChild
+                          variant="ghost"
+                          className="justify-start h-auto py-2.5 px-4 font-bold text-base w-full"
+                        >
+                          <Link
+                            href={href}
+                            target={external ? "_blank" : undefined}
+                          >
+                            {label}
+                          </Link>
+                        </Button>
                       )}
                     </div>
                   ))}
