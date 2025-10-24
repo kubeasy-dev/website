@@ -229,7 +229,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                     </Link>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[300px] gap-2 p-4">
+                    <ul className="grid w-[300px] gap-4">
                       {subRoutes.map((subRoute) => (
                         <li key={subRoute.href}>
                           <NavigationMenuLink asChild>
