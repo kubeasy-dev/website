@@ -1,7 +1,7 @@
 "use client";
 
 import type { User } from "better-auth";
-import { Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -180,9 +180,57 @@ export function HeaderClient({ user }: HeaderClientProps) {
               <SheetFooter className="border-t pt-4">
                 <div className="flex w-full flex-col gap-2">
                   {user ? (
-                    <div className="flex items-center justify-between w-full">
-                      <UserDropdown user={user} />
-                    </div>
+                    <>
+                      {/* User info section */}
+                      <div className="px-3 py-2 border-b">
+                        <p className="text-sm font-bold leading-none">
+                          {user.name}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground mt-1">
+                          {user.email}
+                        </p>
+                      </div>
+
+                      {/* User menu items directly visible */}
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setIsOpen(false);
+                            router.push("/dashboard");
+                          }}
+                          className="justify-start font-bold w-full"
+                          asChild
+                        >
+                          <Link href="/dashboard">Dashboard</Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setIsOpen(false);
+                            router.push("/profile");
+                          }}
+                          className="justify-start font-bold w-full"
+                          asChild
+                        >
+                          <Link href="/profile">Profile</Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={async () => {
+                            setIsOpen(false);
+                            const { signOut } = await import(
+                              "@/lib/auth-client"
+                            );
+                            await signOut();
+                          }}
+                          className="justify-start font-bold text-destructive hover:text-destructive w-full"
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Logout
+                        </Button>
+                      </div>
+                    </>
                   ) : (
                     <>
                       <Button
