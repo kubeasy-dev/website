@@ -8,7 +8,7 @@ export function OpenSourceSection() {
       <div className="absolute top-10 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
       <div className="absolute bottom-10 right-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl" />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl  px-4 mx-auto">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6 font-black text-sm uppercase tracking-wider">
             <Heart className="w-5 h-5" />

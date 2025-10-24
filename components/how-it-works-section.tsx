@@ -103,7 +103,7 @@ export function HowItWorksSection() {
         <div className="absolute bottom-20 right-20 w-40 h-40 bg-accent rounded-full neo-border" />
       </div>
 
-      <div className="container mx-auto max-w-7xl relative z-10">
+      <div className="container mx-auto  px-4 max-w-7xl relative z-10">
         <div className="text-center mb-20 space-y-6">
           <div className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black text-sm uppercase tracking-wider">
             <Sparkles className="h-5 w-5" />

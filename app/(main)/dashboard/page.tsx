@@ -96,7 +96,7 @@ export default async function DashboardPage() {
   return (
     <HydrateClient>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 max-w-7xl">
           {/* Header */}
           <div className="mb-12">
             <h1 className="text-5xl font-black mb-4">

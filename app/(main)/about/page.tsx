@@ -39,7 +39,7 @@ const sections = [
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto max-w-7xl">
+    <div className="container mx-auto px-4 max-w-7xl">
       {/* Hero Section */}
       <div className="mb-16 space-y-6 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-foreground border-4 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
