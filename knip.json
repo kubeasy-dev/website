@@ -1,0 +1,49 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "app/**/*.{ts,tsx}",
+    "server/api/**/*.{ts,tsx}",
+    "server/db/schema/**/*.ts",
+    "lib/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "trpc/**/*.{ts,tsx}",
+    "scripts/**/*.ts",
+    "*.config.{js,ts,mjs}",
+    "sentry.*.config.ts",
+    "instrumentation*.ts"
+  ],
+  "project": ["**/*.{ts,tsx,js,jsx,mjs,cjs}"],
+  "ignore": [
+    "**/*.test.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/build/**",
+    "drizzle/**"
+  ],
+  "ignoreDependencies": [
+    "@tailwindcss/postcss",
+    "postcss",
+    "autoprefixer",
+    "tailwindcss",
+    "tailwindcss-animate",
+    "tw-animate-css",
+    "@biomejs/biome",
+    "husky",
+    "lint-staged",
+    "prettier",
+    "dotenv",
+    "dotenv-cli",
+    "eslint",
+    "eslint-config-next",
+    "@eslint/eslintrc"
+  ],
+  "ignoreBinaries": ["tsx"],
+  "next": {
+    "entry": ["app/**/*.{ts,tsx}!", "next.config.mjs!", "middleware.ts"]
+  },
+  "typescript": {
+    "entry": ["types/**/*.ts"]
+  }
+}
