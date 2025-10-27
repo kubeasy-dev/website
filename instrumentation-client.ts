@@ -19,12 +19,12 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
 
 // Initialize Sentry
 Sentry.init({
-  dsn: "https://6e6e807799115b099c0c68c05c26ee8a@o4510220564955136.ingest.de.sentry.io/4510220589138000",
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],
 
-  environment: isDevelopment ? "development" : "production",
+  environment: process.env.NEXT_PUBLIC_VERCEL_ENV,
 
   // Define how likely traces are sampled.
   // DEV: 100% of traces to capture all development activity
