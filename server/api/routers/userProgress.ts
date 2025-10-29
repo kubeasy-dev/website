@@ -717,18 +717,29 @@ export const userProgressRouter = createTRPCRouter({
             }
 
             // Verify both validations are successful when validated=true
-            if (!staticValidation || !dynamicValidation) {
+            // For challenges without dynamic validations, only static validation is required
+            const hasDynamicValidations =
+              payload.dynamicValidations &&
+              Object.keys(payload.dynamicValidations).length > 0;
+
+            if (
+              !staticValidation ||
+              (hasDynamicValidations && !dynamicValidation)
+            ) {
               logger.warn(
-                "Validation claimed as successful but individual validations are false",
+                "Validation claimed as successful but required validations are false",
                 {
                   userId,
                   challengeId: challengeData.id,
                   staticValidation,
                   dynamicValidation,
+                  hasDynamicValidations,
                 },
               );
               throw new Error(
-                "Both static and dynamic validation must pass for successful submission",
+                hasDynamicValidations
+                  ? "Both static and dynamic validation must pass for successful submission"
+                  : "Static validation must pass for successful submission",
               );
             }
           }
