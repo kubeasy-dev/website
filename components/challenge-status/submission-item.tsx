@@ -10,8 +10,8 @@ interface SubmissionItemProps {
   submission: {
     id: string;
     timestamp: Date;
-    staticValidation: boolean;
-    dynamicValidation: boolean;
+    staticValidation: boolean | null;
+    dynamicValidation: boolean | null;
     payload: unknown;
   };
 }

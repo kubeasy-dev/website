@@ -58,6 +58,17 @@ export async function POST(
       payload,
     } = body;
 
+    // Debug logging
+    console.log("[SUBMIT DEBUG]", {
+      slug,
+      validated,
+      staticValidation,
+      dynamicValidation,
+      hasPayload: !!payload,
+      payloadKeys: payload ? Object.keys(payload) : [],
+      userId: auth.user.id,
+    });
+
     if (typeof validated !== "boolean") {
       return NextResponse.json(
         {
@@ -82,7 +93,11 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error submitting challenge:", error);
+    console.error("[SUBMIT ERROR]", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     const message = error instanceof Error ? error.message : "Unknown error";
 
     if (message === "Challenge not found") {

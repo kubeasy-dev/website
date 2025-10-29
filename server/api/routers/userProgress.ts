@@ -601,6 +601,9 @@ export const userProgressRouter = createTRPCRouter({
       z.object({
         challengeSlug: z.string(),
         validated: z.boolean(),
+        // New structure: validations grouped by type
+        validations: z.record(z.any()).optional(),
+        // Legacy fields for backward compatibility
         staticValidation: z.boolean().optional(),
         dynamicValidation: z.boolean().optional(),
         payload: z.any().optional(),
@@ -611,6 +614,7 @@ export const userProgressRouter = createTRPCRouter({
       const {
         challengeSlug,
         validated,
+        validations,
         staticValidation,
         dynamicValidation,
         payload,
@@ -669,94 +673,62 @@ export const userProgressRouter = createTRPCRouter({
             throw new Error("Challenge already completed");
           }
 
-          // Verify payload integrity when validation is claimed as successful
+          // Verify validations integrity when validation is claimed as successful
           if (validated) {
-            // Require payload to be present
-            if (!payload) {
-              logger.warn("Validation claimed but no payload provided", {
-                userId,
-                challengeId: challengeData.id,
-              });
-              throw new Error("Payload required for successful validation");
-            }
-
-            // Verify staticValidation matches payload
-            if (staticValidation && payload.staticValidations) {
-              const hasStaticChecks = Object.keys(
-                payload.staticValidations,
-              ).some(
-                (key) =>
-                  Array.isArray(payload.staticValidations[key]) &&
-                  payload.staticValidations[key].length > 0,
-              );
-              if (!hasStaticChecks) {
-                logger.warn(
-                  "Static validation claimed but no static checks in payload",
-                  { userId, challengeId: challengeData.id },
-                );
-                throw new Error("Invalid static validation payload");
-              }
-            }
-
-            // Verify dynamicValidation matches payload
-            if (dynamicValidation && payload.dynamicValidations) {
-              const hasDynamicChecks = Object.keys(
-                payload.dynamicValidations,
-              ).some(
-                (key) =>
-                  Array.isArray(payload.dynamicValidations[key]) &&
-                  payload.dynamicValidations[key].length > 0,
-              );
-              if (!hasDynamicChecks) {
-                logger.warn(
-                  "Dynamic validation claimed but no dynamic checks in payload",
-                  { userId, challengeId: challengeData.id },
-                );
-                throw new Error("Invalid dynamic validation payload");
-              }
-            }
-
-            // Verify both validations are successful when validated=true
-            // For challenges without dynamic validations, only static validation is required
-            const hasDynamicValidations =
-              payload.dynamicValidations &&
-              Object.keys(payload.dynamicValidations).length > 0;
-
-            if (
-              !staticValidation ||
-              (hasDynamicValidations && !dynamicValidation)
-            ) {
+            // Require validations or payload to be present
+            if (!validations && !payload) {
               logger.warn(
-                "Validation claimed as successful but required validations are false",
+                "Validation claimed but no validations or payload provided",
                 {
                   userId,
                   challengeId: challengeData.id,
-                  staticValidation,
-                  dynamicValidation,
-                  hasDynamicValidations,
                 },
               );
-              throw new Error(
-                hasDynamicValidations
-                  ? "Both static and dynamic validation must pass for successful submission"
-                  : "Static validation must pass for successful submission",
+              throw new Error("Validations required for successful validation");
+            }
+
+            // Use new validations structure if available, fallback to legacy
+            const validationData = validations || payload;
+
+            // Verify that all validations in the payload passed
+            if (validationData) {
+              const allPassed = Object.values(validationData).every(
+                (valList: any) => {
+                  if (Array.isArray(valList)) {
+                    return valList.every((val: any) => val.passed === true);
+                  }
+                  return false;
+                },
               );
+
+              if (!allPassed) {
+                logger.warn(
+                  "Validation claimed as successful but some validations failed",
+                  {
+                    userId,
+                    challengeId: challengeData.id,
+                    validationTypes: Object.keys(validationData),
+                  },
+                );
+                throw new Error(
+                  "All validations must pass for successful submission",
+                );
+              }
             }
           }
 
           // Always store the submission (even if validation failed)
-          if (
-            staticValidation !== undefined ||
-            dynamicValidation !== undefined ||
-            payload !== undefined
-          ) {
+          if (validations !== undefined || payload !== undefined) {
             await ctx.db.insert(userSubmission).values({
               id: nanoid(),
               userId,
               challengeId: challengeData.id,
-              staticValidation: staticValidation ?? false,
-              dynamicValidation: dynamicValidation ?? false,
-              payload: payload ?? {},
+              validated,
+              validations: validations || null,
+              // Legacy fields for backward compatibility
+              staticValidation: staticValidation ?? null,
+              dynamicValidation: dynamicValidation ?? null,
+              payload: payload || null,
             });
           }
 
@@ -1065,6 +1037,71 @@ export const userProgressRouter = createTRPCRouter({
 
       return {
         submissions,
+      };
+    }),
+
+  /**
+   * Get the latest validation status for a challenge
+   * Returns the most recent submission's validation details
+   */
+  getLatestValidationStatus: privateProcedure
+    .input(
+      z.object({
+        slug: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Get challenge ID from slug
+      const [challengeData] = await ctx.db
+        .select({ id: challenge.id })
+        .from(challenge)
+        .where(eq(challenge.slug, input.slug))
+        .limit(1);
+
+      if (!challengeData) {
+        throw new Error("Challenge not found");
+      }
+
+      // Get the most recent submission for this challenge by this user
+      const [latestSubmission] = await ctx.db
+        .select({
+          id: userSubmission.id,
+          timestamp: userSubmission.timestamp,
+          validated: userSubmission.validated,
+          validations: userSubmission.validations,
+          // Legacy fields for backward compatibility
+          staticValidation: userSubmission.staticValidation,
+          dynamicValidation: userSubmission.dynamicValidation,
+          payload: userSubmission.payload,
+        })
+        .from(userSubmission)
+        .where(
+          and(
+            eq(userSubmission.userId, ctx.user.id),
+            eq(userSubmission.challengeId, challengeData.id),
+          ),
+        )
+        .orderBy(desc(userSubmission.timestamp))
+        .limit(1);
+
+      if (!latestSubmission) {
+        return {
+          hasSubmission: false,
+          validations: null,
+          timestamp: null,
+          validated: false,
+        };
+      }
+
+      // Use new validations structure if available, fallback to legacy
+      const validationData =
+        latestSubmission.validations || latestSubmission.payload;
+
+      return {
+        hasSubmission: true,
+        validated: latestSubmission.validated,
+        validations: validationData,
+        timestamp: latestSubmission.timestamp,
       };
     }),
 });

@@ -146,6 +146,33 @@ Authentication is handled by **Better Auth** (not NextAuth):
   - `index.ts`: Exports all schemas
 - **Config**: `drizzle.config.ts` points to `server/db/schema` directory
 
+### Challenge Validation System
+
+The website backend tracks user progress through a specialized validation system:
+
+**Database Schema (userSubmission table)**:
+- `validated: boolean` - Overall pass/fail status
+- `validations: json` - Structured validation results from CLI
+  - Format: `{logvalidations: [{name, passed, details, rawStatus}], statusvalidations: [...], ...}`
+  - Stores results for all 6 validation types (Log, Status, Event, Metrics, RBAC, Connectivity)
+- Legacy fields (`staticValidation`, `dynamicValidation`, `payload`) kept for backward compatibility
+
+**tRPC Endpoints (server/api/routers/userProgress.ts)**:
+- `submitChallenge` - Receives validation results from CLI
+  - Validates that all validations passed before marking challenge as complete
+  - Stores per-validation details in database
+  - Awards XP and updates user progress on successful completion
+- `getLatestValidationStatus` - Fetches most recent submission's validation details
+  - Used by frontend to display real-time progress
+  - Returns structured validation data for UI rendering
+
+**Integration Flow**:
+1. User runs `kubeasy challenge submit` in CLI
+2. CLI fetches validation CRDs from Kubernetes cluster
+3. CLI sends structured payload to `submitChallenge` mutation
+4. Backend validates and stores results, updates user progress
+5. Frontend queries `getLatestValidationStatus` to display current state
+
 ### Project Structure
 
 ```

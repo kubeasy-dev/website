@@ -113,9 +113,15 @@ export const userSubmission = pgTable("user_submission", {
     .notNull()
     .references(() => challenge.id, { onDelete: "cascade" }),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
-  staticValidation: boolean("static_validation").notNull().default(false),
-  dynamicValidation: boolean("dynamic_validation").notNull().default(false),
-  payload: json("payload").notNull(),
+  validated: boolean("validated").notNull().default(false),
+  // Deprecated fields - kept for backward compatibility, will be removed in future
+  staticValidation: boolean("static_validation"),
+  dynamicValidation: boolean("dynamic_validation"),
+  // New structure: stores validation results grouped by type
+  // Structure: { logvalidations: [{name, passed, details, rawStatus}], ... }
+  validations: json("validations"),
+  // Legacy payload field for backward compatibility
+  payload: json("payload"),
 });
 
 export const xpActionEnum = pgEnum("xp_action", [
