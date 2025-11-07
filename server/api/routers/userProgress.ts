@@ -1152,12 +1152,12 @@ export const userProgressRouter = createTRPCRouter({
               });
             }
 
-            // Record streak bonus XP transaction if applicable
-            if (streakInfo?.streakBonus) {
+            // Record streak bonus XP transaction if applicable and not hit daily limit
+            if (streakInfo?.streakBonus && !hitDailyLimit) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "daily_streak",
-                xpAmount: streakBonusXp,
+                xpAmount: actualStreakBonusXp,
                 challengeId: challengeData.id,
                 description: streakInfo.streakBonus.label,
               });
@@ -1166,8 +1166,16 @@ export const userProgressRouter = createTRPCRouter({
                 userId,
                 challengeId: challengeData.id,
                 streak: streakInfo.streak,
-                streakBonusXp,
+                streakBonusXp: actualStreakBonusXp,
                 streakLabel: streakInfo.streakBonus.label,
+              });
+            }
+
+            // Log if we hit the daily limit
+            if (hitDailyLimit) {
+              logger.info("Daily completion limit reached - no streak bonus", {
+                userId,
+                challengeId: challengeData.id,
               });
             }
 
@@ -1187,10 +1195,11 @@ export const userProgressRouter = createTRPCRouter({
               userId,
               challengeId: challengeData.id,
               difficulty: challengeData.difficulty,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               isFirstChallenge,
-              streak: streakInfo?.streak ?? 0,
-              streakBonusXp,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
+              streakBonusXp: actualStreakBonusXp,
+              hitDailyLimit,
             });
 
             // Track challenge completed event in PostHog
@@ -1199,19 +1208,19 @@ export const userProgressRouter = createTRPCRouter({
               challengeData.id,
               challengeSlug,
               challengeData.difficulty,
-              totalXp,
+              actualTotalXp,
               isFirstChallenge,
             );
 
             return {
               success: true,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               totalXp: newXp,
               rank: newRank,
               rankUp: oldRank !== newRank,
               firstChallenge: isFirstChallenge,
-              streak: streakInfo?.streak ?? 0,
-              streakBonusXp,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
+              streakBonusXp: actualStreakBonusXp,
             };
           } catch (error) {
             logger.error("Failed to complete challenge", {
