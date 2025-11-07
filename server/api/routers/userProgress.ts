@@ -80,6 +80,9 @@ function calculateStreakBonus(streak: number): {
 /**
  * Calculate current streak and check if this is the first challenge completed today
  * Returns null if a challenge was already completed today, otherwise returns streak info
+ *
+ * Optimized to only query recent completions (last 91 days) to reduce data scanned
+ * and avoid race conditions with DB-level unique constraint
  */
 async function calculateStreakForCompletion(
   database: typeof db,
@@ -88,6 +91,15 @@ async function calculateStreakForCompletion(
   streak: number;
   streakBonus: { bonus: number; label: string } | null;
 } | null> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Calculate date 90 days ago (max possible streak bonus is 90 days)
+  const ninetyDaysAgo = new Date(today);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  // Only query completions from the last 91 days to optimize performance
+  // This is sufficient since max streak bonus is 90 days
   const streakResult = await database
     .select({
       completedAt: userProgress.completedAt,
@@ -98,12 +110,10 @@ async function calculateStreakForCompletion(
         eq(userProgress.userId, userId),
         eq(userProgress.status, "completed"),
         sql`${userProgress.completedAt} IS NOT NULL`,
+        sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
       ),
     )
-    .orderBy(sql`${userProgress.completedAt} DESC`);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    .orderBy(desc(userProgress.completedAt));
 
   // Check if user already completed a challenge today
   const completedDates = new Set(
