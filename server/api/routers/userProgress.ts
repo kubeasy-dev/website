@@ -300,96 +300,97 @@ export const userProgressRouter = createTRPCRouter({
           span.setAttribute("isFirstChallenge", isFirstChallenge);
 
           try {
-            // Use a transaction to ensure data consistency
-            await ctx.db.transaction(async (tx) => {
-              // Update or create user progress
-              if (existingProgress) {
-                await tx
-                  .update(userProgress)
-                  .set({
-                    status: "completed",
-                    completedAt: new Date(),
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(userProgress.id, existingProgress.id));
-              } else {
-                await tx.insert(userProgress).values({
-                  id: nanoid(),
-                  userId,
-                  challengeId,
+            // Note: Neon serverless driver does not support transactions
+            // We execute operations in optimal order to minimize inconsistency risk
+
+            // Update or create user progress FIRST
+            if (existingProgress) {
+              await ctx.db
+                .update(userProgress)
+                .set({
                   status: "completed",
                   completedAt: new Date(),
-                });
-              }
-
-              // Check if user has XP record
-              const [existingXp] = await tx
-                .select()
-                .from(userXp)
-                .where(eq(userXp.userId, userId));
-
-              const oldXp = existingXp?.totalXp ?? 0;
-              const newXp = oldXp + totalXp;
-              const oldRank = calculateRank(oldXp);
-              const newRank = calculateRank(newXp);
-
-              if (existingXp) {
-                // Update existing XP
-                await tx
-                  .update(userXp)
-                  .set({
-                    totalXp: newXp,
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(userXp.userId, userId));
-              } else {
-                // Create new XP record
-                await tx.insert(userXp).values({
-                  userId,
-                  totalXp,
-                });
-              }
-
-              // Record base XP transaction
-              await tx.insert(userXpTransaction).values({
+                  updatedAt: new Date(),
+                })
+                .where(eq(userProgress.id, existingProgress.id));
+            } else {
+              await ctx.db.insert(userProgress).values({
+                id: nanoid(),
                 userId,
-                action: "challenge_completed",
-                xpAmount: baseXp,
                 challengeId,
-                description: `Completed ${challengeData.difficulty} challenge`,
+                status: "completed",
+                completedAt: new Date(),
+              });
+            }
+
+            // Check if user has XP record
+            const [existingXp] = await ctx.db
+              .select()
+              .from(userXp)
+              .where(eq(userXp.userId, userId));
+
+            const oldXp = existingXp?.totalXp ?? 0;
+            const newXp = oldXp + totalXp;
+            const oldRank = calculateRank(oldXp);
+            const newRank = calculateRank(newXp);
+
+            // Update user's total XP SECOND (critical operation)
+            if (existingXp) {
+              // Update existing XP
+              await ctx.db
+                .update(userXp)
+                .set({
+                  totalXp: newXp,
+                  updatedAt: new Date(),
+                })
+                .where(eq(userXp.userId, userId));
+            } else {
+              // Create new XP record
+              await ctx.db.insert(userXp).values({
+                userId,
+                totalXp,
+              });
+            }
+
+            // Record base XP transaction (for history/audit trail)
+            await ctx.db.insert(userXpTransaction).values({
+              userId,
+              action: "challenge_completed",
+              xpAmount: baseXp,
+              challengeId,
+              description: `Completed ${challengeData.difficulty} challenge`,
+            });
+
+            // Record bonus XP transaction if applicable
+            if (isFirstChallenge) {
+              await ctx.db.insert(userXpTransaction).values({
+                userId,
+                action: "first_challenge",
+                xpAmount: bonusXp,
+                challengeId,
+                description: "First challenge bonus",
               });
 
-              // Record bonus XP transaction if applicable
-              if (isFirstChallenge) {
-                await tx.insert(userXpTransaction).values({
-                  userId,
-                  action: "first_challenge",
-                  xpAmount: bonusXp,
-                  challengeId,
-                  description: "First challenge bonus",
-                });
+              logger.info("First challenge completed", {
+                userId,
+                challengeId,
+                totalXp,
+                baseXp,
+                bonusXp,
+              });
+            }
 
-                logger.info("First challenge completed", {
-                  userId,
-                  challengeId,
-                  totalXp,
-                  baseXp,
-                  bonusXp,
-                });
-              }
-
-              // Log rank upgrade if applicable
-              if (oldRank !== newRank) {
-                logger.info("User rank upgraded", {
-                  userId,
-                  oldRank,
-                  newRank,
-                  oldXp,
-                  newXp,
-                  challengeId,
-                });
-              }
-            });
+            // Log rank upgrade if applicable
+            if (oldRank !== newRank) {
+              logger.info("User rank upgraded", {
+                userId,
+                oldRank,
+                newRank,
+                oldXp,
+                newXp,
+                challengeId,
+              });
+            }
 
             logger.info("Challenge completed successfully", {
               userId,
