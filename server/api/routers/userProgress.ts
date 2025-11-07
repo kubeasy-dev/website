@@ -60,6 +60,90 @@ function calculateRank(xp: number): string {
   return "Novice";
 }
 
+function calculateStreakBonus(streak: number): {
+  bonus: number;
+  label: string;
+} | null {
+  // Find the highest streak bonus the user qualifies for
+  for (let i = STREAK_BONUSES.length - 1; i >= 0; i--) {
+    if (streak >= STREAK_BONUSES[i].minStreak) {
+      return {
+        bonus: STREAK_BONUSES[i].bonus,
+        label: STREAK_BONUSES[i].label,
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Calculate current streak and check if this is the first challenge completed today
+ * Returns null if a challenge was already completed today, otherwise returns streak info
+ */
+async function calculateStreakForCompletion(
+  db: any,
+  userId: string,
+): Promise<{
+  streak: number;
+  streakBonus: { bonus: number; label: string } | null;
+} | null> {
+  const streakResult = await db
+    .select({
+      completedAt: userProgress.completedAt,
+    })
+    .from(userProgress)
+    .where(
+      and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.status, "completed"),
+        sql`${userProgress.completedAt} IS NOT NULL`,
+      ),
+    )
+    .orderBy(sql`${userProgress.completedAt} DESC`);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Check if user already completed a challenge today
+  const completedDates = new Set(
+    streakResult
+      .map((r) => {
+        if (!r.completedAt) return null;
+        const date = new Date(r.completedAt);
+        date.setHours(0, 0, 0, 0);
+        return date.getTime();
+      })
+      .filter((d): d is number => d !== null),
+  );
+
+  if (completedDates.has(today.getTime())) {
+    // Already completed a challenge today, no streak bonus
+    return null;
+  }
+
+  // Calculate current streak (before today)
+  let streak = 0;
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  let currentDate = new Date(yesterday);
+
+  // Count consecutive days before today
+  while (completedDates.has(currentDate.getTime())) {
+    streak++;
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  // The new streak will be current streak + 1 (including today)
+  const newStreak = streak + 1;
+  const streakBonus = calculateStreakBonus(newStreak);
+
+  return {
+    streak: newStreak,
+    streakBonus,
+  };
+}
+
 export const userProgressRouter = createTRPCRouter({
   // Get completion percentage
   getCompletionPercentage: privateProcedure
