@@ -126,7 +126,7 @@ async function calculateStreakForCompletion(
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  let currentDate = new Date(yesterday);
+  const currentDate = new Date(yesterday);
 
   // Count consecutive days before today
   while (completedDates.has(currentDate.getTime())) {
@@ -393,10 +393,7 @@ export const userProgressRouter = createTRPCRouter({
             : 0;
 
           // Calculate streak bonus (BEFORE marking challenge as completed)
-          const streakInfo = await calculateStreakForCompletion(
-            ctx.db,
-            userId,
-          );
+          const streakInfo = await calculateStreakForCompletion(ctx.db, userId);
           const streakBonusXp = streakInfo?.streakBonus?.bonus ?? 0;
 
           const totalXp = baseXp + firstChallengeBonusXp + streakBonusXp;
@@ -938,10 +935,7 @@ export const userProgressRouter = createTRPCRouter({
             : 0;
 
           // Calculate streak bonus (BEFORE marking challenge as completed)
-          const streakInfo = await calculateStreakForCompletion(
-            ctx.db,
-            userId,
-          );
+          const streakInfo = await calculateStreakForCompletion(ctx.db, userId);
           const streakBonusXp = streakInfo?.streakBonus?.bonus ?? 0;
 
           const totalXp = baseXp + firstChallengeBonusXp + streakBonusXp;
@@ -1013,12 +1007,12 @@ export const userProgressRouter = createTRPCRouter({
               description: `Completed ${challengeData.difficulty} challenge`,
             });
 
-            // Record bonus XP transaction if applicable
+            // Record first challenge bonus XP transaction if applicable
             if (isFirstChallenge) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "first_challenge",
-                xpAmount: bonusXp,
+                xpAmount: firstChallengeBonusXp,
                 challengeId: challengeData.id,
                 description: "First challenge bonus",
               });
@@ -1028,7 +1022,26 @@ export const userProgressRouter = createTRPCRouter({
                 challengeId: challengeData.id,
                 totalXp,
                 baseXp,
-                bonusXp,
+                firstChallengeBonusXp,
+              });
+            }
+
+            // Record streak bonus XP transaction if applicable
+            if (streakInfo && streakInfo.streakBonus) {
+              await ctx.db.insert(userXpTransaction).values({
+                userId,
+                action: "daily_streak",
+                xpAmount: streakBonusXp,
+                challengeId: challengeData.id,
+                description: streakInfo.streakBonus.label,
+              });
+
+              logger.info("Streak bonus awarded", {
+                userId,
+                challengeId: challengeData.id,
+                streak: streakInfo.streak,
+                streakBonusXp,
+                streakLabel: streakInfo.streakBonus.label,
               });
             }
 
@@ -1050,6 +1063,8 @@ export const userProgressRouter = createTRPCRouter({
               difficulty: challengeData.difficulty,
               xpAwarded: totalXp,
               isFirstChallenge,
+              streak: streakInfo?.streak ?? 0,
+              streakBonusXp,
             });
 
             // Track challenge completed event in PostHog
@@ -1069,6 +1084,8 @@ export const userProgressRouter = createTRPCRouter({
               rank: newRank,
               rankUp: oldRank !== newRank,
               firstChallenge: isFirstChallenge,
+              streak: streakInfo?.streak ?? 0,
+              streakBonusXp,
             };
           } catch (error) {
             logger.error("Failed to complete challenge", {
