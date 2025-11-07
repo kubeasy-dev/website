@@ -8,7 +8,7 @@ import {
   trackChallengeValidationFailedServer,
 } from "@/lib/analytics-server";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
-import db from "@/server/db";
+import type db from "@/server/db";
 import {
   challenge,
   userProgress,
