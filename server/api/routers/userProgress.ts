@@ -8,6 +8,7 @@ import {
   trackChallengeValidationFailedServer,
 } from "@/lib/analytics-server";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
+import db from "@/server/db";
 import {
   challenge,
   userProgress,
@@ -81,13 +82,13 @@ function calculateStreakBonus(streak: number): {
  * Returns null if a challenge was already completed today, otherwise returns streak info
  */
 async function calculateStreakForCompletion(
-  db: any,
+  database: typeof db,
   userId: string,
 ): Promise<{
   streak: number;
   streakBonus: { bonus: number; label: string } | null;
 } | null> {
-  const streakResult = await db
+  const streakResult = await database
     .select({
       completedAt: userProgress.completedAt,
     })
