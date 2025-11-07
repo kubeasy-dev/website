@@ -416,13 +416,16 @@ export const userProgressRouter = createTRPCRouter({
           span.setAttribute("totalXp", totalXp);
           span.setAttribute("isFirstChallenge", isFirstChallenge);
 
+          // Track if we hit the daily completion limit (for streak bonus)
+          let hitDailyLimit = false;
+
           try {
             // Note: Neon serverless driver does not support transactions
             // We execute operations in optimal order to minimize inconsistency risk
 
             // Update or create user progress FIRST
             // Wrap in try-catch to handle unique constraint violations
-            // (one completion per user per day constraint)
+            // (one completion per user per day constraint for streak tracking)
             try {
               if (existingProgress) {
                 await ctx.db
@@ -444,32 +447,46 @@ export const userProgressRouter = createTRPCRouter({
               }
             } catch (dbError) {
               // Check if this is a unique constraint violation (PostgreSQL error code 23505)
-              // This means the user already completed a challenge today
+              // This means the user already completed another challenge today
               if (
                 dbError instanceof Error &&
                 "code" in dbError &&
                 dbError.code === "23505"
               ) {
-                logger.info("Unique constraint violation - already completed challenge today", {
-                  userId,
-                  challengeId,
-                  error: dbError.message,
-                });
+                logger.info(
+                  "Unique constraint violation - already completed a challenge today, no streak bonus",
+                  {
+                    userId,
+                    challengeId,
+                    constraintError: dbError.message,
+                  },
+                );
 
-                // Return null streak info since they already got their daily bonus
-                return {
-                  success: true,
-                  xpAwarded: baseXp + firstChallengeBonusXp,
-                  baseXp,
-                  firstChallengeBonusXp,
-                  streakBonusXp: 0,
-                  streak: 0,
-                  isFirstChallenge,
-                };
+                hitDailyLimit = true;
+                // Fall through to still award base XP and mark challenge
+                // We'll mark it complete without a completedAt date for this daily limit case
+                if (existingProgress) {
+                  await ctx.db
+                    .update(userProgress)
+                    .set({
+                      status: "completed",
+                      completedAt: null, // No date to avoid constraint
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(userProgress.id, existingProgress.id));
+                } else {
+                  await ctx.db.insert(userProgress).values({
+                    id: nanoid(),
+                    userId,
+                    challengeId,
+                    status: "completed",
+                    completedAt: null, // No date to avoid constraint
+                  });
+                }
+              } else {
+                // Re-throw if it's not a unique constraint violation
+                throw dbError;
               }
-
-              // Re-throw if it's not a unique constraint violation
-              throw dbError;
             }
 
             // Check if user has XP record
