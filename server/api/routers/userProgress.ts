@@ -489,6 +489,10 @@ export const userProgressRouter = createTRPCRouter({
               }
             }
 
+            // Adjust XP if we hit the daily limit (no streak bonus)
+            const actualStreakBonusXp = hitDailyLimit ? 0 : streakBonusXp;
+            const actualTotalXp = baseXp + firstChallengeBonusXp + actualStreakBonusXp;
+
             // Check if user has XP record
             const [existingXp] = await ctx.db
               .select()
@@ -496,7 +500,7 @@ export const userProgressRouter = createTRPCRouter({
               .where(eq(userXp.userId, userId));
 
             const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + totalXp;
+            const newXp = oldXp + actualTotalXp;
             const oldRank = calculateRank(oldXp);
             const newRank = calculateRank(newXp);
 
@@ -514,7 +518,7 @@ export const userProgressRouter = createTRPCRouter({
               // Create new XP record
               await ctx.db.insert(userXp).values({
                 userId,
-                totalXp,
+                totalXp: actualTotalXp,
               });
             }
 
@@ -546,8 +550,8 @@ export const userProgressRouter = createTRPCRouter({
               });
             }
 
-            // Record streak bonus XP transaction if applicable
-            if (streakInfo?.streakBonus) {
+            // Record streak bonus XP transaction if applicable and not hit daily limit
+            if (streakInfo?.streakBonus && !hitDailyLimit) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "daily_streak",
@@ -562,6 +566,14 @@ export const userProgressRouter = createTRPCRouter({
                 streak: streakInfo.streak,
                 streakBonusXp,
                 streakLabel: streakInfo.streakBonus.label,
+              });
+            }
+
+            // Log if we hit the daily limit
+            if (hitDailyLimit) {
+              logger.info("Daily completion limit reached - no streak bonus", {
+                userId,
+                challengeId,
               });
             }
 
@@ -1007,25 +1019,74 @@ export const userProgressRouter = createTRPCRouter({
           span.setAttribute("totalXp", totalXp);
           span.setAttribute("isFirstChallenge", isFirstChallenge);
 
+          // Track if we hit the daily completion limit (for streak bonus)
+          let hitDailyLimit = false;
+
           try {
             // Update or create user progress
-            if (existingProgress) {
-              await ctx.db
-                .update(userProgress)
-                .set({
+            // Wrap in try-catch to handle unique constraint violations
+            // (one completion per user per day constraint for streak tracking)
+            try {
+              if (existingProgress) {
+                await ctx.db
+                  .update(userProgress)
+                  .set({
+                    status: "completed",
+                    completedAt: new Date(),
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(userProgress.id, existingProgress.id));
+              } else {
+                await ctx.db.insert(userProgress).values({
+                  id: nanoid(),
+                  userId,
+                  challengeId: challengeData.id,
                   status: "completed",
                   completedAt: new Date(),
-                  updatedAt: new Date(),
-                })
-                .where(eq(userProgress.id, existingProgress.id));
-            } else {
-              await ctx.db.insert(userProgress).values({
-                id: nanoid(),
-                userId,
-                challengeId: challengeData.id,
-                status: "completed",
-                completedAt: new Date(),
-              });
+                });
+              }
+            } catch (dbError) {
+              // Check if this is a unique constraint violation (PostgreSQL error code 23505)
+              // This means the user already completed another challenge today
+              if (
+                dbError instanceof Error &&
+                "code" in dbError &&
+                dbError.code === "23505"
+              ) {
+                logger.info(
+                  "Unique constraint violation - already completed a challenge today, no streak bonus",
+                  {
+                    userId,
+                    challengeId: challengeData.id,
+                    constraintError: dbError.message,
+                  },
+                );
+
+                hitDailyLimit = true;
+                // Fall through to still award base XP and mark challenge
+                // We'll mark it complete without a completedAt date for this daily limit case
+                if (existingProgress) {
+                  await ctx.db
+                    .update(userProgress)
+                    .set({
+                      status: "completed",
+                      completedAt: null, // No date to avoid constraint
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(userProgress.id, existingProgress.id));
+                } else {
+                  await ctx.db.insert(userProgress).values({
+                    id: nanoid(),
+                    userId,
+                    challengeId: challengeData.id,
+                    status: "completed",
+                    completedAt: null, // No date to avoid constraint
+                  });
+                }
+              } else {
+                // Re-throw if it's not a unique constraint violation
+                throw dbError;
+              }
             }
 
             // Submission details were already stored before validation check
