@@ -470,12 +470,12 @@ export const userProgressRouter = createTRPCRouter({
               description: `Completed ${challengeData.difficulty} challenge`,
             });
 
-            // Record bonus XP transaction if applicable
+            // Record first challenge bonus XP transaction if applicable
             if (isFirstChallenge) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "first_challenge",
-                xpAmount: bonusXp,
+                xpAmount: firstChallengeBonusXp,
                 challengeId,
                 description: "First challenge bonus",
               });
@@ -485,7 +485,26 @@ export const userProgressRouter = createTRPCRouter({
                 challengeId,
                 totalXp,
                 baseXp,
-                bonusXp,
+                firstChallengeBonusXp,
+              });
+            }
+
+            // Record streak bonus XP transaction if applicable
+            if (streakInfo && streakInfo.streakBonus) {
+              await ctx.db.insert(userXpTransaction).values({
+                userId,
+                action: "daily_streak",
+                xpAmount: streakBonusXp,
+                challengeId,
+                description: streakInfo.streakBonus.label,
+              });
+
+              logger.info("Streak bonus awarded", {
+                userId,
+                challengeId,
+                streak: streakInfo.streak,
+                streakBonusXp,
+                streakLabel: streakInfo.streakBonus.label,
               });
             }
 
@@ -507,13 +526,17 @@ export const userProgressRouter = createTRPCRouter({
               difficulty: challengeData.difficulty,
               xpAwarded: totalXp,
               isFirstChallenge,
+              streak: streakInfo?.streak ?? 0,
+              streakBonusXp,
             });
 
             return {
               success: true,
               xpAwarded: totalXp,
               baseXp,
-              bonusXp,
+              firstChallengeBonusXp,
+              streakBonusXp,
+              streak: streakInfo?.streak ?? 0,
               isFirstChallenge,
             };
           } catch (error) {
