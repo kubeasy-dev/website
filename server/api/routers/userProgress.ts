@@ -987,20 +987,93 @@ export const userProgressRouter = createTRPCRouter({
           span.setAttribute("challengeId", challengeData.id);
 
           try {
-            // Delete user progress
-            const _result = await ctx.db
-              .delete(userProgress)
+            // Get all XP transactions for this challenge
+            const xpTransactions = await ctx.db
+              .select({
+                id: userXpTransaction.id,
+                xpAmount: userXpTransaction.xpAmount,
+                action: userXpTransaction.action,
+              })
+              .from(userXpTransaction)
               .where(
+                and(
+                  eq(userXpTransaction.userId, userId),
+                  eq(userXpTransaction.challengeId, challengeData.id),
+                ),
+              );
+
+            // Calculate total XP to remove
+            const totalXpToRemove = xpTransactions.reduce(
+              (sum, transaction) => sum + transaction.xpAmount,
+              0,
+            );
+
+            span.setAttribute("xpToRemove", totalXpToRemove);
+            span.setAttribute("transactionsCount", xpTransactions.length);
+
+            // Use a transaction to ensure data consistency
+            await ctx.db.transaction(async (tx) => {
+              // Delete XP transactions related to this challenge
+              if (xpTransactions.length > 0) {
+                await tx
+                  .delete(userXpTransaction)
+                  .where(
+                    and(
+                      eq(userXpTransaction.userId, userId),
+                      eq(userXpTransaction.challengeId, challengeData.id),
+                    ),
+                  );
+
+                // Update user's total XP
+                const [currentXp] = await tx
+                  .select({ totalXp: userXp.totalXp })
+                  .from(userXp)
+                  .where(eq(userXp.userId, userId));
+
+                if (currentXp) {
+                  const newTotalXp = Math.max(
+                    0,
+                    currentXp.totalXp - totalXpToRemove,
+                  );
+                  await tx
+                    .update(userXp)
+                    .set({
+                      totalXp: newTotalXp,
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(userXp.userId, userId));
+
+                  const oldRank = calculateRank(currentXp.totalXp);
+                  const newRank = calculateRank(newTotalXp);
+
+                  if (oldRank !== newRank) {
+                    logger.info("User rank downgraded after reset", {
+                      userId,
+                      oldRank,
+                      newRank,
+                      oldXp: currentXp.totalXp,
+                      newXp: newTotalXp,
+                      challengeId: challengeData.id,
+                    });
+                  }
+                }
+              }
+
+              // Delete user progress
+              await tx.delete(userProgress).where(
                 and(
                   eq(userProgress.userId, userId),
                   eq(userProgress.challengeId, challengeData.id),
                 ),
               );
+            });
 
-            logger.info("Challenge progress reset", {
+            logger.info("Challenge progress reset with XP removal", {
               userId,
               challengeId: challengeData.id,
               challengeTitle: challengeData.title,
+              xpRemoved: totalXpToRemove,
+              transactionsDeleted: xpTransactions.length,
             });
 
             return {
