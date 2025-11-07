@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -10,7 +11,6 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 import { user } from "./auth";
 
 export const challengeTheme = pgTable("challenge_theme", {

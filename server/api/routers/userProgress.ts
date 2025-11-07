@@ -491,7 +491,8 @@ export const userProgressRouter = createTRPCRouter({
 
             // Adjust XP if we hit the daily limit (no streak bonus)
             const actualStreakBonusXp = hitDailyLimit ? 0 : streakBonusXp;
-            const actualTotalXp = baseXp + firstChallengeBonusXp + actualStreakBonusXp;
+            const actualTotalXp =
+              baseXp + firstChallengeBonusXp + actualStreakBonusXp;
 
             // Check if user has XP record
             const [existingXp] = await ctx.db
@@ -1094,7 +1095,8 @@ export const userProgressRouter = createTRPCRouter({
 
             // Adjust XP if we hit the daily limit (no streak bonus)
             const actualStreakBonusXp = hitDailyLimit ? 0 : streakBonusXp;
-            const actualTotalXp = baseXp + firstChallengeBonusXp + actualStreakBonusXp;
+            const actualTotalXp =
+              baseXp + firstChallengeBonusXp + actualStreakBonusXp;
 
             // Check if user has XP record
             const [existingXp] = await ctx.db
