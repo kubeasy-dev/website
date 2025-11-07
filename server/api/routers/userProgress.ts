@@ -933,11 +933,23 @@ export const userProgressRouter = createTRPCRouter({
             );
 
           const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-          const bonusXp = isFirstChallenge ? FIRST_CHALLENGE_BONUS : 0;
-          const totalXp = baseXp + bonusXp;
+          const firstChallengeBonusXp = isFirstChallenge
+            ? FIRST_CHALLENGE_BONUS
+            : 0;
+
+          // Calculate streak bonus (BEFORE marking challenge as completed)
+          const streakInfo = await calculateStreakForCompletion(
+            ctx.db,
+            userId,
+          );
+          const streakBonusXp = streakInfo?.streakBonus?.bonus ?? 0;
+
+          const totalXp = baseXp + firstChallengeBonusXp + streakBonusXp;
 
           span.setAttribute("baseXp", baseXp);
-          span.setAttribute("bonusXp", bonusXp);
+          span.setAttribute("firstChallengeBonusXp", firstChallengeBonusXp);
+          span.setAttribute("streakBonusXp", streakBonusXp);
+          span.setAttribute("streak", streakInfo?.streak ?? 0);
           span.setAttribute("totalXp", totalXp);
           span.setAttribute("isFirstChallenge", isFirstChallenge);
 
