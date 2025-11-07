@@ -487,7 +487,7 @@ export const userProgressRouter = createTRPCRouter({
             }
 
             // Record streak bonus XP transaction if applicable
-            if (streakInfo && streakInfo.streakBonus) {
+            if (streakInfo?.streakBonus) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "daily_streak",
@@ -1027,7 +1027,7 @@ export const userProgressRouter = createTRPCRouter({
             }
 
             // Record streak bonus XP transaction if applicable
-            if (streakInfo && streakInfo.streakBonus) {
+            if (streakInfo?.streakBonus) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "daily_streak",
