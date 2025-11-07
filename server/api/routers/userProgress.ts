@@ -421,23 +421,55 @@ export const userProgressRouter = createTRPCRouter({
             // We execute operations in optimal order to minimize inconsistency risk
 
             // Update or create user progress FIRST
-            if (existingProgress) {
-              await ctx.db
-                .update(userProgress)
-                .set({
+            // Wrap in try-catch to handle unique constraint violations
+            // (one completion per user per day constraint)
+            try {
+              if (existingProgress) {
+                await ctx.db
+                  .update(userProgress)
+                  .set({
+                    status: "completed",
+                    completedAt: new Date(),
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(userProgress.id, existingProgress.id));
+              } else {
+                await ctx.db.insert(userProgress).values({
+                  id: nanoid(),
+                  userId,
+                  challengeId,
                   status: "completed",
                   completedAt: new Date(),
-                  updatedAt: new Date(),
-                })
-                .where(eq(userProgress.id, existingProgress.id));
-            } else {
-              await ctx.db.insert(userProgress).values({
-                id: nanoid(),
-                userId,
-                challengeId,
-                status: "completed",
-                completedAt: new Date(),
-              });
+                });
+              }
+            } catch (dbError) {
+              // Check if this is a unique constraint violation (PostgreSQL error code 23505)
+              // This means the user already completed a challenge today
+              if (
+                dbError instanceof Error &&
+                "code" in dbError &&
+                dbError.code === "23505"
+              ) {
+                logger.info("Unique constraint violation - already completed challenge today", {
+                  userId,
+                  challengeId,
+                  error: dbError.message,
+                });
+
+                // Return null streak info since they already got their daily bonus
+                return {
+                  success: true,
+                  xpAwarded: baseXp + firstChallengeBonusXp,
+                  baseXp,
+                  firstChallengeBonusXp,
+                  streakBonusXp: 0,
+                  streak: 0,
+                  isFirstChallenge,
+                };
+              }
+
+              // Re-throw if it's not a unique constraint violation
+              throw dbError;
             }
 
             // Check if user has XP record
