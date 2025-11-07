@@ -593,19 +593,20 @@ export const userProgressRouter = createTRPCRouter({
               userId,
               challengeId,
               difficulty: challengeData.difficulty,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               isFirstChallenge,
-              streak: streakInfo?.streak ?? 0,
-              streakBonusXp,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
+              streakBonusXp: actualStreakBonusXp,
+              hitDailyLimit,
             });
 
             return {
               success: true,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               baseXp,
               firstChallengeBonusXp,
-              streakBonusXp,
-              streak: streakInfo?.streak ?? 0,
+              streakBonusXp: actualStreakBonusXp,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
               isFirstChallenge,
             };
           } catch (error) {
@@ -1091,6 +1092,10 @@ export const userProgressRouter = createTRPCRouter({
 
             // Submission details were already stored before validation check
 
+            // Adjust XP if we hit the daily limit (no streak bonus)
+            const actualStreakBonusXp = hitDailyLimit ? 0 : streakBonusXp;
+            const actualTotalXp = baseXp + firstChallengeBonusXp + actualStreakBonusXp;
+
             // Check if user has XP record
             const [existingXp] = await ctx.db
               .select()
@@ -1098,7 +1103,7 @@ export const userProgressRouter = createTRPCRouter({
               .where(eq(userXp.userId, userId));
 
             const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + totalXp;
+            const newXp = oldXp + actualTotalXp;
             const oldRank = calculateRank(oldXp);
             const newRank = calculateRank(newXp);
 
@@ -1115,7 +1120,7 @@ export const userProgressRouter = createTRPCRouter({
               // Create new XP record
               await ctx.db.insert(userXp).values({
                 userId,
-                totalXp,
+                totalXp: actualTotalXp,
               });
             }
 
