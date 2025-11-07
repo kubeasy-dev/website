@@ -1011,64 +1011,65 @@ export const userProgressRouter = createTRPCRouter({
             span.setAttribute("xpToRemove", totalXpToRemove);
             span.setAttribute("transactionsCount", xpTransactions.length);
 
-            // Use a transaction to ensure data consistency
-            await ctx.db.transaction(async (tx) => {
-              // Delete XP transactions related to this challenge
-              if (xpTransactions.length > 0) {
-                await tx
-                  .delete(userXpTransaction)
-                  .where(
-                    and(
-                      eq(userXpTransaction.userId, userId),
-                      eq(userXpTransaction.challengeId, challengeData.id),
-                    ),
-                  );
+            // Note: Neon serverless driver does not support transactions
+            // We execute operations in optimal order to minimize inconsistency risk
+            if (xpTransactions.length > 0) {
+              // Get current XP
+              const [currentXp] = await ctx.db
+                .select({ totalXp: userXp.totalXp })
+                .from(userXp)
+                .where(eq(userXp.userId, userId));
 
-                // Update user's total XP
-                const [currentXp] = await tx
-                  .select({ totalXp: userXp.totalXp })
-                  .from(userXp)
+              if (currentXp) {
+                const newTotalXp = Math.max(
+                  0,
+                  currentXp.totalXp - totalXpToRemove,
+                );
+
+                const oldRank = calculateRank(currentXp.totalXp);
+                const newRank = calculateRank(newTotalXp);
+
+                // Update user's total XP FIRST (most critical operation)
+                await ctx.db
+                  .update(userXp)
+                  .set({
+                    totalXp: newTotalXp,
+                    updatedAt: new Date(),
+                  })
                   .where(eq(userXp.userId, userId));
 
-                if (currentXp) {
-                  const newTotalXp = Math.max(
-                    0,
-                    currentXp.totalXp - totalXpToRemove,
-                  );
-                  await tx
-                    .update(userXp)
-                    .set({
-                      totalXp: newTotalXp,
-                      updatedAt: new Date(),
-                    })
-                    .where(eq(userXp.userId, userId));
-
-                  const oldRank = calculateRank(currentXp.totalXp);
-                  const newRank = calculateRank(newTotalXp);
-
-                  if (oldRank !== newRank) {
-                    logger.info("User rank downgraded after reset", {
-                      userId,
-                      oldRank,
-                      newRank,
-                      oldXp: currentXp.totalXp,
-                      newXp: newTotalXp,
-                      challengeId: challengeData.id,
-                    });
-                  }
+                if (oldRank !== newRank) {
+                  logger.info("User rank downgraded after reset", {
+                    userId,
+                    oldRank,
+                    newRank,
+                    oldXp: currentXp.totalXp,
+                    newXp: newTotalXp,
+                    challengeId: challengeData.id,
+                  });
                 }
               }
 
-              // Delete user progress
-              await tx
-                .delete(userProgress)
+              // Delete XP transactions related to this challenge
+              await ctx.db
+                .delete(userXpTransaction)
                 .where(
                   and(
-                    eq(userProgress.userId, userId),
-                    eq(userProgress.challengeId, challengeData.id),
+                    eq(userXpTransaction.userId, userId),
+                    eq(userXpTransaction.challengeId, challengeData.id),
                   ),
                 );
-            });
+            }
+
+            // Delete user progress
+            await ctx.db
+              .delete(userProgress)
+              .where(
+                and(
+                  eq(userProgress.userId, userId),
+                  eq(userProgress.challengeId, challengeData.id),
+                ),
+              );
 
             logger.info("Challenge progress reset with XP removal", {
               userId,
