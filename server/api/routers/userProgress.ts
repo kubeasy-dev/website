@@ -1060,12 +1060,14 @@ export const userProgressRouter = createTRPCRouter({
               }
 
               // Delete user progress
-              await tx.delete(userProgress).where(
-                and(
-                  eq(userProgress.userId, userId),
-                  eq(userProgress.challengeId, challengeData.id),
-                ),
-              );
+              await tx
+                .delete(userProgress)
+                .where(
+                  and(
+                    eq(userProgress.userId, userId),
+                    eq(userProgress.challengeId, challengeData.id),
+                  ),
+                );
             });
 
             logger.info("Challenge progress reset with XP removal", {
