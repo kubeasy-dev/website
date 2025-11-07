@@ -1027,9 +1027,6 @@ export const userProgressRouter = createTRPCRouter({
                   currentXp.totalXp - totalXpToRemove,
                 );
 
-                const oldRank = calculateRank(currentXp.totalXp);
-                const newRank = calculateRank(newTotalXp);
-
                 // Update user's total XP FIRST (most critical operation)
                 await ctx.db
                   .update(userXp)
@@ -1038,17 +1035,6 @@ export const userProgressRouter = createTRPCRouter({
                     updatedAt: new Date(),
                   })
                   .where(eq(userXp.userId, userId));
-
-                if (oldRank !== newRank) {
-                  logger.info("User rank downgraded after reset", {
-                    userId,
-                    oldRank,
-                    newRank,
-                    oldXp: currentXp.totalXp,
-                    newXp: newTotalXp,
-                    challengeId: challengeData.id,
-                  });
-                }
               }
 
               // Delete XP transactions related to this challenge
