@@ -15,6 +15,13 @@
       "when": 1761137841534,
       "tag": "0001_swift_speedball",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762528347003,
+      "tag": "0002_nervous_marauders",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "user_progress_user_daily_completion_idx" ON "user_progress" USING btree ("user_id",date_trunc('day', "completed_at")) WHERE "user_progress"."status" = 'completed' AND "user_progress"."completed_at" IS NOT NULL;
