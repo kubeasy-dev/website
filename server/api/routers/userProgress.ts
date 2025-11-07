@@ -19,13 +19,15 @@ import {
 const { logger } = Sentry;
 
 // Rank thresholds based on XP
+// Based on ~150 challenges (60 easy, 60 medium, 30 hard) = ~15,000 XP total
+// Legend rank achievable at ~80% completion (12,000 XP / ~120 challenges)
 const RANK_THRESHOLDS = [
   { name: "Novice", minXp: 0 },
-  { name: "Beginner", minXp: 100 },
-  { name: "Advanced", minXp: 500 },
-  { name: "Expert", minXp: 1000 },
-  { name: "Master", minXp: 2000 },
-  { name: "Legend", minXp: 5000 },
+  { name: "Beginner", minXp: 300 }, // ~3-6 challenges (2-4%)
+  { name: "Advanced", minXp: 1200 }, // ~12-18 challenges (8-12%)
+  { name: "Expert", minXp: 3500 }, // ~35 challenges (23%)
+  { name: "Master", minXp: 7000 }, // ~70 challenges (47%)
+  { name: "Legend", minXp: 12000 }, // ~120 challenges (80%)
 ] as const;
 
 // XP rewards based on challenge difficulty
@@ -36,6 +38,17 @@ const XP_REWARDS = {
 } as const;
 
 const FIRST_CHALLENGE_BONUS = 50;
+
+// Streak bonus thresholds
+// Awarded when completing a challenge on a new consecutive day
+const STREAK_BONUSES = [
+  { minStreak: 3, bonus: 25, label: "3-day streak" },
+  { minStreak: 7, bonus: 50, label: "1-week streak" },
+  { minStreak: 14, bonus: 100, label: "2-week streak" },
+  { minStreak: 30, bonus: 200, label: "1-month streak" },
+  { minStreak: 60, bonus: 400, label: "2-month streak" },
+  { minStreak: 90, bonus: 600, label: "3-month streak" },
+] as const;
 
 function calculateRank(xp: number): string {
   // Find the highest rank the user qualifies for
