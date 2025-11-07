@@ -1,7 +1,21 @@
 {
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "hostRequirements": {
+    "cpus": 4
+  },
+  "waitFor": "onCreateCommand",
+  "postCreateCommand": "pnpm install",
+  "postAttachCommand": {
+    "server": "pnpm run dev"
+  },
+  "portsAttributes": {
+    "3000": {
+      "label": "Application",
+      "onAutoForward": "openPreview"
+    }
+  },
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/wandb/catnip/feature:1": {}
   },
-  "forwardPorts": [6369]
+  "forwardPorts": [3000, 6369]
 }
