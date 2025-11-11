@@ -227,3 +227,14 @@ export function generateBreadcrumbSchema(
     })),
   };
 }
+
+/**
+ * Safely stringify JSON-LD data for use in dangerouslySetInnerHTML
+ * Escapes characters that could be used for XSS attacks in script tags
+ */
+export function stringifyJsonLd(data: object): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
