@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -8,6 +9,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -101,6 +103,14 @@ export const userProgress = pgTable(
       table.challengeId,
       table.status,
     ),
+    // Unique constraint: one completion per user per day
+    // Prevents race conditions when marking challenges as completed
+    // Only applies when status is 'completed' and completedAt is not null
+    uniqueIndex("user_progress_user_daily_completion_idx")
+      .on(table.userId, sql`date_trunc('day', ${table.completedAt})`)
+      .where(
+        sql`${table.status} = 'completed' AND ${table.completedAt} IS NOT NULL`,
+      ),
   ],
 );
 

@@ -8,6 +8,7 @@ import {
   trackChallengeValidationFailedServer,
 } from "@/lib/analytics-server";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
+import type db from "@/server/db";
 import {
   challenge,
   userProgress,
@@ -19,13 +20,15 @@ import {
 const { logger } = Sentry;
 
 // Rank thresholds based on XP
+// Based on ~150 challenges (60 easy, 60 medium, 30 hard) = ~15,000 XP total
+// Legend rank achievable at ~80% completion (12,000 XP / ~120 challenges)
 const RANK_THRESHOLDS = [
   { name: "Novice", minXp: 0 },
-  { name: "Beginner", minXp: 100 },
-  { name: "Advanced", minXp: 500 },
-  { name: "Expert", minXp: 1000 },
-  { name: "Master", minXp: 2000 },
-  { name: "Legend", minXp: 5000 },
+  { name: "Beginner", minXp: 300 }, // ~3-6 challenges (2-4%)
+  { name: "Advanced", minXp: 1200 }, // ~12-18 challenges (8-12%)
+  { name: "Expert", minXp: 3500 }, // ~35 challenges (23%)
+  { name: "Master", minXp: 7000 }, // ~70 challenges (47%)
+  { name: "Legend", minXp: 12000 }, // ~120 challenges (80%)
 ] as const;
 
 // XP rewards based on challenge difficulty
@@ -37,6 +40,17 @@ const XP_REWARDS = {
 
 const FIRST_CHALLENGE_BONUS = 50;
 
+// Streak bonus thresholds
+// Awarded when completing a challenge on a new consecutive day
+const STREAK_BONUSES = [
+  { minStreak: 3, bonus: 25, label: "3-day streak" },
+  { minStreak: 7, bonus: 50, label: "1-week streak" },
+  { minStreak: 14, bonus: 100, label: "2-week streak" },
+  { minStreak: 30, bonus: 200, label: "1-month streak" },
+  { minStreak: 60, bonus: 400, label: "2-month streak" },
+  { minStreak: 90, bonus: 600, label: "3-month streak" },
+] as const;
+
 function calculateRank(xp: number): string {
   // Find the highest rank the user qualifies for
   for (let i = RANK_THRESHOLDS.length - 1; i >= 0; i--) {
@@ -45,6 +59,100 @@ function calculateRank(xp: number): string {
     }
   }
   return "Novice";
+}
+
+function calculateStreakBonus(streak: number): {
+  bonus: number;
+  label: string;
+} | null {
+  // Find the highest streak bonus the user qualifies for
+  for (let i = STREAK_BONUSES.length - 1; i >= 0; i--) {
+    if (streak >= STREAK_BONUSES[i].minStreak) {
+      return {
+        bonus: STREAK_BONUSES[i].bonus,
+        label: STREAK_BONUSES[i].label,
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Calculate current streak and check if this is the first challenge completed today
+ * Returns null if a challenge was already completed today, otherwise returns streak info
+ *
+ * Optimized to only query recent completions (last 91 days) to reduce data scanned
+ * and avoid race conditions with DB-level unique constraint
+ */
+async function calculateStreakForCompletion(
+  database: typeof db,
+  userId: string,
+): Promise<{
+  streak: number;
+  streakBonus: { bonus: number; label: string } | null;
+} | null> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Calculate date 90 days ago (max possible streak bonus is 90 days)
+  const ninetyDaysAgo = new Date(today);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  // Only query completions from the last 91 days to optimize performance
+  // This is sufficient since max streak bonus is 90 days
+  const streakResult = await database
+    .select({
+      completedAt: userProgress.completedAt,
+    })
+    .from(userProgress)
+    .where(
+      and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.status, "completed"),
+        sql`${userProgress.completedAt} IS NOT NULL`,
+        sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
+      ),
+    )
+    .orderBy(desc(userProgress.completedAt));
+
+  // Check if user already completed a challenge today
+  const completedDates = new Set(
+    streakResult
+      .map((r) => {
+        if (!r.completedAt) return null;
+        const date = new Date(r.completedAt);
+        date.setHours(0, 0, 0, 0);
+        return date.getTime();
+      })
+      .filter((d): d is number => d !== null),
+  );
+
+  if (completedDates.has(today.getTime())) {
+    // Already completed a challenge today, no streak bonus
+    return null;
+  }
+
+  // Calculate current streak (before today)
+  let streak = 0;
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const currentDate = new Date(yesterday);
+
+  // Count consecutive days before today
+  while (completedDates.has(currentDate.getTime())) {
+    streak++;
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  // The new streak will be current streak + 1 (including today)
+  const newStreak = streak + 1;
+  const streakBonus = calculateStreakBonus(newStreak);
+
+  return {
+    streak: newStreak,
+    streakBonus,
+  };
 }
 
 export const userProgressRouter = createTRPCRouter({
@@ -291,20 +399,36 @@ export const userProgressRouter = createTRPCRouter({
             );
 
           const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-          const bonusXp = isFirstChallenge ? FIRST_CHALLENGE_BONUS : 0;
-          const totalXp = baseXp + bonusXp;
+          const firstChallengeBonusXp = isFirstChallenge
+            ? FIRST_CHALLENGE_BONUS
+            : 0;
+
+          // Calculate streak bonus (BEFORE marking challenge as completed)
+          const streakInfo = await calculateStreakForCompletion(ctx.db, userId);
+          const streakBonusXp = streakInfo?.streakBonus?.bonus ?? 0;
+
+          const totalXp = baseXp + firstChallengeBonusXp + streakBonusXp;
 
           span.setAttribute("baseXp", baseXp);
-          span.setAttribute("bonusXp", bonusXp);
+          span.setAttribute("firstChallengeBonusXp", firstChallengeBonusXp);
+          span.setAttribute("streakBonusXp", streakBonusXp);
+          span.setAttribute("streak", streakInfo?.streak ?? 0);
           span.setAttribute("totalXp", totalXp);
           span.setAttribute("isFirstChallenge", isFirstChallenge);
 
+          // Track if we hit the daily completion limit (for streak bonus)
+          let hitDailyLimit = false;
+
           try {
-            // Use a transaction to ensure data consistency
-            await ctx.db.transaction(async (tx) => {
-              // Update or create user progress
+            // Note: Neon serverless driver does not support transactions
+            // We execute operations in optimal order to minimize inconsistency risk
+
+            // Update or create user progress FIRST
+            // Wrap in try-catch to handle unique constraint violations
+            // (one completion per user per day constraint for streak tracking)
+            try {
               if (existingProgress) {
-                await tx
+                await ctx.db
                   .update(userProgress)
                   .set({
                     status: "completed",
@@ -313,7 +437,7 @@ export const userProgressRouter = createTRPCRouter({
                   })
                   .where(eq(userProgress.id, existingProgress.id));
               } else {
-                await tx.insert(userProgress).values({
+                await ctx.db.insert(userProgress).values({
                   id: nanoid(),
                   userId,
                   challengeId,
@@ -321,89 +445,169 @@ export const userProgressRouter = createTRPCRouter({
                   completedAt: new Date(),
                 });
               }
+            } catch (dbError) {
+              // Check if this is a unique constraint violation (PostgreSQL error code 23505)
+              // This means the user already completed another challenge today
+              if (
+                dbError instanceof Error &&
+                "code" in dbError &&
+                dbError.code === "23505"
+              ) {
+                logger.info(
+                  "Unique constraint violation - already completed a challenge today, no streak bonus",
+                  {
+                    userId,
+                    challengeId,
+                    constraintError: dbError.message,
+                  },
+                );
 
-              // Check if user has XP record
-              const [existingXp] = await tx
-                .select()
-                .from(userXp)
-                .where(eq(userXp.userId, userId));
-
-              const oldXp = existingXp?.totalXp ?? 0;
-              const newXp = oldXp + totalXp;
-              const oldRank = calculateRank(oldXp);
-              const newRank = calculateRank(newXp);
-
-              if (existingXp) {
-                // Update existing XP
-                await tx
-                  .update(userXp)
-                  .set({
-                    totalXp: newXp,
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(userXp.userId, userId));
+                hitDailyLimit = true;
+                // Fall through to still award base XP and mark challenge
+                // We'll mark it complete without a completedAt date for this daily limit case
+                if (existingProgress) {
+                  await ctx.db
+                    .update(userProgress)
+                    .set({
+                      status: "completed",
+                      completedAt: null, // No date to avoid constraint
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(userProgress.id, existingProgress.id));
+                } else {
+                  await ctx.db.insert(userProgress).values({
+                    id: nanoid(),
+                    userId,
+                    challengeId,
+                    status: "completed",
+                    completedAt: null, // No date to avoid constraint
+                  });
+                }
               } else {
-                // Create new XP record
-                await tx.insert(userXp).values({
-                  userId,
-                  totalXp,
-                });
+                // Re-throw if it's not a unique constraint violation
+                throw dbError;
               }
+            }
 
-              // Record base XP transaction
-              await tx.insert(userXpTransaction).values({
+            // Adjust XP if we hit the daily limit (no streak bonus)
+            const actualStreakBonusXp = hitDailyLimit ? 0 : streakBonusXp;
+            const actualTotalXp =
+              baseXp + firstChallengeBonusXp + actualStreakBonusXp;
+
+            // Check if user has XP record
+            const [existingXp] = await ctx.db
+              .select()
+              .from(userXp)
+              .where(eq(userXp.userId, userId));
+
+            const oldXp = existingXp?.totalXp ?? 0;
+            const newXp = oldXp + actualTotalXp;
+            const oldRank = calculateRank(oldXp);
+            const newRank = calculateRank(newXp);
+
+            // Update user's total XP SECOND (critical operation)
+            if (existingXp) {
+              // Update existing XP
+              await ctx.db
+                .update(userXp)
+                .set({
+                  totalXp: newXp,
+                  updatedAt: new Date(),
+                })
+                .where(eq(userXp.userId, userId));
+            } else {
+              // Create new XP record
+              await ctx.db.insert(userXp).values({
                 userId,
-                action: "challenge_completed",
-                xpAmount: baseXp,
+                totalXp: actualTotalXp,
+              });
+            }
+
+            // Record base XP transaction (for history/audit trail)
+            await ctx.db.insert(userXpTransaction).values({
+              userId,
+              action: "challenge_completed",
+              xpAmount: baseXp,
+              challengeId,
+              description: `Completed ${challengeData.difficulty} challenge`,
+            });
+
+            // Record first challenge bonus XP transaction if applicable
+            if (isFirstChallenge) {
+              await ctx.db.insert(userXpTransaction).values({
+                userId,
+                action: "first_challenge",
+                xpAmount: firstChallengeBonusXp,
                 challengeId,
-                description: `Completed ${challengeData.difficulty} challenge`,
+                description: "First challenge bonus",
               });
 
-              // Record bonus XP transaction if applicable
-              if (isFirstChallenge) {
-                await tx.insert(userXpTransaction).values({
-                  userId,
-                  action: "first_challenge",
-                  xpAmount: bonusXp,
-                  challengeId,
-                  description: "First challenge bonus",
-                });
+              logger.info("First challenge completed", {
+                userId,
+                challengeId,
+                totalXp,
+                baseXp,
+                firstChallengeBonusXp,
+              });
+            }
 
-                logger.info("First challenge completed", {
-                  userId,
-                  challengeId,
-                  totalXp,
-                  baseXp,
-                  bonusXp,
-                });
-              }
+            // Record streak bonus XP transaction if applicable and not hit daily limit
+            if (streakInfo?.streakBonus && !hitDailyLimit) {
+              await ctx.db.insert(userXpTransaction).values({
+                userId,
+                action: "daily_streak",
+                xpAmount: streakBonusXp,
+                challengeId,
+                description: streakInfo.streakBonus.label,
+              });
 
-              // Log rank upgrade if applicable
-              if (oldRank !== newRank) {
-                logger.info("User rank upgraded", {
-                  userId,
-                  oldRank,
-                  newRank,
-                  oldXp,
-                  newXp,
-                  challengeId,
-                });
-              }
-            });
+              logger.info("Streak bonus awarded", {
+                userId,
+                challengeId,
+                streak: streakInfo.streak,
+                streakBonusXp,
+                streakLabel: streakInfo.streakBonus.label,
+              });
+            }
+
+            // Log if we hit the daily limit
+            if (hitDailyLimit) {
+              logger.info("Daily completion limit reached - no streak bonus", {
+                userId,
+                challengeId,
+              });
+            }
+
+            // Log rank upgrade if applicable
+            if (oldRank !== newRank) {
+              logger.info("User rank upgraded", {
+                userId,
+                oldRank,
+                newRank,
+                oldXp,
+                newXp,
+                challengeId,
+              });
+            }
 
             logger.info("Challenge completed successfully", {
               userId,
               challengeId,
               difficulty: challengeData.difficulty,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               isFirstChallenge,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
+              streakBonusXp: actualStreakBonusXp,
+              hitDailyLimit,
             });
 
             return {
               success: true,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               baseXp,
-              bonusXp,
+              firstChallengeBonusXp,
+              streakBonusXp: actualStreakBonusXp,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
               isFirstChallenge,
             };
           } catch (error) {
@@ -800,36 +1004,99 @@ export const userProgressRouter = createTRPCRouter({
             );
 
           const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-          const bonusXp = isFirstChallenge ? FIRST_CHALLENGE_BONUS : 0;
-          const totalXp = baseXp + bonusXp;
+          const firstChallengeBonusXp = isFirstChallenge
+            ? FIRST_CHALLENGE_BONUS
+            : 0;
+
+          // Calculate streak bonus (BEFORE marking challenge as completed)
+          const streakInfo = await calculateStreakForCompletion(ctx.db, userId);
+          const streakBonusXp = streakInfo?.streakBonus?.bonus ?? 0;
+
+          const totalXp = baseXp + firstChallengeBonusXp + streakBonusXp;
 
           span.setAttribute("baseXp", baseXp);
-          span.setAttribute("bonusXp", bonusXp);
+          span.setAttribute("firstChallengeBonusXp", firstChallengeBonusXp);
+          span.setAttribute("streakBonusXp", streakBonusXp);
+          span.setAttribute("streak", streakInfo?.streak ?? 0);
           span.setAttribute("totalXp", totalXp);
           span.setAttribute("isFirstChallenge", isFirstChallenge);
 
+          // Track if we hit the daily completion limit (for streak bonus)
+          let hitDailyLimit = false;
+
           try {
             // Update or create user progress
-            if (existingProgress) {
-              await ctx.db
-                .update(userProgress)
-                .set({
+            // Wrap in try-catch to handle unique constraint violations
+            // (one completion per user per day constraint for streak tracking)
+            try {
+              if (existingProgress) {
+                await ctx.db
+                  .update(userProgress)
+                  .set({
+                    status: "completed",
+                    completedAt: new Date(),
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(userProgress.id, existingProgress.id));
+              } else {
+                await ctx.db.insert(userProgress).values({
+                  id: nanoid(),
+                  userId,
+                  challengeId: challengeData.id,
                   status: "completed",
                   completedAt: new Date(),
-                  updatedAt: new Date(),
-                })
-                .where(eq(userProgress.id, existingProgress.id));
-            } else {
-              await ctx.db.insert(userProgress).values({
-                id: nanoid(),
-                userId,
-                challengeId: challengeData.id,
-                status: "completed",
-                completedAt: new Date(),
-              });
+                });
+              }
+            } catch (dbError) {
+              // Check if this is a unique constraint violation (PostgreSQL error code 23505)
+              // This means the user already completed another challenge today
+              if (
+                dbError instanceof Error &&
+                "code" in dbError &&
+                dbError.code === "23505"
+              ) {
+                logger.info(
+                  "Unique constraint violation - already completed a challenge today, no streak bonus",
+                  {
+                    userId,
+                    challengeId: challengeData.id,
+                    constraintError: dbError.message,
+                  },
+                );
+
+                hitDailyLimit = true;
+                // Fall through to still award base XP and mark challenge
+                // We'll mark it complete without a completedAt date for this daily limit case
+                if (existingProgress) {
+                  await ctx.db
+                    .update(userProgress)
+                    .set({
+                      status: "completed",
+                      completedAt: null, // No date to avoid constraint
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(userProgress.id, existingProgress.id));
+                } else {
+                  await ctx.db.insert(userProgress).values({
+                    id: nanoid(),
+                    userId,
+                    challengeId: challengeData.id,
+                    status: "completed",
+                    completedAt: null, // No date to avoid constraint
+                  });
+                }
+              } else {
+                // Re-throw if it's not a unique constraint violation
+                throw dbError;
+              }
             }
 
             // Submission details were already stored before validation check
+
+            // Adjust XP if we hit the daily limit (no streak bonus)
+            const actualStreakBonusXp = hitDailyLimit ? 0 : streakBonusXp;
+            const actualTotalXp =
+              baseXp + firstChallengeBonusXp + actualStreakBonusXp;
 
             // Check if user has XP record
             const [existingXp] = await ctx.db
@@ -838,7 +1105,7 @@ export const userProgressRouter = createTRPCRouter({
               .where(eq(userXp.userId, userId));
 
             const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + totalXp;
+            const newXp = oldXp + actualTotalXp;
             const oldRank = calculateRank(oldXp);
             const newRank = calculateRank(newXp);
 
@@ -855,7 +1122,7 @@ export const userProgressRouter = createTRPCRouter({
               // Create new XP record
               await ctx.db.insert(userXp).values({
                 userId,
-                totalXp,
+                totalXp: actualTotalXp,
               });
             }
 
@@ -868,12 +1135,12 @@ export const userProgressRouter = createTRPCRouter({
               description: `Completed ${challengeData.difficulty} challenge`,
             });
 
-            // Record bonus XP transaction if applicable
+            // Record first challenge bonus XP transaction if applicable
             if (isFirstChallenge) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "first_challenge",
-                xpAmount: bonusXp,
+                xpAmount: firstChallengeBonusXp,
                 challengeId: challengeData.id,
                 description: "First challenge bonus",
               });
@@ -883,7 +1150,34 @@ export const userProgressRouter = createTRPCRouter({
                 challengeId: challengeData.id,
                 totalXp,
                 baseXp,
-                bonusXp,
+                firstChallengeBonusXp,
+              });
+            }
+
+            // Record streak bonus XP transaction if applicable and not hit daily limit
+            if (streakInfo?.streakBonus && !hitDailyLimit) {
+              await ctx.db.insert(userXpTransaction).values({
+                userId,
+                action: "daily_streak",
+                xpAmount: actualStreakBonusXp,
+                challengeId: challengeData.id,
+                description: streakInfo.streakBonus.label,
+              });
+
+              logger.info("Streak bonus awarded", {
+                userId,
+                challengeId: challengeData.id,
+                streak: streakInfo.streak,
+                streakBonusXp: actualStreakBonusXp,
+                streakLabel: streakInfo.streakBonus.label,
+              });
+            }
+
+            // Log if we hit the daily limit
+            if (hitDailyLimit) {
+              logger.info("Daily completion limit reached - no streak bonus", {
+                userId,
+                challengeId: challengeData.id,
               });
             }
 
@@ -903,8 +1197,11 @@ export const userProgressRouter = createTRPCRouter({
               userId,
               challengeId: challengeData.id,
               difficulty: challengeData.difficulty,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               isFirstChallenge,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
+              streakBonusXp: actualStreakBonusXp,
+              hitDailyLimit,
             });
 
             // Track challenge completed event in PostHog
@@ -913,17 +1210,19 @@ export const userProgressRouter = createTRPCRouter({
               challengeData.id,
               challengeSlug,
               challengeData.difficulty,
-              totalXp,
+              actualTotalXp,
               isFirstChallenge,
             );
 
             return {
               success: true,
-              xpAwarded: totalXp,
+              xpAwarded: actualTotalXp,
               totalXp: newXp,
               rank: newRank,
               rankUp: oldRank !== newRank,
               firstChallenge: isFirstChallenge,
+              streak: hitDailyLimit ? 0 : (streakInfo?.streak ?? 0),
+              streakBonusXp: actualStreakBonusXp,
             };
           } catch (error) {
             logger.error("Failed to complete challenge", {
@@ -987,8 +1286,68 @@ export const userProgressRouter = createTRPCRouter({
           span.setAttribute("challengeId", challengeData.id);
 
           try {
+            // Get all XP transactions for this challenge
+            const xpTransactions = await ctx.db
+              .select({
+                id: userXpTransaction.id,
+                xpAmount: userXpTransaction.xpAmount,
+                action: userXpTransaction.action,
+              })
+              .from(userXpTransaction)
+              .where(
+                and(
+                  eq(userXpTransaction.userId, userId),
+                  eq(userXpTransaction.challengeId, challengeData.id),
+                ),
+              );
+
+            // Calculate total XP to remove
+            const totalXpToRemove = xpTransactions.reduce(
+              (sum, transaction) => sum + transaction.xpAmount,
+              0,
+            );
+
+            span.setAttribute("xpToRemove", totalXpToRemove);
+            span.setAttribute("transactionsCount", xpTransactions.length);
+
+            // Note: Neon serverless driver does not support transactions
+            // We execute operations in optimal order to minimize inconsistency risk
+            if (xpTransactions.length > 0) {
+              // Get current XP
+              const [currentXp] = await ctx.db
+                .select({ totalXp: userXp.totalXp })
+                .from(userXp)
+                .where(eq(userXp.userId, userId));
+
+              if (currentXp) {
+                const newTotalXp = Math.max(
+                  0,
+                  currentXp.totalXp - totalXpToRemove,
+                );
+
+                // Update user's total XP FIRST (most critical operation)
+                await ctx.db
+                  .update(userXp)
+                  .set({
+                    totalXp: newTotalXp,
+                    updatedAt: new Date(),
+                  })
+                  .where(eq(userXp.userId, userId));
+              }
+
+              // Delete XP transactions related to this challenge
+              await ctx.db
+                .delete(userXpTransaction)
+                .where(
+                  and(
+                    eq(userXpTransaction.userId, userId),
+                    eq(userXpTransaction.challengeId, challengeData.id),
+                  ),
+                );
+            }
+
             // Delete user progress
-            const _result = await ctx.db
+            await ctx.db
               .delete(userProgress)
               .where(
                 and(
@@ -997,10 +1356,12 @@ export const userProgressRouter = createTRPCRouter({
                 ),
               );
 
-            logger.info("Challenge progress reset", {
+            logger.info("Challenge progress reset with XP removal", {
               userId,
               challengeId: challengeData.id,
               challengeTitle: challengeData.title,
+              xpRemoved: totalXpToRemove,
+              transactionsDeleted: xpTransactions.length,
             });
 
             return {
