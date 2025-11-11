@@ -7,7 +7,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesGrid } from "@/components/challenges-grid";
 import { ThemeHero } from "@/components/theme-hero";
 import { siteConfig } from "@/config/site";
-import { generateMetadata as generateSEOMetadata, generateCourseSchema, generateBreadcrumbSchema } from "@/lib/seo";
+import { generateMetadata as generateSEOMetadata, generateCourseSchema, generateBreadcrumbSchema, stringifyJsonLd } from "@/lib/seo";
 import { getThemeBySlug, getThemes } from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO
@@ -107,13 +107,13 @@ export default async function ThemePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(courseSchema),
+          __html: stringifyJsonLd(courseSchema),
         }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema),
+          __html: stringifyJsonLd(breadcrumbSchema),
         }}
       />
       {/* Back Button */}
