@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { siteConfig } from "@/config/site";
-import { generateMetadata as generateSEOMetadata, generateLearningResourceSchema, generateBreadcrumbSchema } from "@/lib/seo";
+import { generateMetadata as generateSEOMetadata, generateLearningResourceSchema, generateBreadcrumbSchema, stringifyJsonLd } from "@/lib/seo";
 import { getChallengeBySlug, getChallenges } from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO
@@ -101,13 +101,13 @@ export default async function ChallengePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(learningResourceSchema),
+          __html: stringifyJsonLd(learningResourceSchema),
         }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema),
+          __html: stringifyJsonLd(breadcrumbSchema),
         }}
       />
       {/* Back Button */}

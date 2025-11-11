@@ -231,10 +231,15 @@ export function generateBreadcrumbSchema(
 /**
  * Safely stringify JSON-LD data for use in dangerouslySetInnerHTML
  * Escapes characters that could be used for XSS attacks in script tags
+ * - Escapes <, >, & to prevent HTML injection
+ * - Escapes U+2028 and U+2029 line/paragraph separators that can break JS contexts
+ * - Neutralizes </ sequences that could prematurely close script tags
  */
 export function stringifyJsonLd(data: object): string {
   return JSON.stringify(data)
     .replace(/</g, "\\u003c")
     .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026");
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
