@@ -5,7 +5,12 @@ import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 import type React from "react";
 import { TRPCReactProvider } from "@/trpc/client";
-import { generateMetadata, generateOrganizationSchema, generateWebsiteSchema } from "@/lib/seo";
+import {
+  generateMetadata,
+  generateOrganizationSchema,
+  generateWebsiteSchema,
+  stringifyJsonLd,
+} from "@/lib/seo";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -35,13 +40,13 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
+            __html: stringifyJsonLd(organizationSchema),
           }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema),
+            __html: stringifyJsonLd(websiteSchema),
           }}
         />
       </head>
