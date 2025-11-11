@@ -1,10 +1,27 @@
 import { TrendingUp } from "lucide-react";
+import type { Metadata } from "next";
 import type { LucideIconName } from "@/components/lucide-icon";
 import { ThemeCard } from "@/components/theme-card";
+import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getThemes } from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO
 export const revalidate = 3600;
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "Kubernetes Learning Themes",
+  description:
+    "Explore Kubernetes topics organized by theme. Dive deep into specific concepts with curated challenges for each topic.",
+  url: "/themes",
+  keywords: [
+    "kubernetes topics",
+    "kubernetes themes",
+    "kubernetes concepts",
+    "learn kubernetes",
+    "kubernetes courses",
+    "k8s tutorials",
+  ],
+});
 
 export default async function ThemeListPage() {
   // Access database directly for static rendering (no headers/session needed)

@@ -1,10 +1,13 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesGrid } from "@/components/challenges-grid";
 import { ThemeHero } from "@/components/theme-hero";
+import { siteConfig } from "@/config/site";
+import { generateMetadata as generateSEOMetadata, generateCourseSchema, generateBreadcrumbSchema, stringifyJsonLd } from "@/lib/seo";
 import { getThemeBySlug, getThemes } from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO
@@ -17,6 +20,33 @@ export async function generateStaticParams() {
   return themes.map((theme) => ({
     slug: theme.slug,
   }));
+}
+
+// Generate dynamic metadata for each theme
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const theme = await getThemeBySlug(slug);
+
+  if (!theme) {
+    return {};
+  }
+
+  return generateSEOMetadata({
+    title: `${theme.name} - Kubernetes Theme`,
+    description: theme.description,
+    url: `/themes/${theme.slug}`,
+    keywords: [
+      theme.name,
+      `kubernetes ${theme.name.toLowerCase()}`,
+      `learn ${theme.name.toLowerCase()}`,
+      "kubernetes theme",
+      ...siteConfig.keywords.slice(0, 5),
+    ],
+  });
 }
 
 function ChallengesGridSkeleton() {
@@ -59,8 +89,33 @@ export default async function ThemePage({
     notFound();
   }
 
+  // Generate structured data for this theme
+  const courseSchema = generateCourseSchema({
+    name: `${theme.name} - Kubernetes Learning Path`,
+    description: theme.description,
+    url: `/themes/${theme.slug}`,
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Themes", url: "/themes" },
+    { name: theme.name, url: `/themes/${theme.slug}` },
+  ]);
+
   return (
     <div className="container mx-auto px-4 max-w-7xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: stringifyJsonLd(courseSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: stringifyJsonLd(breadcrumbSchema),
+        }}
+      />
       {/* Back Button */}
       <Link
         href="/themes"

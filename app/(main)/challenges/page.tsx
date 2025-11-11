@@ -1,12 +1,30 @@
 import { Trophy } from "lucide-react";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesView } from "@/components/challenges-view";
 import { UserStats } from "@/components/user-stats";
+import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getChallenges } from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO while keeping content fresh
 export const revalidate = 3600;
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "Kubernetes Challenges",
+  description:
+    "Master Kubernetes through hands-on practice. Browse our collection of real-world challenges designed to teach you production-ready skills.",
+  url: "/challenges",
+  keywords: [
+    "kubernetes challenges",
+    "kubernetes exercises",
+    "hands-on kubernetes",
+    "kubernetes practice",
+    "kubernetes learning",
+    "k8s challenges",
+    "kubernetes tutorial",
+  ],
+});
 
 export default async function ChallengesPage() {
   // Access database directly for ISR (no headers/session needed)
