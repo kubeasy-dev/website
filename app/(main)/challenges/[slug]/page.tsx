@@ -1,4 +1,5 @@
 import { ArrowLeft, Clock, Target } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -9,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { siteConfig } from "@/config/site";
+import { generateMetadata as generateSEOMetadata, generateLearningResourceSchema, generateBreadcrumbSchema, stringifyJsonLd } from "@/lib/seo";
 import { getChallengeBySlug, getChallenges } from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO
@@ -21,6 +24,40 @@ export async function generateStaticParams() {
   return challenges.map((challenge) => ({
     slug: challenge.slug,
   }));
+}
+
+// Generate dynamic metadata for each challenge
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const challenge = await getChallengeBySlug(slug);
+
+  if (!challenge) {
+    return {};
+  }
+
+  const difficultyLabels: Record<string, string> = {
+    easy: "Beginner",
+    medium: "Intermediate",
+    hard: "Advanced",
+  };
+
+  return generateSEOMetadata({
+    title: challenge.title,
+    description: challenge.description,
+    url: `/challenges/${challenge.slug}`,
+    keywords: [
+      challenge.theme,
+      difficultyLabels[challenge.difficulty],
+      "kubernetes challenge",
+      "kubernetes exercise",
+      "hands-on kubernetes",
+      ...siteConfig.keywords.slice(0, 5),
+    ],
+  });
 }
 
 export default async function ChallengePage({
@@ -37,8 +74,42 @@ export default async function ChallengePage({
     return notFound();
   }
 
+  const difficultyLabels: Record<string, string> = {
+    easy: "Beginner",
+    medium: "Intermediate",
+    hard: "Advanced",
+  };
+
+  // Generate structured data for this challenge
+  const learningResourceSchema = generateLearningResourceSchema({
+    name: challenge.title,
+    description: challenge.description,
+    url: `/challenges/${challenge.slug}`,
+    difficulty: difficultyLabels[challenge.difficulty],
+    estimatedTime: challenge.estimatedTime,
+    theme: challenge.theme,
+  });
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Challenges", url: "/challenges" },
+    { name: challenge.title, url: `/challenges/${challenge.slug}` },
+  ]);
+
   return (
     <div className="container mx-auto max-w-4xl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: stringifyJsonLd(learningResourceSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: stringifyJsonLd(breadcrumbSchema),
+        }}
+      />
       {/* Back Button */}
       <Button
         variant="ghost"

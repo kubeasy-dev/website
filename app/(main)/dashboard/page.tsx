@@ -1,4 +1,5 @@
 import { Target, TrendingUp, Trophy } from "lucide-react";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -10,7 +11,15 @@ import { DashboardStats } from "@/components/dashboard-stats";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { auth } from "@/lib/auth";
+import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+
+export const metadata: Metadata = generateSEOMetadata({
+  title: "Dashboard",
+  description: "Track your Kubernetes learning progress and achievements",
+  url: "/dashboard",
+  noIndex: true, // Private page, don't index
+});
 
 function DashboardChartSkeleton() {
   return (
