@@ -100,6 +100,7 @@ async function calculateStreakForCompletion(
 
   // Only query completions from the last 91 days to optimize performance
   // This is sufficient since max streak bonus is 90 days
+  // Exclude completions with dailyLimitReached=true (no streak bonus awarded)
   const streakResult = await database
     .select({
       completedAt: userProgress.completedAt,
@@ -109,6 +110,7 @@ async function calculateStreakForCompletion(
       and(
         eq(userProgress.userId, userId),
         eq(userProgress.status, "completed"),
+        eq(userProgress.dailyLimitReached, false),
         sql`${userProgress.completedAt} IS NOT NULL`,
         sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
       ),
@@ -284,6 +286,7 @@ export const userProgressRouter = createTRPCRouter({
 
     // Only query completions from the last 91 days to optimize performance
     // This is sufficient since max streak bonus is 90 days
+    // Exclude completions with dailyLimitReached=true (no streak bonus awarded)
     const streakResult = await ctx.db
       .select({
         completedAt: userProgress.completedAt,
@@ -293,6 +296,7 @@ export const userProgressRouter = createTRPCRouter({
         and(
           eq(userProgress.userId, userId),
           eq(userProgress.status, "completed"),
+          eq(userProgress.dailyLimitReached, false),
           sql`${userProgress.completedAt} IS NOT NULL`,
           sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
         ),
@@ -537,13 +541,15 @@ export const userProgressRouter = createTRPCRouter({
 
                 hitDailyLimit = true;
                 // Fall through to still award base XP and mark challenge
-                // We'll mark it complete without a completedAt date for this daily limit case
+                // Set dailyLimitReached=true to preserve completedAt timestamp
+                // This allows date-based queries to work while excluding from streak bonuses
                 if (existingProgress) {
                   await ctx.db
                     .update(userProgress)
                     .set({
                       status: "completed",
-                      completedAt: null, // No date to avoid constraint
+                      completedAt: new Date(),
+                      dailyLimitReached: true,
                       updatedAt: new Date(),
                     })
                     .where(eq(userProgress.id, existingProgress.id));
@@ -553,7 +559,8 @@ export const userProgressRouter = createTRPCRouter({
                     userId,
                     challengeId,
                     status: "completed",
-                    completedAt: null, // No date to avoid constraint
+                    completedAt: new Date(),
+                    dailyLimitReached: true,
                   });
                 }
               } else {
@@ -1294,13 +1301,15 @@ export const userProgressRouter = createTRPCRouter({
 
                 hitDailyLimit = true;
                 // Fall through to still award base XP and mark challenge
-                // We'll mark it complete without a completedAt date for this daily limit case
+                // Set dailyLimitReached=true to preserve completedAt timestamp
+                // This allows date-based queries to work while excluding from streak bonuses
                 if (existingProgress) {
                   await ctx.db
                     .update(userProgress)
                     .set({
                       status: "completed",
-                      completedAt: null, // No date to avoid constraint
+                      completedAt: new Date(),
+                      dailyLimitReached: true,
                       updatedAt: new Date(),
                     })
                     .where(eq(userProgress.id, existingProgress.id));
@@ -1310,7 +1319,8 @@ export const userProgressRouter = createTRPCRouter({
                     userId,
                     challengeId: challengeData.id,
                     status: "completed",
-                    completedAt: null, // No date to avoid constraint
+                    completedAt: new Date(),
+                    dailyLimitReached: true,
                   });
                 }
               } else {

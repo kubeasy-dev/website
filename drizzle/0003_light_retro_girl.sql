@@ -1,0 +1,1 @@
+ALTER TABLE "user_progress" ADD COLUMN "daily_limit_reached" boolean DEFAULT false NOT NULL;

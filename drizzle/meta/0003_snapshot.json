@@ -1,6 +1,6 @@
 {
-  "id": "b1a2a9d8-bcf0-4ff1-982a-b964eccea7b6",
-  "prevId": "bdccd254-b77a-4229-abb4-365882f97140",
+  "id": "12b834bc-5a45-466c-be76-1e2039fc2d47",
+  "prevId": "b1a2a9d8-bcf0-4ff1-982a-b964eccea7b6",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -757,6 +757,13 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "daily_limit_reached": {
+          "name": "daily_limit_reached",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "updated_at": {
           "name": "updated_at",

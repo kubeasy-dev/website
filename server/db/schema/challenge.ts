@@ -84,6 +84,7 @@ export const userProgress = pgTable(
     status: challengeStatusEnum("status").notNull().default("not_started"),
     startedAt: timestamp("started_at").defaultNow().notNull(),
     completedAt: timestamp("completed_at"),
+    dailyLimitReached: boolean("daily_limit_reached").notNull().default(false),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
