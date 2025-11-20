@@ -78,6 +78,94 @@ function calculateStreakBonus(streak: number): {
 }
 
 /**
+ * Safely insert XP transaction with retry logic and error monitoring
+ *
+ * Implements eventual consistency by retrying failed transaction logs
+ * with exponential backoff. If all retries fail, alerts via Sentry for
+ * manual reconciliation.
+ *
+ * @param database - Database instance
+ * @param transactionData - XP transaction data to insert
+ * @param context - Additional context for error logging (operation, userId, challengeId, etc.)
+ * @param maxRetries - Maximum number of retry attempts (default: 3)
+ */
+async function insertXpTransactionWithRetry(
+  database: typeof db,
+  transactionData: {
+    userId: string;
+    action: "challenge_completed" | "daily_streak" | "first_challenge";
+    xpAmount: number;
+    challengeId: number;
+    description: string;
+  },
+  context: {
+    operation: string;
+    userId: string;
+    challengeId: number;
+    inconsistencyType: string;
+    additionalData?: Record<string, unknown>;
+  },
+  maxRetries = 3,
+): Promise<void> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await database.insert(userXpTransaction).values(transactionData);
+      // Success! Log if this was a retry
+      if (attempt > 0) {
+        logger.info("XP transaction log succeeded after retry", {
+          attempt,
+          ...context,
+        });
+      }
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // If not the last attempt, wait with exponential backoff
+      if (attempt < maxRetries) {
+        const delayMs = Math.min(1000 * 2 ** attempt, 5000); // Max 5s
+        logger.warn("XP transaction log failed, retrying...", {
+          attempt: attempt + 1,
+          maxRetries,
+          delayMs,
+          error: lastError.message,
+          ...context,
+        });
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+
+  // All retries exhausted - log critical error and alert via Sentry
+  logger.error("CRITICAL: XP transaction log failed after all retries", {
+    attempts: maxRetries + 1,
+    error: lastError?.message,
+    ...context,
+  });
+
+  Sentry.captureException(lastError, {
+    level: "error",
+    tags: {
+      operation: context.operation,
+      inconsistency_type: context.inconsistencyType,
+      retry_exhausted: "true",
+    },
+    contexts: {
+      challenge: { id: context.challengeId },
+      user: { id: context.userId },
+      transaction: {
+        action: transactionData.action,
+        xpAmount: transactionData.xpAmount,
+        description: transactionData.description,
+      },
+      ...(context.additionalData && { additional: context.additionalData }),
+    },
+  });
+}
+
+/**
  * Calculate current streak and check if this is the first challenge completed today
  * Returns null if a challenge was already completed today, otherwise returns streak info
  *
@@ -604,145 +692,88 @@ export const userProgressRouter = createTRPCRouter({
             }
 
             // Record base XP transaction (for history/audit trail)
-            // Wrap in try-catch to detect partial failures
-            try {
-              await ctx.db.insert(userXpTransaction).values({
+            // Uses retry logic with exponential backoff for resilience
+            await insertXpTransactionWithRetry(
+              ctx.db,
+              {
                 userId,
                 action: "challenge_completed",
                 xpAmount: baseXp,
                 challengeId,
                 description: `Completed ${challengeData.difficulty} challenge`,
-              });
-            } catch (txError) {
-              // Critical: XP was updated but transaction log failed
-              // Alert via Sentry for manual reconciliation
-              logger.error(
-                "CRITICAL: XP transaction log failed after XP update",
-                {
-                  userId,
-                  challengeId,
-                  actualTotalXp,
-                  error:
-                    txError instanceof Error
-                      ? txError.message
-                      : String(txError),
+              },
+              {
+                operation: "challenge.complete",
+                userId,
+                challengeId,
+                inconsistencyType: "xp_transaction_log_failed",
+                additionalData: {
+                  difficulty: challengeData.difficulty,
+                  awarded: actualTotalXp,
+                  newTotal: newXp,
                 },
-              );
-              Sentry.captureException(txError, {
-                level: "error",
-                tags: {
-                  operation: "challenge.complete",
-                  inconsistency_type: "xp_transaction_log_failed",
-                },
-                contexts: {
-                  challenge: {
-                    id: challengeId,
-                    difficulty: challengeData.difficulty,
-                  },
-                  user: {
-                    id: userId,
-                  },
-                  xp: {
-                    awarded: actualTotalXp,
-                    newTotal: newXp,
-                  },
-                },
-              });
-              // Continue execution - XP was awarded, just log failed
-            }
+              },
+            );
 
             // Record first challenge bonus XP transaction if applicable
             if (isFirstChallenge) {
-              try {
-                await ctx.db.insert(userXpTransaction).values({
+              await insertXpTransactionWithRetry(
+                ctx.db,
+                {
                   userId,
                   action: "first_challenge",
                   xpAmount: firstChallengeBonusXp,
                   challengeId,
                   description: "First challenge bonus",
-                });
-
-                logger.info("First challenge completed", {
+                },
+                {
+                  operation: "challenge.complete",
                   userId,
                   challengeId,
-                  totalXp,
-                  baseXp,
-                  firstChallengeBonusXp,
-                });
-              } catch (txError) {
-                logger.error(
-                  "CRITICAL: First challenge bonus transaction log failed",
-                  {
-                    userId,
-                    challengeId,
-                    firstChallengeBonusXp,
-                    error:
-                      txError instanceof Error
-                        ? txError.message
-                        : String(txError),
-                  },
-                );
-                Sentry.captureException(txError, {
-                  level: "error",
-                  tags: {
-                    operation: "challenge.complete",
-                    inconsistency_type:
-                      "first_challenge_transaction_log_failed",
-                  },
-                  contexts: {
-                    challenge: { id: challengeId },
-                    user: { id: userId },
-                    xp: { bonusAmount: firstChallengeBonusXp },
-                  },
-                });
-              }
+                  inconsistencyType: "first_challenge_transaction_log_failed",
+                  additionalData: { bonusAmount: firstChallengeBonusXp },
+                },
+              );
+
+              logger.info("First challenge completed", {
+                userId,
+                challengeId,
+                totalXp,
+                baseXp,
+                firstChallengeBonusXp,
+              });
             }
 
             // Record streak bonus XP transaction if applicable and not hit daily limit
             if (streakInfo?.streakBonus && !hitDailyLimit) {
-              try {
-                await ctx.db.insert(userXpTransaction).values({
+              await insertXpTransactionWithRetry(
+                ctx.db,
+                {
                   userId,
                   action: "daily_streak",
                   xpAmount: streakBonusXp,
                   challengeId,
                   description: streakInfo.streakBonus.label,
-                });
+                },
+                {
+                  operation: "challenge.complete",
+                  userId,
+                  challengeId,
+                  inconsistencyType: "streak_transaction_log_failed",
+                  additionalData: {
+                    bonusAmount: streakBonusXp,
+                    streak: streakInfo.streak,
+                  },
+                },
+              );
 
-                logger.info("Streak bonus awarded", {
-                  userId,
-                  challengeId,
-                  streak: streakInfo.streak,
-                  streakBonusXp,
-                  streakLabel: streakInfo.streakBonus.label,
-                });
-              } catch (txError) {
-                logger.error("CRITICAL: Streak bonus transaction log failed", {
-                  userId,
-                  challengeId,
-                  streakBonusXp,
-                  streak: streakInfo.streak,
-                  error:
-                    txError instanceof Error
-                      ? txError.message
-                      : String(txError),
-                });
-                Sentry.captureException(txError, {
-                  level: "error",
-                  tags: {
-                    operation: "challenge.complete",
-                    inconsistency_type: "streak_transaction_log_failed",
-                  },
-                  contexts: {
-                    challenge: { id: challengeId },
-                    user: { id: userId },
-                    xp: {
-                      bonusAmount: streakBonusXp,
-                      streak: streakInfo.streak,
-                    },
-                  },
-                });
-              }
+              logger.info("Streak bonus awarded", {
+                userId,
+                challengeId,
+                streak: streakInfo.streak,
+                streakBonusXp,
+                streakLabel: streakInfo.streakBonus.label,
+              });
             }
 
             // Log if we hit the daily limit
@@ -1365,140 +1396,88 @@ export const userProgressRouter = createTRPCRouter({
             }
 
             // Record base XP transaction
-            // Wrap in try-catch to detect partial failures
-            try {
-              await ctx.db.insert(userXpTransaction).values({
+            // Uses retry logic with exponential backoff for resilience
+            await insertXpTransactionWithRetry(
+              ctx.db,
+              {
                 userId,
                 action: "challenge_completed",
                 xpAmount: baseXp,
                 challengeId: challengeData.id,
                 description: `Completed ${challengeData.difficulty} challenge`,
-              });
-            } catch (txError) {
-              logger.error(
-                "CRITICAL: XP transaction log failed after XP update in submitChallenge",
-                {
-                  userId,
-                  challengeId: challengeData.id,
-                  actualTotalXp,
-                  error:
-                    txError instanceof Error
-                      ? txError.message
-                      : String(txError),
+              },
+              {
+                operation: "challenge.submit",
+                userId,
+                challengeId: challengeData.id,
+                inconsistencyType: "xp_transaction_log_failed",
+                additionalData: {
+                  difficulty: challengeData.difficulty,
+                  awarded: actualTotalXp,
+                  newTotal: newXp,
                 },
-              );
-              Sentry.captureException(txError, {
-                level: "error",
-                tags: {
-                  operation: "challenge.submit",
-                  inconsistency_type: "xp_transaction_log_failed",
-                },
-                contexts: {
-                  challenge: {
-                    id: challengeData.id,
-                    difficulty: challengeData.difficulty,
-                  },
-                  user: { id: userId },
-                  xp: { awarded: actualTotalXp, newTotal: newXp },
-                },
-              });
-            }
+              },
+            );
 
             // Record first challenge bonus XP transaction if applicable
             if (isFirstChallenge) {
-              try {
-                await ctx.db.insert(userXpTransaction).values({
+              await insertXpTransactionWithRetry(
+                ctx.db,
+                {
                   userId,
                   action: "first_challenge",
                   xpAmount: firstChallengeBonusXp,
                   challengeId: challengeData.id,
                   description: "First challenge bonus",
-                });
-
-                logger.info("First challenge completed", {
+                },
+                {
+                  operation: "challenge.submit",
                   userId,
                   challengeId: challengeData.id,
-                  totalXp,
-                  baseXp,
-                  firstChallengeBonusXp,
-                });
-              } catch (txError) {
-                logger.error(
-                  "CRITICAL: First challenge bonus transaction log failed in submitChallenge",
-                  {
-                    userId,
-                    challengeId: challengeData.id,
-                    firstChallengeBonusXp,
-                    error:
-                      txError instanceof Error
-                        ? txError.message
-                        : String(txError),
-                  },
-                );
-                Sentry.captureException(txError, {
-                  level: "error",
-                  tags: {
-                    operation: "challenge.submit",
-                    inconsistency_type:
-                      "first_challenge_transaction_log_failed",
-                  },
-                  contexts: {
-                    challenge: { id: challengeData.id },
-                    user: { id: userId },
-                    xp: { bonusAmount: firstChallengeBonusXp },
-                  },
-                });
-              }
+                  inconsistencyType: "first_challenge_transaction_log_failed",
+                  additionalData: { bonusAmount: firstChallengeBonusXp },
+                },
+              );
+
+              logger.info("First challenge completed", {
+                userId,
+                challengeId: challengeData.id,
+                totalXp,
+                baseXp,
+                firstChallengeBonusXp,
+              });
             }
 
             // Record streak bonus XP transaction if applicable and not hit daily limit
             if (streakInfo?.streakBonus && !hitDailyLimit) {
-              try {
-                await ctx.db.insert(userXpTransaction).values({
+              await insertXpTransactionWithRetry(
+                ctx.db,
+                {
                   userId,
                   action: "daily_streak",
                   xpAmount: actualStreakBonusXp,
                   challengeId: challengeData.id,
                   description: streakInfo.streakBonus.label,
-                });
-
-                logger.info("Streak bonus awarded", {
+                },
+                {
+                  operation: "challenge.submit",
                   userId,
                   challengeId: challengeData.id,
-                  streak: streakInfo.streak,
-                  streakBonusXp: actualStreakBonusXp,
-                  streakLabel: streakInfo.streakBonus.label,
-                });
-              } catch (txError) {
-                logger.error(
-                  "CRITICAL: Streak bonus transaction log failed in submitChallenge",
-                  {
-                    userId,
-                    challengeId: challengeData.id,
-                    streakBonusXp: actualStreakBonusXp,
+                  inconsistencyType: "streak_transaction_log_failed",
+                  additionalData: {
+                    bonusAmount: actualStreakBonusXp,
                     streak: streakInfo.streak,
-                    error:
-                      txError instanceof Error
-                        ? txError.message
-                        : String(txError),
                   },
-                );
-                Sentry.captureException(txError, {
-                  level: "error",
-                  tags: {
-                    operation: "challenge.submit",
-                    inconsistency_type: "streak_transaction_log_failed",
-                  },
-                  contexts: {
-                    challenge: { id: challengeData.id },
-                    user: { id: userId },
-                    xp: {
-                      bonusAmount: actualStreakBonusXp,
-                      streak: streakInfo.streak,
-                    },
-                  },
-                });
-              }
+                },
+              );
+
+              logger.info("Streak bonus awarded", {
+                userId,
+                challengeId: challengeData.id,
+                streak: streakInfo.streak,
+                streakBonusXp: actualStreakBonusXp,
+                streakLabel: streakInfo.streakBonus.label,
+              });
             }
 
             // Log if we hit the daily limit
