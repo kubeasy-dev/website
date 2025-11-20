@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Target } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
