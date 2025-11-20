@@ -104,13 +104,14 @@ export const userProgress = pgTable(
       table.challengeId,
       table.status,
     ),
-    // Unique constraint: one completion per user per day
+    // Unique constraint: one streak-eligible completion per user per day
     // Prevents race conditions when marking challenges as completed
-    // Only applies when status is 'completed' and completedAt is not null
+    // Only applies when status is 'completed', completedAt is not null,
+    // and dailyLimitReached is false (only first completion per day gets streak bonus)
     uniqueIndex("user_progress_user_daily_completion_idx")
       .on(table.userId, sql`date_trunc('day', ${table.completedAt})`)
       .where(
-        sql`${table.status} = 'completed' AND ${table.completedAt} IS NOT NULL`,
+        sql`${table.status} = 'completed' AND ${table.completedAt} IS NOT NULL AND ${table.dailyLimitReached} = false`,
       ),
   ],
 );
@@ -177,5 +178,29 @@ export const userXpTransaction = pgTable(
     index("user_xp_transaction_user_id_idx").on(table.userId),
     // Index composite pour les requêtes filtrées par action
     index("user_xp_transaction_user_action_idx").on(table.userId, table.action),
+  ],
+);
+
+// Table to track challenge completion idempotency
+// Prevents double XP awards when transaction logging fails
+export const challengeCompletionIdempotency = pgTable(
+  "challenge_completion_idempotency",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    challengeId: integer("challenge_id")
+      .notNull()
+      .references(() => challenge.id, { onDelete: "cascade" }),
+    completedAt: timestamp("completed_at").notNull().defaultNow(),
+  },
+  (table) => [
+    // Unique constraint: one completion per user per challenge
+    // This ensures idempotency even if transaction logging fails
+    uniqueIndex("idempotency_user_challenge_idx").on(
+      table.userId,
+      table.challengeId,
+    ),
   ],
 );

@@ -11,6 +11,7 @@ import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import type db from "@/server/db";
 import {
   challenge,
+  challengeCompletionIdempotency,
   userProgress,
   userSubmission,
   userXp,
@@ -81,13 +82,14 @@ function calculateStreakBonus(streak: number): {
  * Safely insert XP transaction with retry logic and error monitoring
  *
  * Implements eventual consistency by retrying failed transaction logs
- * with exponential backoff. If all retries fail, alerts via Sentry for
- * manual reconciliation.
+ * with exponential backoff. If all retries fail, throws an error to
+ * abort the operation, allowing safe retry later via idempotency key.
  *
  * @param database - Database instance
  * @param transactionData - XP transaction data to insert
  * @param context - Additional context for error logging (operation, userId, challengeId, etc.)
  * @param maxRetries - Maximum number of retry attempts (default: 3)
+ * @throws {Error} If all retry attempts fail
  */
 async function insertXpTransactionWithRetry(
   database: typeof db,
@@ -138,7 +140,7 @@ async function insertXpTransactionWithRetry(
     }
   }
 
-  // All retries exhausted - log critical error and alert via Sentry
+  // All retries exhausted - log critical error, alert via Sentry, and throw
   logger.error("CRITICAL: XP transaction log failed after all retries", {
     attempts: maxRetries + 1,
     error: lastError?.message,
@@ -163,6 +165,10 @@ async function insertXpTransactionWithRetry(
       ...(context.additionalData && { additional: context.additionalData }),
     },
   });
+
+  // Throw error to abort the operation
+  // The idempotency key will remain, allowing safe retry later
+  throw lastError || new Error("Transaction log failed after all retries");
 }
 
 /**
@@ -522,70 +528,65 @@ export const userProgressRouter = createTRPCRouter({
 
           try {
             // Note: Neon serverless driver does not support transactions
-            // Use idempotency checks to prevent duplicate XP awards and allow safe retries
+            // Use idempotency table to prevent duplicate XP awards and allow safe retries
 
-            // IDEMPOTENCY CHECK: Verify if challenge was already processed
-            // Check for existing XP transactions for this challenge completion
-            const [existingTransactionCheck] = await ctx.db
-              .select({ count: count() })
-              .from(userXpTransaction)
-              .where(
-                and(
-                  eq(userXpTransaction.userId, userId),
-                  eq(userXpTransaction.challengeId, challengeId),
-                ),
-              );
-
-            if ((existingTransactionCheck?.count ?? 0) > 0) {
-              // Challenge already processed, return cached result from existing data
-              logger.info("Challenge already processed (idempotency check)", {
+            // IDEMPOTENCY CHECK: Attempt to insert idempotency key
+            // This will fail with unique constraint if already processed
+            const idempotencyId = nanoid();
+            try {
+              await ctx.db.insert(challengeCompletionIdempotency).values({
+                id: idempotencyId,
                 userId,
                 challengeId,
-                existingTransactions: existingTransactionCheck?.count ?? 0,
               });
+              // Success - this is a new completion, proceed with XP award
+            } catch (idempotencyError) {
+              // Idempotency key already exists - challenge was already processed
+              if (
+                idempotencyError instanceof Error &&
+                "code" in idempotencyError &&
+                idempotencyError.code === "23505"
+              ) {
+                logger.info("Challenge already processed (idempotency check)", {
+                  userId,
+                  challengeId,
+                });
 
-              // Get current user XP and progress for response
-              const [_currentXp] = await ctx.db
-                .select({ totalXp: userXp.totalXp })
-                .from(userXp)
-                .where(eq(userXp.userId, userId));
+                // Get current user XP for response
+                const [_currentXp] = await ctx.db
+                  .select({ totalXp: userXp.totalXp })
+                  .from(userXp)
+                  .where(eq(userXp.userId, userId));
 
-              const [_currentProgress] = await ctx.db
-                .select({ completedAt: userProgress.completedAt })
-                .from(userProgress)
-                .where(
-                  and(
-                    eq(userProgress.userId, userId),
-                    eq(userProgress.challengeId, challengeId),
-                  ),
+                // Get all XP transactions for this challenge to calculate awarded XP
+                const transactions = await ctx.db
+                  .select({ xpAmount: userXpTransaction.xpAmount })
+                  .from(userXpTransaction)
+                  .where(
+                    and(
+                      eq(userXpTransaction.userId, userId),
+                      eq(userXpTransaction.challengeId, challengeId),
+                    ),
+                  );
+
+                const totalXpAwarded = transactions.reduce(
+                  (sum, t) => sum + t.xpAmount,
+                  0,
                 );
 
-              // Get all XP transactions for this challenge to calculate awarded XP
-              const transactions = await ctx.db
-                .select({ xpAmount: userXpTransaction.xpAmount })
-                .from(userXpTransaction)
-                .where(
-                  and(
-                    eq(userXpTransaction.userId, userId),
-                    eq(userXpTransaction.challengeId, challengeId),
-                  ),
-                );
-
-              const totalXpAwarded = transactions.reduce(
-                (sum, t) => sum + t.xpAmount,
-                0,
-              );
-
-              return {
-                success: true,
-                xpAwarded: totalXpAwarded,
-                baseXp,
-                firstChallengeBonusXp: 0,
-                streakBonusXp: 0,
-                streak: 0,
-                isFirstChallenge: false,
-                cached: true, // Indicate this is a cached response
-              };
+                return {
+                  success: true,
+                  xpAwarded: totalXpAwarded,
+                  baseXp,
+                  firstChallengeBonusXp: 0,
+                  streakBonusXp: 0,
+                  streak: 0,
+                  isFirstChallenge: false,
+                  cached: true, // Indicate this is a cached response
+                };
+              }
+              // Re-throw if not an idempotency error
+              throw idempotencyError;
             }
 
             // Update or create user progress FIRST
@@ -1231,64 +1232,69 @@ export const userProgressRouter = createTRPCRouter({
           let hitDailyLimit = false;
 
           try {
-            // IDEMPOTENCY CHECK: Verify if challenge was already processed
-            // Check for existing XP transactions for this challenge completion
-            const [existingTransactionCheck] = await ctx.db
-              .select({ count: count() })
-              .from(userXpTransaction)
-              .where(
-                and(
-                  eq(userXpTransaction.userId, userId),
-                  eq(userXpTransaction.challengeId, challengeData.id),
-                ),
-              );
-
-            if ((existingTransactionCheck?.count ?? 0) > 0) {
-              // Challenge already processed, return cached result from existing data
-              logger.info(
-                "Challenge already processed (idempotency check) in submitChallenge",
-                {
-                  userId,
-                  challengeId: challengeData.id,
-                  existingTransactions: existingTransactionCheck?.count ?? 0,
-                },
-              );
-
-              // Get current user XP for response
-              const [currentXp] = await ctx.db
-                .select({ totalXp: userXp.totalXp })
-                .from(userXp)
-                .where(eq(userXp.userId, userId));
-
-              // Get all XP transactions for this challenge to calculate awarded XP
-              const transactions = await ctx.db
-                .select({ xpAmount: userXpTransaction.xpAmount })
-                .from(userXpTransaction)
-                .where(
-                  and(
-                    eq(userXpTransaction.userId, userId),
-                    eq(userXpTransaction.challengeId, challengeData.id),
-                  ),
+            // IDEMPOTENCY CHECK: Attempt to insert idempotency key
+            // This will fail with unique constraint if already processed
+            const idempotencyId = nanoid();
+            try {
+              await ctx.db.insert(challengeCompletionIdempotency).values({
+                id: idempotencyId,
+                userId,
+                challengeId: challengeData.id,
+              });
+              // Success - this is a new completion, proceed with XP award
+            } catch (idempotencyError) {
+              // Idempotency key already exists - challenge was already processed
+              if (
+                idempotencyError instanceof Error &&
+                "code" in idempotencyError &&
+                idempotencyError.code === "23505"
+              ) {
+                logger.info(
+                  "Challenge already processed (idempotency check) in submitChallenge",
+                  {
+                    userId,
+                    challengeId: challengeData.id,
+                  },
                 );
 
-              const totalXpAwarded = transactions.reduce(
-                (sum, t) => sum + t.xpAmount,
-                0,
-              );
+                // Get current user XP for response
+                const [currentXp] = await ctx.db
+                  .select({ totalXp: userXp.totalXp })
+                  .from(userXp)
+                  .where(eq(userXp.userId, userId));
 
-              const rank = calculateRank(currentXp?.totalXp ?? 0);
+                // Get all XP transactions for this challenge to calculate awarded XP
+                const transactions = await ctx.db
+                  .select({ xpAmount: userXpTransaction.xpAmount })
+                  .from(userXpTransaction)
+                  .where(
+                    and(
+                      eq(userXpTransaction.userId, userId),
+                      eq(userXpTransaction.challengeId, challengeData.id),
+                    ),
+                  );
 
-              return {
-                success: true,
-                xpAwarded: totalXpAwarded,
-                totalXp: currentXp?.totalXp ?? 0,
-                rank,
-                rankUp: false,
-                firstChallenge: false,
-                streak: 0,
-                streakBonusXp: 0,
-                cached: true, // Indicate this is a cached response
-              };
+                const totalXpAwarded = transactions.reduce(
+                  (sum, t) => sum + t.xpAmount,
+                  0,
+                );
+
+                const rank = calculateRank(currentXp?.totalXp ?? 0);
+
+                return {
+                  success: true,
+                  xpAwarded: totalXpAwarded,
+                  totalXp: currentXp?.totalXp ?? 0,
+                  rank,
+                  rankUp: false,
+                  firstChallenge: false,
+                  streak: 0,
+                  streakBonusXp: 0,
+                  cached: true, // Indicate this is a cached response
+                };
+              }
+              // Re-throw if not an idempotency error
+              throw idempotencyError;
             }
 
             // Update or create user progress
@@ -1593,7 +1599,8 @@ export const userProgressRouter = createTRPCRouter({
           span.setAttribute("challengeId", challengeData.id);
 
           try {
-            // Get all XP transactions for this challenge
+            // Get only base challenge_completed XP transactions
+            // Preserve first_challenge and daily_streak bonuses (separate achievements)
             const xpTransactions = await ctx.db
               .select({
                 id: userXpTransaction.id,
@@ -1605,10 +1612,11 @@ export const userProgressRouter = createTRPCRouter({
                 and(
                   eq(userXpTransaction.userId, userId),
                   eq(userXpTransaction.challengeId, challengeData.id),
+                  eq(userXpTransaction.action, "challenge_completed"),
                 ),
               );
 
-            // Calculate total XP to remove
+            // Calculate total XP to remove (only base challenge XP)
             const totalXpToRemove = xpTransactions.reduce(
               (sum, transaction) => sum + transaction.xpAmount,
               0,
@@ -1642,13 +1650,15 @@ export const userProgressRouter = createTRPCRouter({
                   .where(eq(userXp.userId, userId));
               }
 
-              // Delete XP transactions related to this challenge
+              // Delete only base challenge_completed XP transactions
+              // Keep first_challenge and daily_streak bonuses
               await ctx.db
                 .delete(userXpTransaction)
                 .where(
                   and(
                     eq(userXpTransaction.userId, userId),
                     eq(userXpTransaction.challengeId, challengeData.id),
+                    eq(userXpTransaction.action, "challenge_completed"),
                   ),
                 );
             }
@@ -1663,13 +1673,29 @@ export const userProgressRouter = createTRPCRouter({
                 ),
               );
 
-            logger.info("Challenge progress reset with XP removal", {
-              userId,
-              challengeId: challengeData.id,
-              challengeTitle: challengeData.title,
-              xpRemoved: totalXpToRemove,
-              transactionsDeleted: xpTransactions.length,
-            });
+            // Delete idempotency key to allow re-completion
+            await ctx.db
+              .delete(challengeCompletionIdempotency)
+              .where(
+                and(
+                  eq(challengeCompletionIdempotency.userId, userId),
+                  eq(
+                    challengeCompletionIdempotency.challengeId,
+                    challengeData.id,
+                  ),
+                ),
+              );
+
+            logger.info(
+              "Challenge progress reset (preserved first_challenge and daily_streak bonuses)",
+              {
+                userId,
+                challengeId: challengeData.id,
+                challengeTitle: challengeData.title,
+                baseXpRemoved: totalXpToRemove,
+                baseTransactionsDeleted: xpTransactions.length,
+              },
+            );
 
             return {
               success: true,
