@@ -276,6 +276,14 @@ export const userProgressRouter = createTRPCRouter({
   getStreak: privateProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
 
+    // Calculate date 90 days ago (max possible streak bonus is 90 days)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const ninetyDaysAgo = new Date(today);
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    // Only query completions from the last 91 days to optimize performance
+    // This is sufficient since max streak bonus is 90 days
     const streakResult = await ctx.db
       .select({
         completedAt: userProgress.completedAt,
@@ -286,6 +294,7 @@ export const userProgressRouter = createTRPCRouter({
           eq(userProgress.userId, userId),
           eq(userProgress.status, "completed"),
           sql`${userProgress.completedAt} IS NOT NULL`,
+          sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
         ),
       )
       .orderBy(sql`${userProgress.completedAt} DESC`);
