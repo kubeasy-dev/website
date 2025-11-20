@@ -1,9 +1,9 @@
-import { ArrowLeft, Clock, Target } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { ChallengeStatus } from "@/components/challenge-status";
+import { ChallengeMission } from "@/components/challenge-mission";
 import { DifficultyBadge } from "@/components/dificulty-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,29 +102,14 @@ export default async function ChallengePage({
         </CardContent>
       </Card>
 
-      {/* Mission Card */}
-      <Card className="mb-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-secondary">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Target className="h-6 w-6" />
-            <CardTitle className="text-2xl font-black">Your Mission</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="font-medium whitespace-pre-line">
-            {challenge.objective}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Challenge Status and Progress - Client-side component handles auth check */}
+      {/* Challenge Mission with Real-time Validation Status */}
       <ErrorBoundary fallback={<div>Error loading challenge status.</div>}>
         <Suspense
           fallback={
             <div className="p-6 bg-secondary border-4 border-black animate-pulse h-32" />
           }
         >
-          <ChallengeStatus slug={slug} />
+          <ChallengeMission slug={slug} objective={challenge.objective} />
         </Suspense>
       </ErrorBoundary>
     </div>
