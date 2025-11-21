@@ -676,37 +676,11 @@ export const userProgressRouter = createTRPCRouter({
             const actualTotalXp =
               baseXp + firstChallengeBonusXp + actualStreakBonusXp;
 
-            // Check if user has XP record
-            const [existingXp] = await ctx.db
-              .select()
-              .from(userXp)
-              .where(eq(userXp.userId, userId));
+            // CRITICAL: Log ALL transactions BEFORE updating user's total XP
+            // This ensures transaction log is the source of truth
+            // If any transaction logging fails, we throw and abort (preserving idempotency)
 
-            const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + actualTotalXp;
-            const oldRank = calculateRank(oldXp);
-            const newRank = calculateRank(newXp);
-
-            // Update user's total XP SECOND (critical operation)
-            if (existingXp) {
-              // Update existing XP
-              await ctx.db
-                .update(userXp)
-                .set({
-                  totalXp: newXp,
-                  updatedAt: new Date(),
-                })
-                .where(eq(userXp.userId, userId));
-            } else {
-              // Create new XP record
-              await ctx.db.insert(userXp).values({
-                userId,
-                totalXp: actualTotalXp,
-              });
-            }
-
-            // Record base XP transaction (for history/audit trail)
-            // Uses retry logic with exponential backoff for resilience
+            // Record base XP transaction FIRST
             await insertXpTransactionWithRetry(
               ctx.db,
               {
@@ -723,8 +697,7 @@ export const userProgressRouter = createTRPCRouter({
                 inconsistencyType: "xp_transaction_log_failed",
                 additionalData: {
                   difficulty: challengeData.difficulty,
-                  awarded: actualTotalXp,
-                  newTotal: newXp,
+                  baseXp,
                 },
               },
             );
@@ -749,11 +722,9 @@ export const userProgressRouter = createTRPCRouter({
                 },
               );
 
-              logger.info("First challenge completed", {
+              logger.info("First challenge bonus awarded", {
                 userId,
                 challengeId,
-                totalXp,
-                baseXp,
                 firstChallengeBonusXp,
               });
             }
@@ -795,6 +766,33 @@ export const userProgressRouter = createTRPCRouter({
               logger.info("Daily completion limit reached - no streak bonus", {
                 userId,
                 challengeId,
+              });
+            }
+
+            // ALL transactions logged successfully - now safe to update user's total XP
+            // If this update fails, transactions exist so idempotency prevents double-award
+            const [existingXp] = await ctx.db
+              .select()
+              .from(userXp)
+              .where(eq(userXp.userId, userId));
+
+            const oldXp = existingXp?.totalXp ?? 0;
+            const newXp = oldXp + actualTotalXp;
+            const oldRank = calculateRank(oldXp);
+            const newRank = calculateRank(newXp);
+
+            if (existingXp) {
+              await ctx.db
+                .update(userXp)
+                .set({
+                  totalXp: newXp,
+                  updatedAt: new Date(),
+                })
+                .where(eq(userXp.userId, userId));
+            } else {
+              await ctx.db.insert(userXp).values({
+                userId,
+                totalXp: actualTotalXp,
               });
             }
 
@@ -1401,36 +1399,11 @@ export const userProgressRouter = createTRPCRouter({
             const actualTotalXp =
               baseXp + firstChallengeBonusXp + actualStreakBonusXp;
 
-            // Check if user has XP record
-            const [existingXp] = await ctx.db
-              .select()
-              .from(userXp)
-              .where(eq(userXp.userId, userId));
+            // CRITICAL: Log ALL transactions BEFORE updating user's total XP
+            // This ensures transaction log is the source of truth
+            // If any transaction logging fails, we throw and abort (preserving idempotency)
 
-            const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + actualTotalXp;
-            const oldRank = calculateRank(oldXp);
-            const newRank = calculateRank(newXp);
-
-            if (existingXp) {
-              // Update existing XP
-              await ctx.db
-                .update(userXp)
-                .set({
-                  totalXp: newXp,
-                  updatedAt: new Date(),
-                })
-                .where(eq(userXp.userId, userId));
-            } else {
-              // Create new XP record
-              await ctx.db.insert(userXp).values({
-                userId,
-                totalXp: actualTotalXp,
-              });
-            }
-
-            // Record base XP transaction
-            // Uses retry logic with exponential backoff for resilience
+            // Record base XP transaction FIRST
             await insertXpTransactionWithRetry(
               ctx.db,
               {
@@ -1447,8 +1420,7 @@ export const userProgressRouter = createTRPCRouter({
                 inconsistencyType: "xp_transaction_log_failed",
                 additionalData: {
                   difficulty: challengeData.difficulty,
-                  awarded: actualTotalXp,
-                  newTotal: newXp,
+                  baseXp,
                 },
               },
             );
@@ -1519,6 +1491,33 @@ export const userProgressRouter = createTRPCRouter({
               logger.info("Daily completion limit reached - no streak bonus", {
                 userId,
                 challengeId: challengeData.id,
+              });
+            }
+
+            // ALL transactions logged successfully - now safe to update user's total XP
+            // If this update fails, transactions exist so idempotency prevents double-award
+            const [existingXp] = await ctx.db
+              .select()
+              .from(userXp)
+              .where(eq(userXp.userId, userId));
+
+            const oldXp = existingXp?.totalXp ?? 0;
+            const newXp = oldXp + actualTotalXp;
+            const oldRank = calculateRank(oldXp);
+            const newRank = calculateRank(newXp);
+
+            if (existingXp) {
+              await ctx.db
+                .update(userXp)
+                .set({
+                  totalXp: newXp,
+                  updatedAt: new Date(),
+                })
+                .where(eq(userXp.userId, userId));
+            } else {
+              await ctx.db.insert(userXp).values({
+                userId,
+                totalXp: actualTotalXp,
               });
             }
 
