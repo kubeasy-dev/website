@@ -79,6 +79,74 @@ function calculateStreakBonus(streak: number): {
 }
 
 /**
+ * Get the user's current streak (including today if completed today)
+ * Used for displaying streak in cached responses
+ */
+async function getCurrentStreak(
+  database: typeof db,
+  userId: string,
+): Promise<number> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const ninetyDaysAgo = new Date(today);
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+  // Query completions from the last 91 days
+  const streakResult = await database
+    .select({
+      completedAt: userProgress.completedAt,
+    })
+    .from(userProgress)
+    .where(
+      and(
+        eq(userProgress.userId, userId),
+        eq(userProgress.status, "completed"),
+        eq(userProgress.dailyLimitReached, false),
+        sql`${userProgress.completedAt} IS NOT NULL`,
+        sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
+      ),
+    )
+    .orderBy(sql`${userProgress.completedAt} DESC`);
+
+  let streak = 0;
+  if (streakResult.length > 0) {
+    let currentDate = new Date(today);
+    const completedDates = new Set(
+      streakResult
+        .map((r) => {
+          if (!r.completedAt) return null;
+          const date = new Date(r.completedAt);
+          date.setHours(0, 0, 0, 0);
+          return date.getTime();
+        })
+        .filter((d): d is number => d !== null),
+    );
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Check if completed today or yesterday (streak is still active)
+    if (
+      completedDates.has(today.getTime()) ||
+      completedDates.has(yesterday.getTime())
+    ) {
+      // Start counting from today if completed, otherwise yesterday
+      if (!completedDates.has(today.getTime())) {
+        currentDate = yesterday;
+      }
+
+      // Count consecutive days
+      while (completedDates.has(currentDate.getTime())) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+    }
+  }
+
+  return streak;
+}
+
+/**
  * Safely insert XP transaction with retry logic and error monitoring
  *
  * Implements eventual consistency by retrying failed transaction logs
@@ -558,9 +626,12 @@ export const userProgressRouter = createTRPCRouter({
                   .from(userXp)
                   .where(eq(userXp.userId, userId));
 
-                // Get all XP transactions for this challenge to calculate awarded XP
+                // Get all XP transactions for this challenge with action breakdown
                 const transactions = await ctx.db
-                  .select({ xpAmount: userXpTransaction.xpAmount })
+                  .select({
+                    xpAmount: userXpTransaction.xpAmount,
+                    action: userXpTransaction.action,
+                  })
                   .from(userXpTransaction)
                   .where(
                     and(
@@ -569,19 +640,29 @@ export const userProgressRouter = createTRPCRouter({
                     ),
                   );
 
+                // Calculate bonuses from actual transaction history
+                const firstChallengeBonusXp =
+                  transactions.find((t) => t.action === "first_challenge")
+                    ?.xpAmount ?? 0;
+                const streakBonusXp =
+                  transactions.find((t) => t.action === "daily_streak")
+                    ?.xpAmount ?? 0;
                 const totalXpAwarded = transactions.reduce(
                   (sum, t) => sum + t.xpAmount,
                   0,
                 );
 
+                // Get streak information for accurate response
+                const currentStreak = await getCurrentStreak(ctx.db, userId);
+
                 return {
                   success: true,
                   xpAwarded: totalXpAwarded,
                   baseXp,
-                  firstChallengeBonusXp: 0,
-                  streakBonusXp: 0,
-                  streak: 0,
-                  isFirstChallenge: false,
+                  firstChallengeBonusXp,
+                  streakBonusXp,
+                  streak: currentStreak,
+                  isFirstChallenge: firstChallengeBonusXp > 0,
                   cached: true, // Indicate this is a cached response
                 };
               }
@@ -1263,9 +1344,12 @@ export const userProgressRouter = createTRPCRouter({
                   .from(userXp)
                   .where(eq(userXp.userId, userId));
 
-                // Get all XP transactions for this challenge to calculate awarded XP
+                // Get all XP transactions for this challenge with action breakdown
                 const transactions = await ctx.db
-                  .select({ xpAmount: userXpTransaction.xpAmount })
+                  .select({
+                    xpAmount: userXpTransaction.xpAmount,
+                    action: userXpTransaction.action,
+                  })
                   .from(userXpTransaction)
                   .where(
                     and(
@@ -1274,10 +1358,20 @@ export const userProgressRouter = createTRPCRouter({
                     ),
                   );
 
+                // Calculate bonuses from actual transaction history
+                const cachedFirstChallengeBonusXp =
+                  transactions.find((t) => t.action === "first_challenge")
+                    ?.xpAmount ?? 0;
+                const cachedStreakBonusXp =
+                  transactions.find((t) => t.action === "daily_streak")
+                    ?.xpAmount ?? 0;
                 const totalXpAwarded = transactions.reduce(
                   (sum, t) => sum + t.xpAmount,
                   0,
                 );
+
+                // Get streak information for accurate response
+                const currentStreak = await getCurrentStreak(ctx.db, userId);
 
                 const rank = calculateRank(currentXp?.totalXp ?? 0);
 
@@ -1287,9 +1381,9 @@ export const userProgressRouter = createTRPCRouter({
                   totalXp: currentXp?.totalXp ?? 0,
                   rank,
                   rankUp: false,
-                  firstChallenge: false,
-                  streak: 0,
-                  streakBonusXp: 0,
+                  firstChallenge: cachedFirstChallengeBonusXp > 0,
+                  streak: currentStreak,
+                  streakBonusXp: cachedStreakBonusXp,
                   cached: true, // Indicate this is a cached response
                 };
               }
