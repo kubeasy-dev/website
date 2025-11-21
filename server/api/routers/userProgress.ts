@@ -80,7 +80,7 @@ function calculateStreakBonus(streak: number): {
 
 /**
  * Get the user's current streak (including today if completed today)
- * Used for displaying streak in cached responses
+ * Uses transaction history as source of truth to preserve streak even after resets
  */
 async function getCurrentStreak(
   database: typeof db,
@@ -91,35 +91,32 @@ async function getCurrentStreak(
   const ninetyDaysAgo = new Date(today);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-  // Query completions from the last 91 days
+  // Query daily_streak transactions from the last 91 days
+  // These transactions are the source of truth for streak-eligible days
+  // This preserves streak history even when challenges are reset
   const streakResult = await database
     .select({
-      completedAt: userProgress.completedAt,
+      createdAt: userXpTransaction.createdAt,
     })
-    .from(userProgress)
+    .from(userXpTransaction)
     .where(
       and(
-        eq(userProgress.userId, userId),
-        eq(userProgress.status, "completed"),
-        eq(userProgress.dailyLimitReached, false),
-        sql`${userProgress.completedAt} IS NOT NULL`,
-        sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
+        eq(userXpTransaction.userId, userId),
+        eq(userXpTransaction.action, "daily_streak"),
+        sql`${userXpTransaction.createdAt} >= ${ninetyDaysAgo}`,
       ),
     )
-    .orderBy(sql`${userProgress.completedAt} DESC`);
+    .orderBy(sql`${userXpTransaction.createdAt} DESC`);
 
   let streak = 0;
   if (streakResult.length > 0) {
     let currentDate = new Date(today);
     const completedDates = new Set(
-      streakResult
-        .map((r) => {
-          if (!r.completedAt) return null;
-          const date = new Date(r.completedAt);
-          date.setHours(0, 0, 0, 0);
-          return date.getTime();
-        })
-        .filter((d): d is number => d !== null),
+      streakResult.map((r) => {
+        const date = new Date(r.createdAt);
+        date.setHours(0, 0, 0, 0);
+        return date.getTime();
+      }),
     );
 
     const yesterday = new Date(today);
@@ -242,9 +239,7 @@ async function insertXpTransactionWithRetry(
 /**
  * Calculate current streak and check if this is the first challenge completed today
  * Returns null if a challenge was already completed today, otherwise returns streak info
- *
- * Optimized to only query recent completions (last 91 days) to reduce data scanned
- * and avoid race conditions with DB-level unique constraint
+ * Uses transaction history as source of truth to preserve streak even after resets
  */
 async function calculateStreakForCompletion(
   database: typeof db,
@@ -260,39 +255,34 @@ async function calculateStreakForCompletion(
   const ninetyDaysAgo = new Date(today);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-  // Only query completions from the last 91 days to optimize performance
-  // This is sufficient since max streak bonus is 90 days
-  // Exclude completions with dailyLimitReached=true (no streak bonus awarded)
+  // Query daily_streak transactions from the last 91 days
+  // These transactions are the source of truth for streak-eligible days
+  // This preserves streak history even when challenges are reset
   const streakResult = await database
     .select({
-      completedAt: userProgress.completedAt,
+      createdAt: userXpTransaction.createdAt,
     })
-    .from(userProgress)
+    .from(userXpTransaction)
     .where(
       and(
-        eq(userProgress.userId, userId),
-        eq(userProgress.status, "completed"),
-        eq(userProgress.dailyLimitReached, false),
-        sql`${userProgress.completedAt} IS NOT NULL`,
-        sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
+        eq(userXpTransaction.userId, userId),
+        eq(userXpTransaction.action, "daily_streak"),
+        sql`${userXpTransaction.createdAt} >= ${ninetyDaysAgo}`,
       ),
     )
-    .orderBy(desc(userProgress.completedAt));
+    .orderBy(desc(userXpTransaction.createdAt));
 
-  // Check if user already completed a challenge today
+  // Check if user already received a streak bonus today
   const completedDates = new Set(
-    streakResult
-      .map((r) => {
-        if (!r.completedAt) return null;
-        const date = new Date(r.completedAt);
-        date.setHours(0, 0, 0, 0);
-        return date.getTime();
-      })
-      .filter((d): d is number => d !== null),
+    streakResult.map((r) => {
+      const date = new Date(r.createdAt);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime();
+    }),
   );
 
   if (completedDates.has(today.getTime())) {
-    // Already completed a challenge today, no streak bonus
+    // Already received streak bonus today, no additional bonus
     return null;
   }
 
@@ -502,18 +492,20 @@ export const userProgressRouter = createTRPCRouter({
           // Calculate XP based on difficulty
           const baseXp = XP_REWARDS[challengeData.difficulty];
 
-          // Check if this is the user's first challenge
-          const [completedCount] = await ctx.db
-            .select({ count: count() })
-            .from(userProgress)
+          // Check if this is the user's first challenge by looking at transaction history
+          // This prevents farming first-challenge bonus through reset cycles
+          const [existingFirstChallengeBonus] = await ctx.db
+            .select({ id: userXpTransaction.id })
+            .from(userXpTransaction)
             .where(
               and(
-                eq(userProgress.userId, userId),
-                eq(userProgress.status, "completed"),
+                eq(userXpTransaction.userId, userId),
+                eq(userXpTransaction.action, "first_challenge"),
               ),
-            );
+            )
+            .limit(1);
 
-          const isFirstChallenge = (completedCount?.count ?? 0) === 0;
+          const isFirstChallenge = !existingFirstChallengeBonus;
           const firstChallengeBonusXp = isFirstChallenge
             ? FIRST_CHALLENGE_BONUS
             : 0;
@@ -1220,18 +1212,20 @@ export const userProgressRouter = createTRPCRouter({
           // Calculate XP based on difficulty
           const baseXp = XP_REWARDS[challengeData.difficulty];
 
-          // Check if this is the user's first challenge
-          const [completedCount] = await ctx.db
-            .select({ count: count() })
-            .from(userProgress)
+          // Check if this is the user's first challenge by looking at transaction history
+          // This prevents farming first-challenge bonus through reset cycles
+          const [existingFirstChallengeBonus] = await ctx.db
+            .select({ id: userXpTransaction.id })
+            .from(userXpTransaction)
             .where(
               and(
-                eq(userProgress.userId, userId),
-                eq(userProgress.status, "completed"),
+                eq(userXpTransaction.userId, userId),
+                eq(userXpTransaction.action, "first_challenge"),
               ),
-            );
+            )
+            .limit(1);
 
-          const isFirstChallenge = (completedCount?.count ?? 0) === 0;
+          const isFirstChallenge = !existingFirstChallengeBonus;
           const firstChallengeBonusXp = isFirstChallenge
             ? FIRST_CHALLENGE_BONUS
             : 0;

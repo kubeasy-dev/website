@@ -178,6 +178,11 @@ export const userXpTransaction = pgTable(
     index("user_xp_transaction_user_id_idx").on(table.userId),
     // Index composite pour les requêtes filtrées par action
     index("user_xp_transaction_user_action_idx").on(table.userId, table.action),
+    // Unique constraint: each user can only receive first_challenge bonus once
+    // Prevents farming first-challenge XP through reset cycles
+    uniqueIndex("user_xp_transaction_first_challenge_unique_idx")
+      .on(table.userId)
+      .where(sql`${table.action} = 'first_challenge'`),
   ],
 );
 

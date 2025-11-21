@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "user_xp_transaction_first_challenge_unique_idx" ON "user_xp_transaction" USING btree ("user_id") WHERE "user_xp_transaction"."action" = 'first_challenge';
