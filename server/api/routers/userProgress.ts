@@ -439,67 +439,7 @@ export const userProgressRouter = createTRPCRouter({
   // Get user streak
   getStreak: privateProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
-
-    // Calculate date 90 days ago (max possible streak bonus is 90 days)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const ninetyDaysAgo = new Date(today);
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-
-    // Only query completions from the last 91 days to optimize performance
-    // This is sufficient since max streak bonus is 90 days
-    // Exclude completions with dailyLimitReached=true (no streak bonus awarded)
-    const streakResult = await ctx.db
-      .select({
-        completedAt: userProgress.completedAt,
-      })
-      .from(userProgress)
-      .where(
-        and(
-          eq(userProgress.userId, userId),
-          eq(userProgress.status, "completed"),
-          eq(userProgress.dailyLimitReached, false),
-          sql`${userProgress.completedAt} IS NOT NULL`,
-          sql`${userProgress.completedAt} >= ${ninetyDaysAgo}`,
-        ),
-      )
-      .orderBy(sql`${userProgress.completedAt} DESC`);
-
-    let streak = 0;
-    if (streakResult.length > 0) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      let currentDate = new Date(today);
-      const completedDates = new Set(
-        streakResult
-          .map((r) => {
-            if (!r.completedAt) return null;
-            const date = new Date(r.completedAt);
-            date.setHours(0, 0, 0, 0);
-            return date.getTime();
-          })
-          .filter((d): d is number => d !== null),
-      );
-
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (
-        completedDates.has(today.getTime()) ||
-        completedDates.has(yesterday.getTime())
-      ) {
-        if (!completedDates.has(today.getTime())) {
-          currentDate = yesterday;
-        }
-
-        while (completedDates.has(currentDate.getTime())) {
-          streak++;
-          currentDate.setDate(currentDate.getDate() - 1);
-        }
-      }
-    }
-
+    const streak = await getCurrentStreak(ctx.db, userId);
     return streak;
   }),
 
