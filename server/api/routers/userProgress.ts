@@ -1627,71 +1627,13 @@ export const userProgressRouter = createTRPCRouter({
           span.setAttribute("challengeId", challengeData.id);
 
           try {
-            // Get only base challenge_completed XP transactions
-            // Preserve first_challenge and daily_streak bonuses (separate achievements)
-            const xpTransactions = await ctx.db
-              .select({
-                id: userXpTransaction.id,
-                xpAmount: userXpTransaction.xpAmount,
-                action: userXpTransaction.action,
-              })
-              .from(userXpTransaction)
-              .where(
-                and(
-                  eq(userXpTransaction.userId, userId),
-                  eq(userXpTransaction.challengeId, challengeData.id),
-                  eq(userXpTransaction.action, "challenge_completed"),
-                ),
-              );
+            // RESET PHILOSOPHY:
+            // Reset allows retrying a challenge for learning purposes
+            // All XP (base + bonuses) and transaction history are PRESERVED
+            // Idempotency key prevents re-earning XP on subsequent completions
+            // Only userProgress is deleted to allow UI/state to show as "not completed"
 
-            // Calculate total XP to remove (only base challenge XP)
-            const totalXpToRemove = xpTransactions.reduce(
-              (sum, transaction) => sum + transaction.xpAmount,
-              0,
-            );
-
-            span.setAttribute("xpToRemove", totalXpToRemove);
-            span.setAttribute("transactionsCount", xpTransactions.length);
-
-            // Note: Neon serverless driver does not support transactions
-            // We execute operations in optimal order to minimize inconsistency risk
-            if (xpTransactions.length > 0) {
-              // Get current XP
-              const [currentXp] = await ctx.db
-                .select({ totalXp: userXp.totalXp })
-                .from(userXp)
-                .where(eq(userXp.userId, userId));
-
-              if (currentXp) {
-                const newTotalXp = Math.max(
-                  0,
-                  currentXp.totalXp - totalXpToRemove,
-                );
-
-                // Update user's total XP FIRST (most critical operation)
-                await ctx.db
-                  .update(userXp)
-                  .set({
-                    totalXp: newTotalXp,
-                    updatedAt: new Date(),
-                  })
-                  .where(eq(userXp.userId, userId));
-              }
-
-              // Delete only base challenge_completed XP transactions
-              // Keep first_challenge and daily_streak bonuses
-              await ctx.db
-                .delete(userXpTransaction)
-                .where(
-                  and(
-                    eq(userXpTransaction.userId, userId),
-                    eq(userXpTransaction.challengeId, challengeData.id),
-                    eq(userXpTransaction.action, "challenge_completed"),
-                  ),
-                );
-            }
-
-            // Delete user progress
+            // Delete user progress (allows retrying in UI)
             await ctx.db
               .delete(userProgress)
               .where(
@@ -1701,27 +1643,17 @@ export const userProgressRouter = createTRPCRouter({
                 ),
               );
 
-            // Delete idempotency key to allow re-completion
-            await ctx.db
-              .delete(challengeCompletionIdempotency)
-              .where(
-                and(
-                  eq(challengeCompletionIdempotency.userId, userId),
-                  eq(
-                    challengeCompletionIdempotency.challengeId,
-                    challengeData.id,
-                  ),
-                ),
-              );
+            // DO NOT delete XP transactions - they are historical facts
+            // DO NOT delete idempotency key - prevents re-earning XP
+            // User can retry the challenge but won't gain XP again
 
             logger.info(
-              "Challenge progress reset (preserved first_challenge and daily_streak bonuses)",
+              "Challenge progress reset (all XP and history preserved)",
               {
                 userId,
                 challengeId: challengeData.id,
                 challengeTitle: challengeData.title,
-                baseXpRemoved: totalXpToRemove,
-                baseTransactionsDeleted: xpTransactions.length,
+                note: "User can retry but will not re-earn XP",
               },
             );
 
