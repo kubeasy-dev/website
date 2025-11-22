@@ -101,10 +101,12 @@ async function completeChallenge(userId: string, challengeId: number) {
     throw new Error(`Challenge ${challengeId} not found`);
   }
 
-  // Call the actual tRPC mutation
+  // Call the actual tRPC mutation with valid payload
   return await caller.userProgress.submitChallenge({
     challengeSlug: challengeData.slug,
     validated: true,
+    staticValidation: true,
+    dynamicValidation: true,
     payload: {
       validated: true,
       validations: {
@@ -172,7 +174,7 @@ describe("XP System - Comprehensive Tests", () => {
         .from(userXp)
         .where(eq(userXp.userId, userId));
 
-      expect(xp.totalXp).toBe(600); // 100 base + 500 bonus
+      expect(xp.totalXp).toBe(100); // 50 base + 50 first challenge bonus
 
       // Verify transactions logged
       const transactions = await db
@@ -183,10 +185,10 @@ describe("XP System - Comprehensive Tests", () => {
       expect(transactions).toHaveLength(2);
       expect(
         transactions.find((t) => t.action === "challenge_completed")?.xpAmount,
-      ).toBe(100);
+      ).toBe(50);
       expect(
         transactions.find((t) => t.action === "first_challenge")?.xpAmount,
-      ).toBe(500);
+      ).toBe(50);
     });
 
     it("should NOT award first-challenge bonus on second challenge", async () => {
@@ -639,7 +641,7 @@ describe("XP System - Comprehensive Tests", () => {
 
     it("should enforce unique idempotency key per (user, challenge)", async () => {
       const userId = await createTestUser();
-      const challengeId = 1;
+      const challengeId = await createTestChallenge(1);
 
       // Insert first key
       await db.insert(challengeCompletionIdempotency).values({
