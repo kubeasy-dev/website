@@ -168,7 +168,7 @@ describe("XP System - Comprehensive Tests", () => {
       // Complete challenge
       await completeChallenge(userId, challengeId);
 
-      // Verify XP total (easy = 100 XP + 500 first challenge bonus)
+      // Verify XP total (easy = 50 XP + 50 first-challenge bonus = 100 total)
       const [xp] = await db
         .select()
         .from(userXp)
