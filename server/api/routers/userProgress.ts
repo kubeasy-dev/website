@@ -552,6 +552,47 @@ export const userProgressRouter = createTRPCRouter({
                   challengeId,
                 });
 
+                // CRITICAL FIX: Ensure userProgress exists even for cached responses
+                // This handles the case where a challenge was reset (deleting userProgress)
+                // but idempotency key was preserved (preventing re-earning XP)
+                if (!existingProgress) {
+                  // userProgress was deleted (e.g., via reset) but idempotency key exists
+                  // Recreate userProgress without awarding XP
+                  await ctx.db.insert(userProgress).values({
+                    id: nanoid(),
+                    userId,
+                    challengeId,
+                    status: "completed",
+                    completedAt: new Date(),
+                    // Note: No dailyLimitReached check needed here since we're not awarding XP
+                  });
+                  logger.info(
+                    "Recreated userProgress for cached completion (post-reset)",
+                    {
+                      userId,
+                      challengeId,
+                    },
+                  );
+                } else {
+                  // existingProgress exists but not completed (status is not_started or in_progress)
+                  // Mark it as completed without awarding XP
+                  await ctx.db
+                    .update(userProgress)
+                    .set({
+                      status: "completed",
+                      completedAt: new Date(),
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(userProgress.id, existingProgress.id));
+                  logger.info(
+                    "Updated userProgress status for cached completion",
+                    {
+                      userId,
+                      challengeId,
+                    },
+                  );
+                }
+
                 // Get current user XP for response
                 const [_currentXp] = await ctx.db
                   .select({ totalXp: userXp.totalXp })
