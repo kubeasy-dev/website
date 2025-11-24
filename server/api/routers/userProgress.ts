@@ -15,37 +15,13 @@ import {
   userXp,
   userXpTransaction,
 } from "@/server/db/schema";
+import {
+  calculateLevel,
+  calculateStreak,
+  calculateXPGain,
+} from "@/server/services/xp";
 
 const { logger } = Sentry;
-
-// Rank thresholds based on XP
-const RANK_THRESHOLDS = [
-  { name: "Novice", minXp: 0 },
-  { name: "Beginner", minXp: 100 },
-  { name: "Advanced", minXp: 500 },
-  { name: "Expert", minXp: 1000 },
-  { name: "Master", minXp: 2000 },
-  { name: "Legend", minXp: 5000 },
-] as const;
-
-// XP rewards based on challenge difficulty
-const XP_REWARDS = {
-  easy: 50,
-  medium: 100,
-  hard: 200,
-} as const;
-
-const FIRST_CHALLENGE_BONUS = 50;
-
-function calculateRank(xp: number): string {
-  // Find the highest rank the user qualifies for
-  for (let i = RANK_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (xp >= RANK_THRESHOLDS[i].minXp) {
-      return RANK_THRESHOLDS[i].name;
-    }
-  }
-  return "Novice";
-}
 
 export const userProgressRouter = createTRPCRouter({
   // Get completion percentage
@@ -150,17 +126,23 @@ export const userProgressRouter = createTRPCRouter({
   getXpAndRank: privateProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
 
-    const [userXpResult] = await ctx.db
-      .select({ totalXp: userXp.totalXp })
-      .from(userXp)
-      .where(eq(userXp.userId, userId));
+    // Get total XP from transactions (source of truth)
+    const result = await ctx.db
+      .select({
+        totalXp: sql<number>`COALESCE(SUM(${userXpTransaction.xpAmount}), 0)`,
+      })
+      .from(userXpTransaction)
+      .where(eq(userXpTransaction.userId, userId));
 
-    const xpEarned = userXpResult?.totalXp ?? 0;
-    const rank = calculateRank(xpEarned);
+    const xpEarned = result[0]?.totalXp ?? 0;
+
+    // Use calculateLevel from XP service to get rank
+    const rankInfo = await calculateLevel(userId);
 
     return {
       xpEarned,
-      rank,
+      rank: rankInfo.name,
+      rankInfo, // Include full rank info (progress, nextRankXp, etc.)
     };
   }),
 
@@ -168,54 +150,9 @@ export const userProgressRouter = createTRPCRouter({
   getStreak: privateProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
 
-    const streakResult = await ctx.db
-      .select({
-        completedAt: userProgress.completedAt,
-      })
-      .from(userProgress)
-      .where(
-        and(
-          eq(userProgress.userId, userId),
-          eq(userProgress.status, "completed"),
-          sql`${userProgress.completedAt} IS NOT NULL`,
-        ),
-      )
-      .orderBy(sql`${userProgress.completedAt} DESC`);
-
-    let streak = 0;
-    if (streakResult.length > 0) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      let currentDate = new Date(today);
-      const completedDates = new Set(
-        streakResult
-          .map((r) => {
-            if (!r.completedAt) return null;
-            const date = new Date(r.completedAt);
-            date.setHours(0, 0, 0, 0);
-            return date.getTime();
-          })
-          .filter((d): d is number => d !== null),
-      );
-
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (
-        completedDates.has(today.getTime()) ||
-        completedDates.has(yesterday.getTime())
-      ) {
-        if (!completedDates.has(today.getTime())) {
-          currentDate = yesterday;
-        }
-
-        while (completedDates.has(currentDate.getTime())) {
-          streak++;
-          currentDate.setDate(currentDate.getDate() - 1);
-        }
-      }
-    }
+    // Use calculateStreak from XP service
+    // This uses daily_streak transactions as source of truth
+    const streak = await calculateStreak(userId);
 
     return streak;
   }),
@@ -276,9 +213,6 @@ export const userProgressRouter = createTRPCRouter({
             throw new Error("Challenge already completed");
           }
 
-          // Calculate XP based on difficulty
-          const baseXp = XP_REWARDS[challengeData.difficulty];
-
           // Check if this is the user's first challenge
           const [completedCount] = await ctx.db
             .select({ count: count() })
@@ -291,13 +225,23 @@ export const userProgressRouter = createTRPCRouter({
             );
 
           const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-          const bonusXp = isFirstChallenge ? FIRST_CHALLENGE_BONUS : 0;
-          const totalXp = baseXp + bonusXp;
 
-          span.setAttribute("baseXp", baseXp);
-          span.setAttribute("bonusXp", bonusXp);
-          span.setAttribute("totalXp", totalXp);
+          // Get current streak to calculate streak bonus
+          const currentStreak = await calculateStreak(userId);
+
+          // Calculate XP using XP service
+          const xpGain = calculateXPGain({
+            difficulty: challengeData.difficulty,
+            isFirstChallenge,
+            currentStreak,
+          });
+
+          span.setAttribute("baseXp", xpGain.baseXP);
+          span.setAttribute("firstChallengeBonus", xpGain.firstChallengeBonus);
+          span.setAttribute("streakBonus", xpGain.streakBonus);
+          span.setAttribute("totalXp", xpGain.total);
           span.setAttribute("isFirstChallenge", isFirstChallenge);
+          span.setAttribute("currentStreak", currentStreak);
 
           try {
             // Use a transaction to ensure data consistency
@@ -322,16 +266,17 @@ export const userProgressRouter = createTRPCRouter({
                 });
               }
 
-              // Check if user has XP record
+              // Get old rank before XP update
+              const oldRankInfo = await calculateLevel(userId);
+
+              // Check if user has XP record (still used for backward compatibility)
               const [existingXp] = await tx
                 .select()
                 .from(userXp)
                 .where(eq(userXp.userId, userId));
 
               const oldXp = existingXp?.totalXp ?? 0;
-              const newXp = oldXp + totalXp;
-              const oldRank = calculateRank(oldXp);
-              const newRank = calculateRank(newXp);
+              const newXp = oldXp + xpGain.total;
 
               if (existingXp) {
                 // Update existing XP
@@ -346,7 +291,7 @@ export const userProgressRouter = createTRPCRouter({
                 // Create new XP record
                 await tx.insert(userXp).values({
                   userId,
-                  totalXp,
+                  totalXp: xpGain.total,
                 });
               }
 
@@ -354,17 +299,17 @@ export const userProgressRouter = createTRPCRouter({
               await tx.insert(userXpTransaction).values({
                 userId,
                 action: "challenge_completed",
-                xpAmount: baseXp,
+                xpAmount: xpGain.baseXP,
                 challengeId,
                 description: `Completed ${challengeData.difficulty} challenge`,
               });
 
-              // Record bonus XP transaction if applicable
-              if (isFirstChallenge) {
+              // Record first challenge bonus transaction if applicable
+              if (xpGain.firstChallengeBonus > 0) {
                 await tx.insert(userXpTransaction).values({
                   userId,
                   action: "first_challenge",
-                  xpAmount: bonusXp,
+                  xpAmount: xpGain.firstChallengeBonus,
                   challengeId,
                   description: "First challenge bonus",
                 });
@@ -372,18 +317,32 @@ export const userProgressRouter = createTRPCRouter({
                 logger.info("First challenge completed", {
                   userId,
                   challengeId,
-                  totalXp,
-                  baseXp,
-                  bonusXp,
+                  totalXp: xpGain.total,
+                  baseXp: xpGain.baseXP,
+                  bonusXp: xpGain.firstChallengeBonus,
                 });
               }
 
+              // Record streak bonus transaction if applicable
+              if (xpGain.streakBonus > 0) {
+                await tx.insert(userXpTransaction).values({
+                  userId,
+                  action: "daily_streak",
+                  xpAmount: xpGain.streakBonus,
+                  challengeId,
+                  description: `${currentStreak} day streak bonus`,
+                });
+              }
+
+              // Get new rank after XP update
+              const newRankInfo = await calculateLevel(userId);
+
               // Log rank upgrade if applicable
-              if (oldRank !== newRank) {
+              if (oldRankInfo.name !== newRankInfo.name) {
                 logger.info("User rank upgraded", {
                   userId,
-                  oldRank,
-                  newRank,
+                  oldRank: oldRankInfo.name,
+                  newRank: newRankInfo.name,
                   oldXp,
                   newXp,
                   challengeId,
@@ -395,15 +354,21 @@ export const userProgressRouter = createTRPCRouter({
               userId,
               challengeId,
               difficulty: challengeData.difficulty,
-              xpAwarded: totalXp,
+              xpAwarded: xpGain.total,
+              baseXp: xpGain.baseXP,
+              firstChallengeBonus: xpGain.firstChallengeBonus,
+              streakBonus: xpGain.streakBonus,
+              currentStreak,
               isFirstChallenge,
             });
 
             return {
               success: true,
-              xpAwarded: totalXp,
-              baseXp,
-              bonusXp,
+              xpAwarded: xpGain.total,
+              baseXp: xpGain.baseXP,
+              bonusXp: xpGain.firstChallengeBonus + xpGain.streakBonus,
+              streakBonus: xpGain.streakBonus,
+              currentStreak,
               isFirstChallenge,
             };
           } catch (error) {
@@ -756,10 +721,7 @@ export const userProgressRouter = createTRPCRouter({
             };
           }
 
-          // Validation passed - use existing completeChallenge logic
-          // Calculate XP based on difficulty
-          const baseXp = XP_REWARDS[challengeData.difficulty];
-
+          // Validation passed - calculate XP using XP service
           // Check if this is the user's first challenge
           const [completedCount] = await ctx.db
             .select({ count: count() })
@@ -772,13 +734,23 @@ export const userProgressRouter = createTRPCRouter({
             );
 
           const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-          const bonusXp = isFirstChallenge ? FIRST_CHALLENGE_BONUS : 0;
-          const totalXp = baseXp + bonusXp;
 
-          span.setAttribute("baseXp", baseXp);
-          span.setAttribute("bonusXp", bonusXp);
-          span.setAttribute("totalXp", totalXp);
+          // Get current streak to calculate streak bonus
+          const currentStreak = await calculateStreak(userId);
+
+          // Calculate XP using XP service
+          const xpGain = calculateXPGain({
+            difficulty: challengeData.difficulty,
+            isFirstChallenge,
+            currentStreak,
+          });
+
+          span.setAttribute("baseXp", xpGain.baseXP);
+          span.setAttribute("firstChallengeBonus", xpGain.firstChallengeBonus);
+          span.setAttribute("streakBonus", xpGain.streakBonus);
+          span.setAttribute("totalXp", xpGain.total);
           span.setAttribute("isFirstChallenge", isFirstChallenge);
+          span.setAttribute("currentStreak", currentStreak);
 
           try {
             // Update or create user progress
@@ -803,16 +775,17 @@ export const userProgressRouter = createTRPCRouter({
 
             // Submission details were already stored before validation check
 
-            // Check if user has XP record
+            // Get old rank before XP update
+            const oldRankInfo = await calculateLevel(userId);
+
+            // Check if user has XP record (still used for backward compatibility)
             const [existingXp] = await ctx.db
               .select()
               .from(userXp)
               .where(eq(userXp.userId, userId));
 
             const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + totalXp;
-            const oldRank = calculateRank(oldXp);
-            const newRank = calculateRank(newXp);
+            const newXp = oldXp + xpGain.total;
 
             if (existingXp) {
               // Update existing XP
@@ -827,7 +800,7 @@ export const userProgressRouter = createTRPCRouter({
               // Create new XP record
               await ctx.db.insert(userXp).values({
                 userId,
-                totalXp,
+                totalXp: xpGain.total,
               });
             }
 
@@ -835,17 +808,17 @@ export const userProgressRouter = createTRPCRouter({
             await ctx.db.insert(userXpTransaction).values({
               userId,
               action: "challenge_completed",
-              xpAmount: baseXp,
+              xpAmount: xpGain.baseXP,
               challengeId: challengeData.id,
               description: `Completed ${challengeData.difficulty} challenge`,
             });
 
-            // Record bonus XP transaction if applicable
-            if (isFirstChallenge) {
+            // Record first challenge bonus transaction if applicable
+            if (xpGain.firstChallengeBonus > 0) {
               await ctx.db.insert(userXpTransaction).values({
                 userId,
                 action: "first_challenge",
-                xpAmount: bonusXp,
+                xpAmount: xpGain.firstChallengeBonus,
                 challengeId: challengeData.id,
                 description: "First challenge bonus",
               });
@@ -853,18 +826,32 @@ export const userProgressRouter = createTRPCRouter({
               logger.info("First challenge completed", {
                 userId,
                 challengeId: challengeData.id,
-                totalXp,
-                baseXp,
-                bonusXp,
+                totalXp: xpGain.total,
+                baseXp: xpGain.baseXP,
+                bonusXp: xpGain.firstChallengeBonus,
               });
             }
 
+            // Record streak bonus transaction if applicable
+            if (xpGain.streakBonus > 0) {
+              await ctx.db.insert(userXpTransaction).values({
+                userId,
+                action: "daily_streak",
+                xpAmount: xpGain.streakBonus,
+                challengeId: challengeData.id,
+                description: `${currentStreak} day streak bonus`,
+              });
+            }
+
+            // Get new rank after XP update
+            const newRankInfo = await calculateLevel(userId);
+
             // Log rank upgrade
-            if (oldRank !== newRank) {
+            if (oldRankInfo.name !== newRankInfo.name) {
               logger.info("User rank upgraded", {
                 userId,
-                oldRank,
-                newRank,
+                oldRank: oldRankInfo.name,
+                newRank: newRankInfo.name,
                 oldXp,
                 newXp,
                 challengeId: challengeData.id,
@@ -875,7 +862,11 @@ export const userProgressRouter = createTRPCRouter({
               userId,
               challengeId: challengeData.id,
               difficulty: challengeData.difficulty,
-              xpAwarded: totalXp,
+              xpAwarded: xpGain.total,
+              baseXp: xpGain.baseXP,
+              firstChallengeBonus: xpGain.firstChallengeBonus,
+              streakBonus: xpGain.streakBonus,
+              currentStreak,
               isFirstChallenge,
             });
 
@@ -885,17 +876,19 @@ export const userProgressRouter = createTRPCRouter({
               challengeData.id,
               challengeSlug,
               challengeData.difficulty,
-              totalXp,
+              xpGain.total,
               isFirstChallenge,
             );
 
             return {
               success: true,
-              xpAwarded: totalXp,
+              xpAwarded: xpGain.total,
               totalXp: newXp,
-              rank: newRank,
-              rankUp: oldRank !== newRank,
+              rank: newRankInfo.name,
+              rankUp: oldRankInfo.name !== newRankInfo.name,
               firstChallenge: isFirstChallenge,
+              streakBonus: xpGain.streakBonus,
+              currentStreak,
             };
           } catch (error) {
             logger.error("Failed to complete challenge", {
