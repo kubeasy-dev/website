@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, apiKey } from "better-auth/plugins";
+import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
 import { trackUserSignupServer } from "@/lib/analytics-server";
@@ -24,19 +24,23 @@ export const auth = betterAuth({
       },
     }),
     admin(),
+    oAuthProxy(),
   ],
   socialProviders: {
     github: {
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET,
+      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/github`,
     },
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/google`,
     },
     microsoft: {
       clientId: env.MICROSOFT_CLIENT_ID,
       clientSecret: env.MICROSOFT_CLIENT_SECRET,
+      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/microsoft`,
     },
   },
   databaseHooks: {

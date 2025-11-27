@@ -211,15 +211,68 @@ drizzle/                      # Generated migration files
 Required environment variables (`.env`):
 ```bash
 DATABASE_URL=                  # Neon PostgreSQL connection string
+BETTER_AUTH_URL=               # Production URL (e.g., https://kubeasy.dev)
+BETTER_AUTH_SECRET=            # Better Auth secret key
 GITHUB_CLIENT_ID=              # GitHub OAuth app ID
 GITHUB_CLIENT_SECRET=          # GitHub OAuth app secret
 GOOGLE_CLIENT_ID=              # Google OAuth client ID
 GOOGLE_CLIENT_SECRET=          # Google OAuth client secret
 MICROSOFT_CLIENT_ID=           # Microsoft OAuth client ID
 MICROSOFT_CLIENT_SECRET=       # Microsoft OAuth client secret
-BETTER_AUTH_SECRET=            # Better Auth secret key
-BETTER_AUTH_URL=               # Better Auth callback URL
+RESEND_API_KEY=                # Resend API key for transactional emails
 ```
+
+### OAuth Configuration for Preview Deployments
+
+The project uses **Better Auth's OAuth Proxy plugin** to handle authentication on Vercel preview deployments without needing to register each preview URL with OAuth providers.
+
+#### How It Works
+
+1. **Production URL Only**: Only the production URL needs to be registered with OAuth providers (GitHub, Google, Microsoft)
+2. **Automatic Proxying**: On preview deployments, the `oAuthProxy` plugin automatically proxies OAuth requests through the production URL
+3. **Secure Cookie Sharing**: Cookies are encrypted and passed via URL parameters between the proxy and the preview environment
+
+#### OAuth Provider Setup
+
+Register these callback URLs with your OAuth providers:
+
+```
+GitHub:     https://kubeasy.dev/api/auth/callback/github
+Google:     https://kubeasy.dev/api/auth/callback/google
+Microsoft:  https://kubeasy.dev/api/auth/callback/microsoft
+```
+
+#### Configuration
+
+The OAuth proxy is configured in `lib/auth.ts`:
+
+```typescript
+import { oAuthProxy } from "better-auth/plugins";
+
+export const auth = betterAuth({
+  plugins: [
+    oAuthProxy(), // Automatically infers URLs from BETTER_AUTH_URL
+  ],
+  socialProviders: {
+    github: {
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
+      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/github`,
+    },
+    // ... other providers
+  },
+});
+```
+
+The plugin automatically:
+- Detects if running on a preview deployment (different from `BETTER_AUTH_URL`)
+- Creates a proxy endpoint at `/api/auth/oauth-proxy`
+- Forwards OAuth callbacks through production
+- Returns users to the correct preview URL after authentication
+
+#### Vercel Environment Variables
+
+On Vercel, set `BETTER_AUTH_URL` to your production URL in **both** production and preview environments. The plugin will automatically detect when it's running on a preview URL and enable proxying.
 
 ## Code Quality & Git Hooks
 
