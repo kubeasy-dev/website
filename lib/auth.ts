@@ -13,6 +13,12 @@ import { createResendContact } from "./resend";
 const { logger } = Sentry;
 
 export const auth = betterAuth({
+  baseURL: env.BETTER_AUTH_URL,
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://kubeasy.dev",
+    "https://*.vercel.app", // Allow all Vercel preview deployments
+  ],
   database: drizzleAdapter(db, {
     provider: "pg", // or "mysql", "sqlite"
     schema: schema,

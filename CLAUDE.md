@@ -250,6 +250,12 @@ The OAuth proxy is configured in `lib/auth.ts`:
 import { oAuthProxy } from "better-auth/plugins";
 
 export const auth = betterAuth({
+  baseURL: env.BETTER_AUTH_URL,
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://kubeasy.dev",
+    "https://*.vercel.app", // Allow all Vercel preview deployments
+  ],
   plugins: [
     oAuthProxy(), // Automatically infers URLs from BETTER_AUTH_URL
   ],
@@ -263,6 +269,11 @@ export const auth = betterAuth({
   },
 });
 ```
+
+**Important configuration notes:**
+- `baseURL`: Explicitly set to production URL to ensure consistent OAuth redirects
+- `trustedOrigins`: Uses wildcard pattern `*.vercel.app` to allow all preview deployments
+- This prevents `INVALID_ORIGIN` errors on preview branches
 
 The plugin automatically:
 - Detects if running on a preview deployment (different from `BETTER_AUTH_URL`)
