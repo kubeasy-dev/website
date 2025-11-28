@@ -4,7 +4,7 @@
  * and can be used in static/ISR page generation
  */
 
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import db from "@/server/db";
 import { challenge, challengeTheme } from "@/server/db/schema";
 
@@ -89,4 +89,17 @@ export async function getThemeBySlug(slug: string) {
     .limit(1);
 
   return theme ?? null;
+}
+
+/**
+ * Get challenge count for a specific theme
+ * Efficient count query without fetching all challenge data
+ */
+export async function getChallengeCountByTheme(themeSlug: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(challenge)
+    .where(eq(challenge.theme, themeSlug));
+
+  return result[0]?.count ?? 0;
 }

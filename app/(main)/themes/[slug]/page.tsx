@@ -7,8 +7,17 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesGrid } from "@/components/challenges-grid";
 import { ThemeHero } from "@/components/theme-hero";
 import { siteConfig } from "@/config/site";
-import { generateMetadata as generateSEOMetadata, generateCourseSchema, generateBreadcrumbSchema, stringifyJsonLd } from "@/lib/seo";
-import { getThemeBySlug, getThemes } from "@/server/db/queries";
+import {
+  generateBreadcrumbSchema,
+  generateCourseSchema,
+  generateMetadata as generateSEOMetadata,
+  stringifyJsonLd,
+} from "@/lib/seo";
+import {
+  getChallengeCountByTheme,
+  getThemeBySlug,
+  getThemes,
+} from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO
 export const revalidate = 3600;
@@ -102,16 +111,21 @@ export default async function ThemePage({
     { name: theme.name, url: `/themes/${theme.slug}` },
   ]);
 
+  // Fetch challenge count for this theme with efficient SQL count query
+  const totalChallenges = await getChallengeCountByTheme(slug);
+
   return (
     <div className="container mx-auto px-4 max-w-7xl">
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
         dangerouslySetInnerHTML={{
           __html: stringifyJsonLd(courseSchema),
         }}
       />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
         dangerouslySetInnerHTML={{
           __html: stringifyJsonLd(breadcrumbSchema),
         }}
@@ -125,14 +139,8 @@ export default async function ThemePage({
         All Themes
       </Link>
 
-      {/* Theme Hero - Client-side component handles auth check */}
-      <Suspense
-        fallback={
-          <div className="bg-secondary border-4 border-black neo-shadow p-8 md:p-12 mb-12 animate-pulse h-64" />
-        }
-      >
-        <ThemeHero themeSlug={slug} />
-      </Suspense>
+      {/* Theme Hero - Server rendered with ISR */}
+      <ThemeHero theme={theme} totalChallenges={totalChallenges} />
 
       {/* Challenges Grid */}
       <ErrorBoundary fallback={<ChallengesGridError />}>
