@@ -13,7 +13,11 @@ import {
   generateMetadata as generateSEOMetadata,
   stringifyJsonLd,
 } from "@/lib/seo";
-import { getChallenges, getThemeBySlug, getThemes } from "@/server/db/queries";
+import {
+  getChallengeCountByTheme,
+  getThemeBySlug,
+  getThemes,
+} from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO
 export const revalidate = 3600;
@@ -107,9 +111,8 @@ export default async function ThemePage({
     { name: theme.name, url: `/themes/${theme.slug}` },
   ]);
 
-  // Fetch challenges count for this theme
-  const { challenges } = await getChallenges();
-  const themeChallenges = challenges.filter((c) => c.themeSlug === slug);
+  // Fetch challenge count for this theme with efficient SQL count query
+  const totalChallenges = await getChallengeCountByTheme(slug);
 
   return (
     <div className="container mx-auto px-4 max-w-7xl">
@@ -137,7 +140,7 @@ export default async function ThemePage({
       </Link>
 
       {/* Theme Hero - Server rendered with ISR */}
-      <ThemeHero theme={theme} totalChallenges={themeChallenges.length} />
+      <ThemeHero theme={theme} totalChallenges={totalChallenges} />
 
       {/* Challenges Grid */}
       <ErrorBoundary fallback={<ChallengesGridError />}>
