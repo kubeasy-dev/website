@@ -114,14 +114,9 @@ export const userSubmission = pgTable("user_submission", {
     .references(() => challenge.id, { onDelete: "cascade" }),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
   validated: boolean("validated").notNull().default(false),
-  // Deprecated fields - kept for backward compatibility, will be removed in future
-  staticValidation: boolean("static_validation"),
-  dynamicValidation: boolean("dynamic_validation"),
-  // New structure: stores validation results grouped by type
-  // Structure: { logvalidations: [{name, passed, details, rawStatus}], ... }
-  validations: json("validations"),
-  // Legacy payload field for backward compatibility
-  payload: json("payload"),
+  // Objectives: flat list of validation results enriched from challengeObjective table
+  // Structure: {id, name, description, passed, category, message}[]
+  objectives: json("objectives"),
 });
 
 export const xpActionEnum = pgEnum("xp_action", [
@@ -152,6 +147,51 @@ export const userXp = pgTable(
 );
 
 // Table to store XP transaction history
+// Objective category enum matching the validation types
+export const objectiveCategoryEnum = pgEnum("objective_category", [
+  "status",
+  "log",
+  "event",
+  "metrics",
+  "rbac",
+  "connectivity",
+]);
+
+// Table to store challenge objectives (parsed from validation CRDs)
+export const challengeObjective = pgTable(
+  "challenge_objective",
+  {
+    id: serial("id").primaryKey(),
+    challengeId: integer("challenge_id")
+      .notNull()
+      .references(() => challenge.id, { onDelete: "cascade" }),
+    // The CRD name (e.g., "app-ready-check") - used as unique key within challenge
+    objectiveKey: text("objective_key").notNull(),
+    // Human-readable title from annotation kubeasy.dev/title
+    title: text("title").notNull(),
+    // Description from annotation kubeasy.dev/description (required)
+    description: text("description").notNull(),
+    // Validation category (status, log, event, etc.)
+    category: objectiveCategoryEnum("category").notNull(),
+    // Order for display (based on file order or explicit annotation)
+    displayOrder: integer("display_order").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    // Unique constraint: one objective per key per challenge
+    index("challenge_objective_challenge_key_idx").on(
+      table.challengeId,
+      table.objectiveKey,
+    ),
+    // Index for fetching all objectives for a challenge
+    index("challenge_objective_challenge_id_idx").on(table.challengeId),
+  ],
+);
+
 export const userXpTransaction = pgTable(
   "user_xp_transaction",
   {

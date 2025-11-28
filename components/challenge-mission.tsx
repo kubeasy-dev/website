@@ -3,14 +3,13 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
+  Circle,
   Clock,
   Loader2,
   Target,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,49 +22,55 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import type { Objective, ObjectiveCategory } from "@/types/cli-api";
 import { SubmissionItem } from "./challenge-status/submission-item";
 
 interface ChallengeMissionProps {
   slug: string;
-  objective: string;
 }
 
-interface ValidationItem {
-  name: string;
-  passed: boolean;
-  details?: string[];
-  rawStatus?: Record<string, unknown>;
-}
-
-interface ValidationData {
-  [key: string]: ValidationItem[];
-}
-
-const VALIDATION_TYPE_LABELS: Record<string, string> = {
-  logvalidations: "Log Validation",
-  statusvalidations: "Status Validation",
-  eventvalidations: "Event Validation",
-  metricsvalidations: "Metrics Validation",
-  rbacvalidations: "RBAC Validation",
-  connectivityvalidations: "Connectivity Validation",
+const CATEGORY_LABELS: Record<ObjectiveCategory, string> = {
+  status: "Status",
+  log: "Logs",
+  event: "Events",
+  metrics: "Metrics",
+  rbac: "RBAC",
+  connectivity: "Network",
 };
 
-const VALIDATION_TYPE_COLORS: Record<string, string> = {
-  logvalidations: "bg-blue-50 border-blue-500",
-  statusvalidations: "bg-purple-50 border-purple-500",
-  eventvalidations: "bg-orange-50 border-orange-500",
-  metricsvalidations: "bg-green-50 border-green-500",
-  rbacvalidations: "bg-red-50 border-red-500",
-  connectivityvalidations: "bg-cyan-50 border-cyan-500",
+const CATEGORY_COLORS: Record<ObjectiveCategory, string> = {
+  log: "bg-blue-100 text-blue-700",
+  status: "bg-purple-100 text-purple-700",
+  event: "bg-orange-100 text-orange-700",
+  metrics: "bg-green-100 text-green-700",
+  rbac: "bg-red-100 text-red-700",
+  connectivity: "bg-cyan-100 text-cyan-700",
 };
 
-export function ChallengeMission({ slug, objective }: ChallengeMissionProps) {
+// Display objective with status: pending (no submission), passed, or failed
+interface DisplayObjective {
+  id: string;
+  objectiveKey: string;
+  title: string;
+  description: string | null;
+  category: ObjectiveCategory;
+  // Status: null = pending (no submission yet), true = passed, false = failed
+  status: boolean | null;
+  // Message from validation result (only when status is not null)
+  message?: string;
+}
+
+export function ChallengeMission({ slug }: ChallengeMissionProps) {
   const trpc = useTRPC();
-  const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
   const [showHistory, setShowHistory] = useState(false);
 
+  // Fetch predefined objectives from database
+  const { data: objectivesData, isLoading: isLoadingObjectives } = useQuery({
+    ...trpc.challenge.getObjectives.queryOptions({ slug }),
+  });
+
   // Poll every 5 seconds for real-time updates
-  const { data: validationStatus, isLoading } = useQuery({
+  const { data: validationStatus, isLoading: isLoadingValidation } = useQuery({
     ...trpc.userProgress.getLatestValidationStatus.queryOptions({ slug }),
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
@@ -86,48 +91,70 @@ export function ChallengeMission({ slug, objective }: ChallengeMissionProps) {
   });
 
   const status = statusData?.status ?? "not_started";
+  const isLoading = isLoadingObjectives || isLoadingValidation;
 
-  const toggleExpanded = (type: string) => {
-    setExpandedTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) {
-        next.delete(type);
-      } else {
-        next.add(type);
-      }
-      return next;
+  // Merge predefined objectives with submission results
+  const displayObjectives = useMemo((): DisplayObjective[] => {
+    const predefinedObjectives = objectivesData?.objectives ?? [];
+    const submissionObjectives = validationStatus?.hasSubmission
+      ? (validationStatus.objectives as Objective[] | null)
+      : null;
+
+    // If no predefined objectives, fall back to submission objectives (for backward compat)
+    if (predefinedObjectives.length === 0 && submissionObjectives) {
+      return submissionObjectives.map((obj) => ({
+        id: obj.id,
+        objectiveKey: obj.id,
+        title: obj.name,
+        description: obj.description ?? null,
+        category: obj.category,
+        status: obj.passed,
+        message: obj.message,
+      }));
+    }
+
+    // Map predefined objectives and merge with submission results
+    return predefinedObjectives.map((predefined) => {
+      // Find matching submission result by objectiveKey
+      const submissionResult = submissionObjectives?.find(
+        (sub) => sub.id === predefined.objectiveKey,
+      );
+
+      return {
+        id: String(predefined.id),
+        objectiveKey: predefined.objectiveKey,
+        title: predefined.title,
+        description: predefined.description,
+        category: predefined.category as ObjectiveCategory,
+        // null = pending (no submission), true/false = passed/failed
+        status: submissionResult ? submissionResult.passed : null,
+        message: submissionResult?.message,
+      };
     });
-  };
-
-  const hasSubmission =
-    validationStatus?.hasSubmission && validationStatus.validations;
-  const validations = hasSubmission
-    ? (validationStatus.validations as ValidationData)
-    : null;
-  const validationTypes = validations
-    ? Object.keys(validations).filter(
-        (type) =>
-          VALIDATION_TYPE_LABELS[type] && Array.isArray(validations[type]),
-      )
-    : [];
+  }, [objectivesData, validationStatus]);
 
   // Calculate overall progress
-  const totalValidations = validationTypes.reduce(
-    (sum, type) => sum + (validations?.[type]?.length || 0),
-    0,
-  );
-  const passedValidations = validationTypes.reduce(
-    (sum, type) =>
-      sum +
-      (validations?.[type]?.filter((v: ValidationItem) => v.passed).length ||
-        0),
-    0,
-  );
-  const allPassed =
-    totalValidations > 0 && passedValidations === totalValidations;
+  const totalObjectives = displayObjectives.length;
+  const passedObjectives = displayObjectives.filter(
+    (obj) => obj.status === true,
+  ).length;
+  const hasAnySubmission = displayObjectives.some((obj) => obj.status !== null);
+  const allPassed = totalObjectives > 0 && passedObjectives === totalObjectives;
 
   // Determine if challenge is completed
   const isCompleted = status === "completed";
+
+  // Status icon component
+  const StatusIcon = ({ objStatus }: { objStatus: boolean | null }) => {
+    if (objStatus === null) {
+      // Pending - no submission yet
+      return <Circle className="h-5 w-5 text-gray-400 flex-shrink-0" />;
+    }
+    if (objStatus) {
+      return <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />;
+    }
+    return <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />;
+  };
 
   return (
     <Card
@@ -140,17 +167,14 @@ export function ChallengeMission({ slug, objective }: ChallengeMissionProps) {
         <CardTitle className="text-2xl font-black flex items-center gap-3">
           <Target className="h-6 w-6" />
           Your Mission
-          {totalValidations > 0 && (
+          {totalObjectives > 0 && (
             <span className="ml-auto text-base font-bold">
-              {passedValidations}/{totalValidations} passed
+              {passedObjectives}/{totalObjectives}
             </span>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Mission Description */}
-        <p className="font-medium whitespace-pre-line">{objective}</p>
-
         {/* Loading state */}
         {isLoading && (
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -162,21 +186,84 @@ export function ChallengeMission({ slug, objective }: ChallengeMissionProps) {
         )}
 
         {/* Success Message - only when completed */}
-        {(() => {
-          if (!isCompleted) return null;
-          return (
-            <div className="bg-green-50 border-4 border-green-600 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
-                <p className="font-bold text-green-900">
-                  Congratulations! You've successfully completed this challenge.
-                </p>
-              </div>
+        {isCompleted && (
+          <div className="bg-green-50 border-4 border-green-600 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
+              <p className="font-bold text-green-900">
+                Congratulations! You've successfully completed this challenge.
+              </p>
             </div>
-          );
-        })()}
+          </div>
+        )}
 
-        {/* CLI Commands - Always visible */}
+        {/* Objectives Checklist - Flat list (ABOVE CLI commands) */}
+        {!isLoading && displayObjectives.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-bold">
+              Complete the objectives below and submit your solution:
+            </p>
+
+            <div className="space-y-2">
+              {displayObjectives.map((obj) => (
+                <div
+                  key={obj.id}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-lg border-2 border-black",
+                    obj.status === true
+                      ? "bg-green-50"
+                      : obj.status === false
+                        ? "bg-red-50"
+                        : "bg-white",
+                  )}
+                >
+                  <StatusIcon objStatus={obj.status} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold">{obj.title}</p>
+                      <span
+                        className={cn(
+                          "text-xs font-semibold px-2 py-0.5 rounded-full",
+                          CATEGORY_COLORS[obj.category] ||
+                            "bg-gray-100 text-gray-700",
+                        )}
+                      >
+                        {CATEGORY_LABELS[obj.category] || obj.category}
+                      </span>
+                    </div>
+                    {obj.description && (
+                      <p className="text-sm text-foreground/70 mt-1">
+                        {obj.description}
+                      </p>
+                    )}
+                    {obj.message && (
+                      <p
+                        className={cn(
+                          "text-sm mt-2 font-medium",
+                          obj.status === true
+                            ? "text-green-700"
+                            : "text-red-600",
+                        )}
+                      >
+                        {obj.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Last Updated - only if there's a submission */}
+            {hasAnySubmission && validationStatus?.timestamp && (
+              <p className="text-xs text-muted-foreground text-right font-medium">
+                Last updated:{" "}
+                {new Date(validationStatus.timestamp).toLocaleString()}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* CLI Commands */}
         <div className="space-y-3">
           {isCompleted ? (
             <>
@@ -198,9 +285,7 @@ export function ChallengeMission({ slug, objective }: ChallengeMissionProps) {
             </>
           ) : (
             <>
-              <p className="text-sm font-bold">
-                Work on this challenge in your local Kubernetes cluster:
-              </p>
+              <p className="text-sm font-bold">Submit your solution:</p>
               <div className="bg-black text-green-400 p-3 rounded-lg border-4 border-black font-mono text-sm">
                 <span className="text-gray-500">$</span> kubeasy challenge
                 submit {slug}
@@ -243,109 +328,11 @@ export function ChallengeMission({ slug, objective }: ChallengeMissionProps) {
           )}
         </div>
 
-        {/* No submission yet message */}
-        {!isLoading && !hasSubmission && (
+        {/* No objectives in database (backward compat) */}
+        {!isLoading && displayObjectives.length === 0 && !hasAnySubmission && (
           <p className="text-sm font-medium text-muted-foreground">
             Submit your solution to see validation progress.
           </p>
-        )}
-
-        {/* Validation Objectives */}
-        {!isLoading && hasSubmission && validationTypes.length > 0 && (
-          <div className="space-y-3">
-            {validationTypes.map((type) => {
-              const typeValidations = validations?.[type] || [];
-              const typeLabel = VALIDATION_TYPE_LABELS[type] || type;
-              const typeColor =
-                VALIDATION_TYPE_COLORS[type] || "bg-gray-50 border-gray-500";
-              const isExpanded = expandedTypes.has(type);
-              const allTypePassed = typeValidations.every((v) => v.passed);
-              const passedCount = typeValidations.filter(
-                (v) => v.passed,
-              ).length;
-
-              return (
-                <div
-                  key={type}
-                  className={cn(
-                    "rounded-lg border-4 border-black overflow-hidden",
-                    typeColor,
-                  )}
-                >
-                  {/* Type Header */}
-                  <button
-                    type="button"
-                    onClick={() => toggleExpanded(type)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:opacity-80 transition-opacity"
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="h-5 w-5" />
-                    ) : (
-                      <ChevronRight className="h-5 w-5" />
-                    )}
-                    {allTypePassed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-600" />
-                    )}
-                    <span className="font-bold text-lg">{typeLabel}</span>
-                    <span className="ml-auto text-sm font-medium">
-                      {passedCount}/{typeValidations.length}
-                    </span>
-                  </button>
-
-                  {/* Validation Items */}
-                  {isExpanded && (
-                    <div className="border-t-4 border-black bg-white/50">
-                      {typeValidations.map((validation, idx) => (
-                        <div
-                          key={`${type}-${validation.name}-${idx}`}
-                          className="px-4 py-3 border-b-2 border-border last:border-b-0"
-                        >
-                          <div className="flex items-start gap-3">
-                            {validation.passed ? (
-                              <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                            ) : (
-                              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-bold">{validation.name}</p>
-                              {validation.details &&
-                                validation.details.length > 0 && (
-                                  <ul className="mt-2 space-y-1 text-sm text-foreground/70 font-medium">
-                                    {validation.details.map(
-                                      (detail, detailIdx) => (
-                                        <li
-                                          key={detailIdx}
-                                          className="flex items-start gap-2"
-                                        >
-                                          <span className="text-xs mt-1">
-                                            •
-                                          </span>
-                                          <span>{detail}</span>
-                                        </li>
-                                      ),
-                                    )}
-                                  </ul>
-                                )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Last Updated */}
-            {validationStatus.timestamp && (
-              <p className="text-xs text-muted-foreground text-right font-medium">
-                Last updated:{" "}
-                {new Date(validationStatus.timestamp).toLocaleString()}
-              </p>
-            )}
-          </div>
         )}
       </CardContent>
     </Card>

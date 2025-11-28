@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { authenticateApiRequest, createApiCaller } from "@/lib/api-auth";
+import type { ObjectiveResult } from "@/types/cli-api";
 
 /**
  * POST /api/cli/challenge/[slug]/submit
- * Submits a challenge with validation result from Kubernetes operator
+ * Submits a challenge with validation results from Kubernetes CRDs
  *
  * Authentication: Requires API token in Authorization header
  * Format: Bearer <token>
  *
  * Request body:
  * {
- *   validated: boolean // Result from Kubernetes operator validation (required)
- *   static_validation?: boolean // Static validation result (optional)
- *   dynamic_validation?: boolean // Dynamic validation result (optional)
- *   payload?: any // Additional validation details (optional)
+ *   results: ObjectiveResult[] // Raw results from validation CRDs
  * }
  *
  * Response (success):
@@ -51,33 +49,35 @@ export async function POST(
   try {
     // Parse request body
     const body = await request.json();
-    const {
-      validated,
-      static_validation: staticValidation,
-      dynamic_validation: dynamicValidation,
-      payload,
-    } = body;
 
-    // Debug logging
-    console.log("[SUBMIT DEBUG]", {
-      slug,
-      validated,
-      staticValidation,
-      dynamicValidation,
-      hasPayload: !!payload,
-      payloadKeys: payload ? Object.keys(payload) : [],
-      userId: auth.user.id,
-    });
+    const results = body.results as ObjectiveResult[] | undefined;
 
-    if (typeof validated !== "boolean") {
+    // Validate request
+    if (!Array.isArray(results)) {
       return NextResponse.json(
         {
           error:
-            "Invalid request body. Expected { validated: boolean, static_validation?: boolean, dynamic_validation?: boolean, payload?: any }",
+            "Invalid request body. Expected { results: ObjectiveResult[] }",
         },
         { status: 400 },
       );
     }
+
+    if (results.length === 0) {
+      return NextResponse.json(
+        { error: "results array cannot be empty" },
+        { status: 400 },
+      );
+    }
+
+    // Debug logging
+    const allPassed = results.every((r) => r.passed);
+    console.log("[SUBMIT]", {
+      slug,
+      allPassed,
+      resultsCount: results.length,
+      userId: auth.user.id,
+    });
 
     // Create tRPC caller with authenticated context
     const trpc = createApiCaller(auth.user, auth.session);
@@ -85,10 +85,7 @@ export async function POST(
     // Call the userProgress.submitChallenge procedure
     const result = await trpc.userProgress.submitChallenge({
       challengeSlug: slug,
-      validated,
-      staticValidation,
-      dynamicValidation,
-      payload,
+      results,
     });
 
     return NextResponse.json(result);

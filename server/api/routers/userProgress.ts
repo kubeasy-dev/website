@@ -10,6 +10,7 @@ import {
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import {
   challenge,
+  challengeObjective,
   userProgress,
   userSubmission,
   userXp,
@@ -560,30 +561,25 @@ export const userProgressRouter = createTRPCRouter({
       };
     }),
 
-  // Submit challenge with validation result from CLI
+  // Submit challenge with validation results from CLI
+  // CLI sends raw CRD statuses, backend enriches with metadata from challengeObjective table
   submitChallenge: privateProcedure
     .input(
       z.object({
         challengeSlug: z.string(),
-        validated: z.boolean(),
-        // New structure: validations grouped by type
-        validations: z.record(z.any()).optional(),
-        // Legacy fields for backward compatibility
-        staticValidation: z.boolean().optional(),
-        dynamicValidation: z.boolean().optional(),
-        payload: z.any().optional(),
+        // Simplified input: just the raw results from CRDs
+        results: z.array(
+          z.object({
+            objectiveKey: z.string(), // CRD metadata.name
+            passed: z.boolean(), // CRD status.allPassed
+            message: z.string().optional(), // CRD status message
+          }),
+        ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
-      const {
-        challengeSlug,
-        validated,
-        validations,
-        staticValidation,
-        dynamicValidation,
-        payload,
-      } = input;
+      const { challengeSlug, results } = input;
 
       return Sentry.startSpan(
         {
@@ -593,7 +589,6 @@ export const userProgressRouter = createTRPCRouter({
         async (span) => {
           span.setAttribute("userId", userId);
           span.setAttribute("challengeSlug", challengeSlug);
-          span.setAttribute("validated", validated);
 
           // Find challenge by slug
           const [challengeData] = await ctx.db
@@ -638,72 +633,91 @@ export const userProgressRouter = createTRPCRouter({
             throw new Error("Challenge already completed");
           }
 
-          // Verify validations integrity when validation is claimed as successful
-          if (validated) {
-            // Require validations or payload to be present
-            if (!validations && !payload) {
-              logger.warn(
-                "Validation claimed but no validations or payload provided",
-                {
-                  userId,
-                  challengeId: challengeData.id,
-                },
-              );
-              throw new Error("Validations required for successful validation");
-            }
+          // Fetch objective metadata from challengeObjective table
+          const objectiveMetadata = await ctx.db
+            .select({
+              objectiveKey: challengeObjective.objectiveKey,
+              title: challengeObjective.title,
+              description: challengeObjective.description,
+              category: challengeObjective.category,
+            })
+            .from(challengeObjective)
+            .where(eq(challengeObjective.challengeId, challengeData.id));
 
-            // Use new validations structure if available, fallback to legacy
-            const validationData = validations || payload;
+          // Create a map for quick lookup
+          const metadataMap = new Map(
+            objectiveMetadata.map((m) => [m.objectiveKey, m]),
+          );
 
-            // Verify that all validations in the payload passed
-            if (validationData) {
-              const allPassed = Object.values(validationData).every(
-                (valList: any) => {
-                  if (Array.isArray(valList)) {
-                    return valList.every((val: any) => val.passed === true);
-                  }
-                  return false;
-                },
-              );
+          // Security validation: ensure ALL registered objectives are present in the submission
+          const expectedKeys = new Set(
+            objectiveMetadata.map((m) => m.objectiveKey),
+          );
+          const submittedKeys = new Set(results.map((r) => r.objectiveKey));
 
-              if (!allPassed) {
-                logger.warn(
-                  "Validation claimed as successful but some validations failed",
-                  {
-                    userId,
-                    challengeId: challengeData.id,
-                    validationTypes: Object.keys(validationData),
-                  },
-                );
-                throw new Error(
-                  "All validations must pass for successful submission",
-                );
-              }
-            }
-          }
-
-          // Always store the submission (even if validation failed)
-          if (validations !== undefined || payload !== undefined) {
-            await ctx.db.insert(userSubmission).values({
-              id: nanoid(),
+          // Check for missing objectives (objectives in DB but not in submission)
+          const missingKeys = [...expectedKeys].filter(
+            (key) => !submittedKeys.has(key),
+          );
+          if (missingKeys.length > 0) {
+            logger.warn("Submission missing required objectives", {
               userId,
               challengeId: challengeData.id,
-              validated,
-              validations: validations || null,
-              // Legacy fields for backward compatibility
-              staticValidation: staticValidation ?? null,
-              dynamicValidation: dynamicValidation ?? null,
-              payload: payload || null,
+              missingKeys,
             });
+            throw new Error(
+              `Missing required objectives: ${missingKeys.join(", ")}`,
+            );
           }
 
-          // If validation failed, return error (but submission is already saved)
+          // Check for unknown objectives (objectives in submission but not in DB)
+          const unknownKeys = [...submittedKeys].filter(
+            (key) => !expectedKeys.has(key),
+          );
+          if (unknownKeys.length > 0) {
+            logger.warn("Submission contains unknown objectives", {
+              userId,
+              challengeId: challengeData.id,
+              unknownKeys,
+            });
+            throw new Error(
+              `Unknown objectives submitted: ${unknownKeys.join(", ")}`,
+            );
+          }
+
+          // Enrich results with metadata and build objectives array for storage
+          const objectives = results.map((result) => {
+            const metadata = metadataMap.get(result.objectiveKey);
+            return {
+              id: result.objectiveKey,
+              name: metadata?.title ?? result.objectiveKey,
+              description: metadata?.description,
+              passed: result.passed,
+              category: metadata?.category ?? "status",
+              message: result.message ?? "",
+            };
+          });
+
+          // Determine if all objectives passed
+          const validated = results.every((r) => r.passed);
+          span.setAttribute("validated", validated);
+
+          // Always store the submission (even if validation failed)
+          await ctx.db.insert(userSubmission).values({
+            id: nanoid(),
+            userId,
+            challengeId: challengeData.id,
+            validated,
+            objectives,
+          });
+
+          // If validation failed, return with failed objectives info
           if (!validated) {
+            const failedObjectives = objectives.filter((obj) => !obj.passed);
             logger.info("Challenge validation failed", {
               userId,
               challengeId: challengeData.id,
-              staticValidation,
-              dynamicValidation,
+              failedObjectives: failedObjectives.map((obj) => obj.id),
             });
 
             // Track validation failure in PostHog
@@ -711,13 +725,18 @@ export const userProgressRouter = createTRPCRouter({
               userId,
               challengeData.id,
               challengeSlug,
-              staticValidation ?? false,
-              dynamicValidation ?? false,
+              failedObjectives.length,
+              failedObjectives.map((obj) => obj.id),
             );
 
             return {
               success: false,
               message: "Validation failed",
+              failedObjectives: failedObjectives.map((obj) => ({
+                id: obj.id,
+                name: obj.name,
+                message: obj.message,
+              })),
             };
           }
 
@@ -953,12 +972,22 @@ export const userProgressRouter = createTRPCRouter({
 
           try {
             // Delete user progress
-            const _result = await ctx.db
+            await ctx.db
               .delete(userProgress)
               .where(
                 and(
                   eq(userProgress.userId, userId),
                   eq(userProgress.challengeId, challengeData.id),
+                ),
+              );
+
+            // Delete user submissions for this challenge
+            await ctx.db
+              .delete(userSubmission)
+              .where(
+                and(
+                  eq(userSubmission.userId, userId),
+                  eq(userSubmission.challengeId, challengeData.id),
                 ),
               );
 
@@ -1061,11 +1090,7 @@ export const userProgressRouter = createTRPCRouter({
           id: userSubmission.id,
           timestamp: userSubmission.timestamp,
           validated: userSubmission.validated,
-          validations: userSubmission.validations,
-          // Legacy fields for backward compatibility
-          staticValidation: userSubmission.staticValidation,
-          dynamicValidation: userSubmission.dynamicValidation,
-          payload: userSubmission.payload,
+          objectives: userSubmission.objectives,
         })
         .from(userSubmission)
         .where(
@@ -1080,20 +1105,25 @@ export const userProgressRouter = createTRPCRouter({
       if (!latestSubmission) {
         return {
           hasSubmission: false,
-          validations: null,
+          objectives: null,
           timestamp: null,
           validated: false,
         };
       }
 
-      // Use new validations structure if available, fallback to legacy
-      const validationData =
-        latestSubmission.validations || latestSubmission.payload;
+      const objectives = latestSubmission.objectives as Array<{
+        id: string;
+        name: string;
+        description?: string;
+        passed: boolean;
+        category: string;
+        message: string;
+      }> | null;
 
       return {
         hasSubmission: true,
         validated: latestSubmission.validated,
-        validations: validationData,
+        objectives,
         timestamp: latestSubmission.timestamp,
       };
     }),

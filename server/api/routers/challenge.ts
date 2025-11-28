@@ -7,7 +7,12 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { getChallengeBySlug, getThemeBySlug } from "@/server/db/queries";
-import { challenge, challengeTheme, userProgress } from "@/server/db/schema";
+import {
+  challenge,
+  challengeObjective,
+  challengeTheme,
+  userProgress,
+} from "@/server/db/schema";
 
 export const challengeRouter = createTRPCRouter({
   list: publicProcedure
@@ -191,5 +196,37 @@ export const challengeRouter = createTRPCRouter({
         success: true,
         message: `Challenge "${input.slug}" has been deleted`,
       };
+    }),
+
+  /**
+   * Get objectives for a challenge by its slug.
+   * Returns the list of validation objectives that must be completed.
+   * Used by frontend to display the "todo list" checklist.
+   */
+  getObjectives: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // First get the challenge to ensure it exists and get its ID
+      const challengeData = await getChallengeBySlug(input.slug);
+
+      if (!challengeData) {
+        return { objectives: [] };
+      }
+
+      // Fetch objectives ordered by displayOrder
+      const objectives = await ctx.db
+        .select({
+          id: challengeObjective.id,
+          objectiveKey: challengeObjective.objectiveKey,
+          title: challengeObjective.title,
+          description: challengeObjective.description,
+          category: challengeObjective.category,
+          displayOrder: challengeObjective.displayOrder,
+        })
+        .from(challengeObjective)
+        .where(eq(challengeObjective.challengeId, challengeData.id))
+        .orderBy(challengeObjective.displayOrder);
+
+      return { objectives };
     }),
 });

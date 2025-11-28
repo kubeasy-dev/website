@@ -8,7 +8,8 @@
 import { PostHog } from "posthog-node";
 
 // Initialize PostHog client for server-side tracking
-const posthogClient = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY ?? "";
+const posthogClient = new PostHog(posthogKey, {
   host: "https://eu.posthog.com",
   flushAt: 1, // Send events immediately (useful for CLI interactions)
   flushInterval: 0, // Disable automatic flushing
@@ -134,15 +135,15 @@ export async function identifyUserServer(
  * @param userId - The user ID
  * @param challengeId - The ID of the challenge
  * @param challengeSlug - The slug of the challenge
- * @param staticValidation - Whether static validation passed
- * @param dynamicValidation - Whether dynamic validation passed
+ * @param failedObjectiveCount - Number of failed objectives
+ * @param failedObjectiveIds - List of failed objective IDs
  */
 export async function trackChallengeValidationFailedServer(
   userId: string,
   challengeId: number,
   challengeSlug: string,
-  staticValidation: boolean,
-  dynamicValidation: boolean,
+  failedObjectiveCount: number,
+  failedObjectiveIds: string[],
 ) {
   posthogClient.capture({
     distinctId: userId,
@@ -150,14 +151,8 @@ export async function trackChallengeValidationFailedServer(
     properties: {
       challengeId,
       challengeSlug,
-      staticValidation,
-      dynamicValidation,
-      failureType:
-        !staticValidation && !dynamicValidation
-          ? "both"
-          : !staticValidation
-            ? "static"
-            : "dynamic",
+      failedObjectiveCount,
+      failedObjectiveIds,
       source: "cli",
     },
   });

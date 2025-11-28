@@ -13,34 +13,42 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
+import type { Objective, ObjectiveCategory } from "@/types/cli-api";
 
 interface ChallengeObjectivesProps {
   slug: string;
 }
 
-interface ValidationItem {
-  name: string;
-  passed: boolean;
-  details?: string[];
-  rawStatus?: Record<string, unknown>;
-}
-
-interface ValidationData {
-  [key: string]: ValidationItem[];
-}
-
-const VALIDATION_TYPE_LABELS: Record<string, string> = {
-  logvalidations: "Log Validation",
-  statusvalidations: "Status Validation",
-  eventvalidations: "Event Validation",
-  metricsvalidations: "Metrics Validation",
-  rbacvalidations: "RBAC Validation",
-  connectivityvalidations: "Connectivity Validation",
+const CATEGORY_LABELS: Record<ObjectiveCategory, string> = {
+  status: "Status Validation",
+  log: "Log Validation",
+  event: "Event Validation",
+  metrics: "Metrics Validation",
+  rbac: "RBAC Validation",
+  connectivity: "Connectivity Validation",
 };
+
+// Group objectives by category
+function groupByCategory(
+  objectives: Objective[],
+): Record<ObjectiveCategory, Objective[]> {
+  return objectives.reduce(
+    (acc, obj) => {
+      if (!acc[obj.category]) {
+        acc[obj.category] = [];
+      }
+      acc[obj.category].push(obj);
+      return acc;
+    },
+    {} as Record<ObjectiveCategory, Objective[]>,
+  );
+}
 
 export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
   const trpc = useTRPC();
-  const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Poll every 5 seconds for real-time updates
   const { data: validationStatus, isLoading } = useQuery({
@@ -49,13 +57,13 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
     refetchIntervalInBackground: true,
   });
 
-  const toggleExpanded = (type: string) => {
-    setExpandedTypes((prev) => {
+  const toggleExpanded = (category: string) => {
+    setExpandedCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(type)) {
-        next.delete(type);
+      if (next.has(category)) {
+        next.delete(category);
       } else {
-        next.add(type);
+        next.add(category);
       }
       return next;
     });
@@ -74,7 +82,7 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
     );
   }
 
-  if (!validationStatus?.hasSubmission || !validationStatus.validations) {
+  if (!validationStatus?.hasSubmission || !validationStatus.objectives) {
     return (
       <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-secondary">
         <CardHeader>
@@ -95,22 +103,14 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
     );
   }
 
-  const validations = validationStatus.validations as ValidationData;
-  const validationTypes = Object.keys(validations);
+  const objectives = validationStatus.objectives as Objective[];
+  const groupedObjectives = groupByCategory(objectives);
+  const categories = Object.keys(groupedObjectives) as ObjectiveCategory[];
 
   // Calculate overall progress
-  const totalValidations = validationTypes.reduce(
-    (sum, type) => sum + (validations[type]?.length || 0),
-    0,
-  );
-  const passedValidations = validationTypes.reduce(
-    (sum, type) =>
-      sum +
-      (validations[type]?.filter((v: ValidationItem) => v.passed).length || 0),
-    0,
-  );
-  const allPassed =
-    totalValidations > 0 && passedValidations === totalValidations;
+  const totalObjectives = objectives.length;
+  const passedObjectives = objectives.filter((obj) => obj.passed).length;
+  const allPassed = totalObjectives > 0 && passedObjectives === totalObjectives;
 
   return (
     <Card
@@ -128,32 +128,34 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
           )}
           Objectives
           <span className="ml-auto text-base font-bold">
-            {passedValidations}/{totalValidations} passed
+            {passedObjectives}/{totalObjectives} passed
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {validationTypes.length === 0 && (
+        {categories.length === 0 && (
           <p className="text-base font-medium text-muted-foreground">
             No validations configured for this challenge.
           </p>
         )}
 
-        {validationTypes.map((type) => {
-          const typeValidations = validations[type] || [];
-          const typeLabel = VALIDATION_TYPE_LABELS[type] || type;
-          const isExpanded = expandedTypes.has(type);
-          const allTypePassed = typeValidations.every((v) => v.passed);
+        {categories.map((category) => {
+          const categoryObjectives = groupedObjectives[category] || [];
+          const categoryLabel = CATEGORY_LABELS[category] || category;
+          const isExpanded = expandedCategories.has(category);
+          const allCategoryPassed = categoryObjectives.every(
+            (obj) => obj.passed,
+          );
 
           return (
             <div
-              key={type}
+              key={category}
               className="border-4 border-black rounded-lg overflow-hidden bg-card"
             >
-              {/* Type Header */}
+              {/* Category Header */}
               <button
                 type="button"
-                onClick={() => toggleExpanded(type)}
+                onClick={() => toggleExpanded(category)}
                 className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors"
               >
                 {isExpanded ? (
@@ -161,48 +163,51 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
                 ) : (
                   <ChevronRight className="h-5 w-5" />
                 )}
-                {allTypePassed ? (
+                {allCategoryPassed ? (
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
                 ) : (
                   <XCircle className="h-5 w-5 text-destructive" />
                 )}
-                <span className="font-bold text-lg">{typeLabel}</span>
+                <span className="font-bold text-lg">{categoryLabel}</span>
                 <span className="ml-auto text-sm font-medium">
-                  {typeValidations.filter((v) => v.passed).length}/
-                  {typeValidations.length}
+                  {categoryObjectives.filter((obj) => obj.passed).length}/
+                  {categoryObjectives.length}
                 </span>
               </button>
 
-              {/* Validation Items */}
+              {/* Objective Items */}
               {isExpanded && (
                 <div className="border-t-4 border-black bg-muted/50">
-                  {typeValidations.map((validation, idx) => (
+                  {categoryObjectives.map((objective) => (
                     <div
-                      key={`${type}-${validation.name}-${idx}`}
+                      key={objective.id}
                       className="px-4 py-3 border-b-2 border-border last:border-b-0"
                     >
                       <div className="flex items-start gap-3">
-                        {validation.passed ? (
+                        {objective.passed ? (
                           <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                         ) : (
                           <XCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                         )}
                         <div className="flex-1">
-                          <p className="font-bold">{validation.name}</p>
-                          {validation.details &&
-                            validation.details.length > 0 && (
-                              <ul className="mt-2 space-y-1 text-sm text-muted-foreground font-medium">
-                                {validation.details.map((detail, detailIdx) => (
-                                  <li
-                                    key={detailIdx}
-                                    className="flex items-start gap-2"
-                                  >
-                                    <span className="text-xs mt-1">•</span>
-                                    <span>{detail}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
+                          <p className="font-bold">{objective.name}</p>
+                          {objective.description && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {objective.description}
+                            </p>
+                          )}
+                          {objective.message && (
+                            <p
+                              className={cn(
+                                "text-sm mt-2 font-medium",
+                                objective.passed
+                                  ? "text-green-700"
+                                  : "text-destructive",
+                              )}
+                            >
+                              {objective.message}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

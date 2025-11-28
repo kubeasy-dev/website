@@ -3,62 +3,33 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface Objective {
+  id: string;
+  name: string;
+  description?: string;
+  passed: boolean;
+  category: string;
+  message: string;
+}
+
 interface SubmissionItemProps {
   submission: {
     id: string;
     timestamp: Date;
     validated: boolean;
-    validations: unknown;
-    // Legacy fields
-    staticValidation: boolean | null;
-    dynamicValidation: boolean | null;
-    payload: unknown;
+    objectives: unknown; // Array of Objective
   };
 }
 
-interface ValidationItem {
-  name: string;
-  passed: boolean;
-  details?: string[];
-  rawStatus?: Record<string, unknown>;
-}
-
-interface ValidationData {
-  [key: string]: ValidationItem[];
-}
-
-const VALIDATION_TYPE_LABELS: Record<string, string> = {
-  logvalidations: "Log Validation",
-  statusvalidations: "Status Validation",
-  eventvalidations: "Event Validation",
-  metricsvalidations: "Metrics Validation",
-  rbacvalidations: "RBAC Validation",
-  connectivityvalidations: "Connectivity Validation",
-};
-
 export function SubmissionItem({ submission }: SubmissionItemProps) {
-  // Use new validations structure if available, fallback to legacy
-  const validations = (submission.validations ||
-    submission.payload) as ValidationData;
-  // Filter to only include valid validation type keys (those that are arrays)
-  const validationTypes = Object.keys(validations || {}).filter(
-    (type) => VALIDATION_TYPE_LABELS[type] && Array.isArray(validations[type]),
-  );
+  const objectives = (submission.objectives || []) as Objective[];
 
-  // Calculate overall stats
-  const totalValidations = validationTypes.reduce(
-    (sum, type) => sum + (validations[type]?.length || 0),
-    0,
-  );
-  const passedValidations = validationTypes.reduce(
-    (sum, type) =>
-      sum +
-      (validations[type]?.filter((v: ValidationItem) => v.passed).length || 0),
-    0,
-  );
+  // Calculate stats
+  const totalObjectives = objectives.length;
+  const passedObjectives = objectives.filter((obj) => obj.passed).length;
   const score =
-    totalValidations > 0
-      ? Math.round((passedValidations / totalValidations) * 100)
+    totalObjectives > 0
+      ? Math.round((passedObjectives / totalObjectives) * 100)
       : 0;
 
   const allPassed = submission.validated;
@@ -86,11 +57,11 @@ export function SubmissionItem({ submission }: SubmissionItemProps) {
       </div>
 
       {/* Right: Score */}
-      {totalValidations > 0 && (
+      {totalObjectives > 0 && (
         <div className="text-right">
           <div className="text-2xl font-black">{score}%</div>
           <div className="text-xs text-foreground/60 font-medium">
-            {passedValidations}/{totalValidations}
+            {passedObjectives}/{totalObjectives}
           </div>
         </div>
       )}
