@@ -4,7 +4,7 @@ CREATE TABLE "challenge_objective" (
 	"challenge_id" integer NOT NULL,
 	"objective_key" text NOT NULL,
 	"title" text NOT NULL,
-	"description" text,
+	"description" text NOT NULL,
 	"category" "objective_category" NOT NULL,
 	"display_order" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,

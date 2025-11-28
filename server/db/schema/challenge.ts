@@ -8,6 +8,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -183,7 +184,7 @@ export const challengeObjective = pgTable(
   },
   (table) => [
     // Unique constraint: one objective per key per challenge
-    index("challenge_objective_challenge_key_idx").on(
+    uniqueIndex("challenge_objective_challenge_key_idx").on(
       table.challengeId,
       table.objectiveKey,
     ),

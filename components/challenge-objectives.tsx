@@ -24,6 +24,7 @@ const CATEGORY_LABELS: Record<ObjectiveCategory, string> = {
   log: "Log Validation",
   event: "Event Validation",
   metrics: "Metrics Validation",
+  rbac: "RBAC Validation",
   connectivity: "Connectivity Validation",
 };
 

@@ -59,6 +59,7 @@ export type ObjectiveCategory =
   | "log" // LogValidation - Container logs contain expected strings
   | "event" // EventValidation - No forbidden events (OOM, BackOff, etc.)
   | "metrics" // MetricsValidation - Restart count, replicas, etc.
+  | "rbac" // RBACValidation - ServiceAccount permissions
   | "connectivity"; // ConnectivityValidation - Network reachability
 
 /**
