@@ -34,7 +34,6 @@ const CATEGORY_LABELS: Record<ObjectiveCategory, string> = {
   log: "Logs",
   event: "Events",
   metrics: "Metrics",
-  rbac: "RBAC",
   connectivity: "Network",
 };
 
@@ -43,7 +42,6 @@ const CATEGORY_COLORS: Record<ObjectiveCategory, string> = {
   status: "bg-purple-100 text-purple-700",
   event: "bg-orange-100 text-orange-700",
   metrics: "bg-green-100 text-green-700",
-  rbac: "bg-red-100 text-red-700",
   connectivity: "bg-cyan-100 text-cyan-700",
 };
 

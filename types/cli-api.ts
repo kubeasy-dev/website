@@ -52,14 +52,13 @@ export interface ChallengeStartResponse {
 
 /**
  * Objective Categories
- * Each category maps to a validation CRD type in the operator
+ * Each category maps to a validation type in the CLI
  */
 export type ObjectiveCategory =
   | "status" // StatusValidation - Pod Ready, Deployment Available, etc.
   | "log" // LogValidation - Container logs contain expected strings
   | "event" // EventValidation - No forbidden events (OOM, BackOff, etc.)
   | "metrics" // MetricsValidation - Restart count, replicas, etc.
-  | "rbac" // RBACValidation - ServiceAccount permissions
   | "connectivity"; // ConnectivityValidation - Network reachability
 
 /**
