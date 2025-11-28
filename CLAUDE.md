@@ -148,30 +148,58 @@ Authentication is handled by **Better Auth** (not NextAuth):
 
 ### Challenge Validation System
 
-The website backend tracks user progress through a specialized validation system:
+The website backend tracks user progress through an objectives-based validation system:
 
-**Database Schema (userSubmission table)**:
-- `validated: boolean` - Overall pass/fail status
-- `validations: json` - Structured validation results from CLI
-  - Format: `{logvalidations: [{name, passed, details, rawStatus}], statusvalidations: [...], ...}`
-  - Stores results for all 6 validation types (Log, Status, Event, Metrics, RBAC, Connectivity)
-- Legacy fields (`staticValidation`, `dynamicValidation`, `payload`) kept for backward compatibility
+**Database Schema**:
 
-**tRPC Endpoints (server/api/routers/userProgress.ts)**:
-- `submitChallenge` - Receives validation results from CLI
-  - Validates that all validations passed before marking challenge as complete
-  - Stores per-validation details in database
+`userSubmission` table stores submission results:
+- `validated: boolean` - Overall pass/fail status (true only if ALL objectives passed)
+- `objectives: json` - Array of enriched `Objective` results from the submission
+
+`challengeObjective` table stores objective metadata (synced from challenge repo):
+- `objectiveKey: text` - Unique key within challenge (CRD metadata.name)
+- `title: text` - Human-readable title
+- `description: text` - Objective description
+- `category: objectiveCategoryEnum` - One of: status, log, event, metrics, rbac, connectivity
+- `displayOrder: integer` - Order for display
+
+**Types** (`types/cli-api.ts`):
+```typescript
+// Raw result from CLI (sent in submission)
+interface ObjectiveResult {
+  objectiveKey: string;  // CRD metadata.name
+  passed: boolean;       // CRD status.allPassed
+  message?: string;      // CRD status message
+}
+
+// Enriched objective for frontend (stored in userSubmission.objectives)
+interface Objective {
+  id: string;            // objectiveKey
+  name: string;          // title from challengeObjective table
+  description?: string;  // description from challengeObjective table
+  passed: boolean;       // Validation result
+  category: ObjectiveCategory;  // status | log | event | metrics | rbac | connectivity
+  message?: string;      // Result message
+}
+```
+
+**tRPC Endpoints** (`server/api/routers/userProgress.ts`):
+- `submitChallenge` - Receives `{ challengeSlug, results: ObjectiveResult[] }` from CLI
+  - Fetches objective metadata from `challengeObjective` table
+  - Validates ALL registered objectives are present (rejects missing or unknown objectives)
+  - Enriches results with metadata to create `Objective[]`
+  - Stores enriched objectives in `userSubmission.objectives`
   - Awards XP and updates user progress on successful completion
-- `getLatestValidationStatus` - Fetches most recent submission's validation details
-  - Used by frontend to display real-time progress
-  - Returns structured validation data for UI rendering
+- `getLatestValidationStatus` - Returns `{ hasSubmission, validated, objectives, timestamp }`
+  - Returns stored `Objective[]` for UI rendering
+  - Frontend polls this endpoint for real-time updates
 
 **Integration Flow**:
-1. User runs `kubeasy challenge submit` in CLI
-2. CLI fetches validation CRDs from Kubernetes cluster
-3. CLI sends structured payload to `submitChallenge` mutation
-4. Backend validates and stores results, updates user progress
-5. Frontend queries `getLatestValidationStatus` to display current state
+1. User runs `kubeasy challenge submit <slug>` in CLI
+2. CLI reads validation CRDs from Kubernetes cluster
+3. CLI sends `{ results: ObjectiveResult[] }` to `submitChallenge`
+4. Backend enriches with metadata and stores in `userSubmission.objectives`
+5. Frontend queries `getLatestValidationStatus` to display objectives status
 
 ### Project Structure
 
