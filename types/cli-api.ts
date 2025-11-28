@@ -42,7 +42,7 @@ export interface ChallengeStatusResponse {
  * POST /api/cli/challenge/[slug]/start
  * Starts a challenge for the user
  */
-export type ChallengeStartRequest = {};
+export type ChallengeStartRequest = Record<string, never>;
 
 export interface ChallengeStartResponse {
   status: "in_progress" | "completed";
@@ -51,14 +51,46 @@ export interface ChallengeStartResponse {
 }
 
 /**
+ * Objective Categories
+ * Each category maps to a validation type in the CLI
+ */
+export type ObjectiveCategory =
+  | "status" // StatusValidation - Pod Ready, Deployment Available, etc.
+  | "log" // LogValidation - Container logs contain expected strings
+  | "event" // EventValidation - No forbidden events (OOM, BackOff, etc.)
+  | "metrics" // MetricsValidation - Restart count, replicas, etc.
+  | "rbac" // RBACValidation - ServiceAccount permissions
+  | "connectivity"; // ConnectivityValidation - Network reachability
+
+/**
+ * ObjectiveResult
+ * Result from a single validation CRD (sent by CLI)
+ */
+export interface ObjectiveResult {
+  objectiveKey: string; // CRD metadata.name (e.g., "pod-ready-check")
+  passed: boolean; // CRD status.allPassed
+  message?: string; // CRD status message or error
+}
+
+/**
+ * Objective
+ * Full objective with metadata (used by frontend, enriched from DB)
+ */
+export interface Objective {
+  id: string; // objectiveKey
+  name: string; // title from challengeObjective table
+  description?: string; // description from challengeObjective table
+  passed: boolean; // Validation result
+  category: ObjectiveCategory; // category from challengeObjective table
+  message?: string; // Result message
+}
+
+/**
  * POST /api/cli/challenge/[slug]/submit
- * Submits a challenge with validation results
+ * Submits a challenge with validation results from CRDs
  */
 export interface ChallengeSubmitRequest {
-  validated: boolean; // Overall validation result (required)
-  static_validation?: boolean; // Static validation result (optional)
-  dynamic_validation?: boolean; // Dynamic validation result (optional)
-  payload?: unknown; // Additional validation details (optional)
+  results: ObjectiveResult[]; // Raw results from validation CRDs
 }
 
 export interface ChallengeSubmitSuccessResponse {
@@ -83,7 +115,7 @@ export type ChallengeSubmitResponse =
  * POST /api/cli/challenge/[slug]/reset
  * Resets the user's progress for a specific challenge
  */
-export type ChallengeResetRequest = {};
+export type ChallengeResetRequest = Record<string, never>;
 
 export interface ChallengeResetResponse {
   success: boolean;

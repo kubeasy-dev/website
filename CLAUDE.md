@@ -146,6 +146,61 @@ Authentication is handled by **Better Auth** (not NextAuth):
   - `index.ts`: Exports all schemas
 - **Config**: `drizzle.config.ts` points to `server/db/schema` directory
 
+### Challenge Validation System
+
+The website backend tracks user progress through an objectives-based validation system:
+
+**Database Schema**:
+
+`userSubmission` table stores submission results:
+- `validated: boolean` - Overall pass/fail status (true only if ALL objectives passed)
+- `objectives: json` - Array of enriched `Objective` results from the submission
+
+`challengeObjective` table stores objective metadata (synced from challenge repo):
+- `objectiveKey: text` - Unique key within challenge (CRD metadata.name)
+- `title: text` - Human-readable title
+- `description: text` - Objective description
+- `category: objectiveCategoryEnum` - One of: status, log, event, metrics, rbac, connectivity
+- `displayOrder: integer` - Order for display
+
+**Types** (`types/cli-api.ts`):
+```typescript
+// Raw result from CLI (sent in submission)
+interface ObjectiveResult {
+  objectiveKey: string;  // CRD metadata.name
+  passed: boolean;       // CRD status.allPassed
+  message?: string;      // CRD status message
+}
+
+// Enriched objective for frontend (stored in userSubmission.objectives)
+interface Objective {
+  id: string;            // objectiveKey
+  name: string;          // title from challengeObjective table
+  description?: string;  // description from challengeObjective table
+  passed: boolean;       // Validation result
+  category: ObjectiveCategory;  // status | log | event | metrics | rbac | connectivity
+  message?: string;      // Result message
+}
+```
+
+**tRPC Endpoints** (`server/api/routers/userProgress.ts`):
+- `submitChallenge` - Receives `{ challengeSlug, results: ObjectiveResult[] }` from CLI
+  - Fetches objective metadata from `challengeObjective` table
+  - Validates ALL registered objectives are present (rejects missing or unknown objectives)
+  - Enriches results with metadata to create `Objective[]`
+  - Stores enriched objectives in `userSubmission.objectives`
+  - Awards XP and updates user progress on successful completion
+- `getLatestValidationStatus` - Returns `{ hasSubmission, validated, objectives, timestamp }`
+  - Returns stored `Objective[]` for UI rendering
+  - Frontend polls this endpoint for real-time updates
+
+**Integration Flow**:
+1. User runs `kubeasy challenge submit <slug>` in CLI
+2. CLI reads validation CRDs from Kubernetes cluster
+3. CLI sends `{ results: ObjectiveResult[] }` to `submitChallenge`
+4. Backend enriches with metadata and stores in `userSubmission.objectives`
+5. Frontend queries `getLatestValidationStatus` to display objectives status
+
 ### Project Structure
 
 ```

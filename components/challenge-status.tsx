@@ -3,16 +3,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
-import { Completed } from "./challenge-status/completed";
-import { InProgress } from "./challenge-status/in-progress";
 import { NotLoggedIn } from "./challenge-status/not-logged-in";
-import { NotStarted } from "./challenge-status/not-started";
 
 interface ChallengeStatusProps {
   slug: string;
+  objective: string;
 }
 
-export function ChallengeStatus({ slug }: ChallengeStatusProps) {
+export function ChallengeStatus({ slug, objective }: ChallengeStatusProps) {
   const { data: session } = authClient.useSession();
   const trpc = useTRPC();
 
@@ -29,17 +27,6 @@ export function ChallengeStatus({ slug }: ChallengeStatusProps) {
     return <NotLoggedIn slug={slug} />;
   }
 
-  const status = statusData?.status ?? "not_started";
-
-  // Route to appropriate component based on status
-  switch (status) {
-    case "not_started":
-      return <NotStarted slug={slug} />;
-    case "in_progress":
-      return <InProgress slug={slug} />;
-    case "completed":
-      return <Completed slug={slug} />;
-    default:
-      return <NotStarted slug={slug} />;
-  }
+  // All states (not_started, in_progress, completed) are now handled in ChallengeMission
+  return null;
 }

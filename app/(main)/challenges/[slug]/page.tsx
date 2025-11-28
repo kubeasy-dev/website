@@ -1,21 +1,23 @@
-import { ArrowLeft, Clock, Target } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { ChallengeStatus } from "@/components/challenge-status";
+import { ChallengeMission } from "@/components/challenge-mission";
 import { DifficultyBadge } from "@/components/dificulty-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { siteConfig } from "@/config/site";
-import { generateMetadata as generateSEOMetadata, generateLearningResourceSchema, generateBreadcrumbSchema, stringifyJsonLd } from "@/lib/seo";
+import {
+  generateBreadcrumbSchema,
+  generateLearningResourceSchema,
+  generateMetadata as generateSEOMetadata,
+  stringifyJsonLd,
+} from "@/lib/seo";
 import { getChallengeBySlug, getChallenges } from "@/server/db/queries";
-
-// ISR: Revalidate every hour for SEO
-export const revalidate = 3600;
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 // Generate static params for all challenges at build time
 export async function generateStaticParams() {
@@ -67,12 +69,15 @@ export default async function ChallengePage({
 }) {
   const { slug } = await params;
 
-  // Access database directly for ISR (no headers/session needed)
+  // Access database directly
   const challenge = await getChallengeBySlug(slug);
 
   if (!challenge) {
     return notFound();
   }
+
+  // Prefetch objectives to avoid loading spinner
+  await prefetch(trpc.challenge.getObjectives.queryOptions({ slug }));
 
   const difficultyLabels: Record<string, string> = {
     easy: "Beginner",
@@ -100,12 +105,14 @@ export default async function ChallengePage({
     <div className="container mx-auto max-w-4xl">
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe - JSON-LD structured data from trusted server-generated content
         dangerouslySetInnerHTML={{
           __html: stringifyJsonLd(learningResourceSchema),
         }}
       />
       <script
         type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe - JSON-LD structured data from trusted server-generated content
         dangerouslySetInnerHTML={{
           __html: stringifyJsonLd(breadcrumbSchema),
         }}
@@ -173,30 +180,11 @@ export default async function ChallengePage({
         </CardContent>
       </Card>
 
-      {/* Mission Card */}
-      <Card className="mb-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-secondary">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Target className="h-6 w-6" />
-            <CardTitle className="text-2xl font-black">Your Mission</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="font-medium whitespace-pre-line">
-            {challenge.objective}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Challenge Status and Progress - Client-side component handles auth check */}
+      {/* Challenge Mission with Real-time Validation Status */}
       <ErrorBoundary fallback={<div>Error loading challenge status.</div>}>
-        <Suspense
-          fallback={
-            <div className="p-6 bg-secondary border-4 border-black animate-pulse h-32" />
-          }
-        >
-          <ChallengeStatus slug={slug} />
-        </Suspense>
+        <HydrateClient>
+          <ChallengeMission slug={slug} />
+        </HydrateClient>
       </ErrorBoundary>
     </div>
   );

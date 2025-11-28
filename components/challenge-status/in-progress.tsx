@@ -8,9 +8,10 @@ import { SubmissionItem } from "./submission-item";
 
 interface InProgressProps {
   slug: string;
+  objective: string;
 }
 
-export function InProgress({ slug }: InProgressProps) {
+export function InProgress({ slug, objective }: InProgressProps) {
   const trpc = useTRPC();
 
   // Fetch submissions
@@ -56,7 +57,7 @@ export function InProgress({ slug }: InProgressProps) {
               </span>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               {submissions.map((submission) => (
                 <SubmissionItem key={submission.id} submission={submission} />
               ))}

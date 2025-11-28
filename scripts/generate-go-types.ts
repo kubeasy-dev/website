@@ -53,12 +53,16 @@ type ChallengeStartResponse struct {
 	Message   *string \`json:"message,omitempty"\`
 }
 
+// ObjectiveResult represents the raw validation result from a CRD
+type ObjectiveResult struct {
+	ObjectiveKey string  \`json:"objectiveKey"\` // CRD metadata.name (e.g., "pod-ready-check")
+	Passed       bool    \`json:"passed"\`       // CRD status.allPassed
+	Message      *string \`json:"message,omitempty"\` // CRD status message or error
+}
+
 // ChallengeSubmitRequest represents the request body for POST /api/cli/challenge/[slug]/submit
 type ChallengeSubmitRequest struct {
-	Validated         bool        \`json:"validated"\`                    // Overall validation result (required)
-	StaticValidation  *bool       \`json:"static_validation,omitempty"\`  // Static validation result (optional)
-	DynamicValidation *bool       \`json:"dynamic_validation,omitempty"\` // Dynamic validation result (optional)
-	Payload           interface{} \`json:"payload,omitempty"\`            // Additional validation details (optional)
+	Results []ObjectiveResult \`json:"results"\` // Raw results from validation CRDs
 }
 
 // ChallengeSubmitSuccessResponse represents a successful submission response

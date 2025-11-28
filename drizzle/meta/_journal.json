@@ -15,6 +15,41 @@
       "when": 1761137841534,
       "tag": "0001_swift_speedball",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761732222866,
+      "tag": "0002_silly_maximus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764282078052,
+      "tag": "0003_clever_thundra",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1764283670179,
+      "tag": "0004_aromatic_vulcan",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1764284646163,
+      "tag": "0005_glamorous_spot",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1764285962023,
+      "tag": "0006_hard_cerise",
+      "breakpoints": true
     }
   ]
 }

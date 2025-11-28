@@ -5,7 +5,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateApiRequest } from "@/lib/api-auth";
 import db from "@/server/db";
-import { challenge, challengeTheme } from "@/server/db/schema";
+import {
+  challenge,
+  challengeObjective,
+  challengeTheme,
+} from "@/server/db/schema";
 
 // User type with admin plugin fields
 interface UserWithRole extends User {
@@ -13,6 +17,22 @@ interface UserWithRole extends User {
 }
 
 const { logger } = Sentry;
+
+// Schema for a single objective in a challenge
+const objectiveSyncSchema = z.object({
+  objectiveKey: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1), // Required - all CRDs must have kubeasy.dev/description annotation
+  category: z.enum([
+    "status",
+    "log",
+    "event",
+    "metrics",
+    "rbac",
+    "connectivity",
+  ]),
+  displayOrder: z.number().int().default(0),
+});
 
 // Schema for a single challenge in the sync request
 const challengeSyncSchema = z.object({
@@ -25,12 +45,45 @@ const challengeSyncSchema = z.object({
   initialSituation: z.string().min(1),
   objective: z.string().min(1),
   ofTheWeek: z.boolean().default(false),
+  objectives: z.array(objectiveSyncSchema).default([]),
 });
 
 // Schema for the sync request body
 const syncRequestSchema = z.object({
   challenges: z.array(challengeSyncSchema),
 });
+
+// Type for objectives from sync schema
+type ObjectiveSync = z.infer<typeof objectiveSyncSchema>;
+
+/**
+ * Syncs objectives for a challenge.
+ * Strategy: delete all existing objectives and insert new ones.
+ * This ensures we always have the correct state from the source of truth (CRDs).
+ */
+async function syncChallengeObjectives(
+  challengeId: number,
+  objectives: ObjectiveSync[],
+): Promise<void> {
+  // Delete all existing objectives for this challenge
+  await db
+    .delete(challengeObjective)
+    .where(eq(challengeObjective.challengeId, challengeId));
+
+  // Insert new objectives
+  if (objectives.length > 0) {
+    await db.insert(challengeObjective).values(
+      objectives.map((obj) => ({
+        challengeId,
+        objectiveKey: obj.objectiveKey,
+        title: obj.title,
+        description: obj.description,
+        category: obj.category,
+        displayOrder: obj.displayOrder,
+      })),
+    );
+  }
+}
 
 /**
  * POST /api/admin/challenges/sync
@@ -176,23 +229,34 @@ export async function POST(request: Request) {
 
           if (!existing) {
             // Create new challenge
-            await db.insert(challenge).values({
-              slug: incomingChallenge.slug,
-              title: incomingChallenge.title,
-              description: incomingChallenge.description,
-              theme: incomingChallenge.theme,
-              difficulty: incomingChallenge.difficulty,
-              estimatedTime: incomingChallenge.estimatedTime,
-              initialSituation: incomingChallenge.initialSituation,
-              objective: incomingChallenge.objective,
-              ofTheWeek: incomingChallenge.ofTheWeek,
-            });
+            const [insertedChallenge] = await db
+              .insert(challenge)
+              .values({
+                slug: incomingChallenge.slug,
+                title: incomingChallenge.title,
+                description: incomingChallenge.description,
+                theme: incomingChallenge.theme,
+                difficulty: incomingChallenge.difficulty,
+                estimatedTime: incomingChallenge.estimatedTime,
+                initialSituation: incomingChallenge.initialSituation,
+                objective: incomingChallenge.objective,
+                ofTheWeek: incomingChallenge.ofTheWeek,
+              })
+              .returning({ id: challenge.id });
+
+            // Sync objectives for the new challenge
+            await syncChallengeObjectives(
+              insertedChallenge.id,
+              incomingChallenge.objectives,
+            );
+
             created.push(incomingChallenge.slug);
             logger.info("Created challenge", {
               slug: incomingChallenge.slug,
+              objectivesCount: incomingChallenge.objectives.length,
             });
           } else {
-            // Check if update is needed
+            // Check if update is needed for challenge metadata
             const needsUpdate =
               existing.title !== incomingChallenge.title ||
               existing.description !== incomingChallenge.description ||
@@ -223,6 +287,13 @@ export async function POST(request: Request) {
                 slug: incomingChallenge.slug,
               });
             }
+
+            // Always sync objectives (even if challenge metadata unchanged)
+            // This ensures objectives are always up to date from source of truth
+            await syncChallengeObjectives(
+              existing.id,
+              incomingChallenge.objectives,
+            );
           }
         }
 
