@@ -7,8 +7,14 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesGrid } from "@/components/challenges-grid";
 import { ThemeHero } from "@/components/theme-hero";
 import { siteConfig } from "@/config/site";
-import { generateMetadata as generateSEOMetadata, generateCourseSchema, generateBreadcrumbSchema, stringifyJsonLd } from "@/lib/seo";
+import {
+  generateBreadcrumbSchema,
+  generateCourseSchema,
+  generateMetadata as generateSEOMetadata,
+  stringifyJsonLd,
+} from "@/lib/seo";
 import { getThemeBySlug, getThemes } from "@/server/db/queries";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 // ISR: Revalidate every hour for SEO
 export const revalidate = 3600;
@@ -102,44 +108,52 @@ export default async function ThemePage({
     { name: theme.name, url: `/themes/${theme.slug}` },
   ]);
 
+  // Prefetch data for client components to avoid SSR fetch issues
+  await prefetch(trpc.theme.get.queryOptions({ slug }));
+  await prefetch(trpc.challenge.list.queryOptions({ theme: slug }));
+
   return (
-    <div className="container mx-auto px-4 max-w-7xl">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: stringifyJsonLd(courseSchema),
-        }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: stringifyJsonLd(breadcrumbSchema),
-        }}
-      />
-      {/* Back Button */}
-      <Link
-        href="/themes"
-        className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-secondary border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all font-black"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        All Themes
-      </Link>
+    <HydrateClient>
+      <div className="container mx-auto px-4 max-w-7xl">
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
+          dangerouslySetInnerHTML={{
+            __html: stringifyJsonLd(courseSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
+          dangerouslySetInnerHTML={{
+            __html: stringifyJsonLd(breadcrumbSchema),
+          }}
+        />
+        {/* Back Button */}
+        <Link
+          href="/themes"
+          className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-secondary border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all font-black"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          All Themes
+        </Link>
 
-      {/* Theme Hero - Client-side component handles auth check */}
-      <Suspense
-        fallback={
-          <div className="bg-secondary border-4 border-black neo-shadow p-8 md:p-12 mb-12 animate-pulse h-64" />
-        }
-      >
-        <ThemeHero themeSlug={slug} />
-      </Suspense>
-
-      {/* Challenges Grid */}
-      <ErrorBoundary fallback={<ChallengesGridError />}>
-        <Suspense fallback={<ChallengesGridSkeleton />}>
-          <ChallengesGrid filters={{ theme: slug }} />
+        {/* Theme Hero - Prefetched data will be automatically hydrated */}
+        <Suspense
+          fallback={
+            <div className="bg-secondary border-4 border-black neo-shadow p-8 md:p-12 mb-12 animate-pulse h-64" />
+          }
+        >
+          <ThemeHero themeSlug={slug} />
         </Suspense>
-      </ErrorBoundary>
-    </div>
+
+        {/* Challenges Grid */}
+        <ErrorBoundary fallback={<ChallengesGridError />}>
+          <Suspense fallback={<ChallengesGridSkeleton />}>
+            <ChallengesGrid filters={{ theme: slug }} />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    </HydrateClient>
   );
 }

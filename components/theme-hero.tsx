@@ -11,12 +11,12 @@ export function ThemeHero({ themeSlug }: { themeSlug: string }) {
   const { data: session } = authClient.useSession();
   const isAuthenticated = !!session;
 
-  // Fetch theme data (always available)
+  // Fetch theme data (will use hydrated data from server prefetch)
   const { data: theme } = useSuspenseQuery(
     trpc.theme.get.queryOptions({ slug: themeSlug }),
   );
 
-  // Fetch challenges count (always available)
+  // Fetch challenges count (will use hydrated data from server prefetch)
   const { data: challengesData } = useSuspenseQuery(
     trpc.challenge.list.queryOptions({ theme: themeSlug }),
   );
@@ -28,10 +28,6 @@ export function ThemeHero({ themeSlug }: { themeSlug: string }) {
     }),
     enabled: isAuthenticated,
   });
-
-  if (!theme) {
-    return null;
-  }
 
   const totalChallenges = challengesData?.count ?? 0;
 
