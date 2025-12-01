@@ -93,12 +93,20 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // Prefetch data for client components (prefetch won't throw on auth errors)
   await Promise.all([
     prefetch(
       trpc.userProgress.getCompletionPercentage.queryOptions({
         splitByTheme: true,
       }),
     ),
+    prefetch(
+      trpc.userProgress.getCompletionPercentage.queryOptions({
+        splitByTheme: false,
+      }),
+    ),
+    prefetch(trpc.userProgress.getXpAndRank.queryOptions()),
+    prefetch(trpc.userProgress.getStreak.queryOptions()),
     prefetch(trpc.theme.list.queryOptions()),
   ]);
 

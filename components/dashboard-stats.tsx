@@ -1,31 +1,35 @@
-import { Award, Flame, Star, Trophy } from "lucide-react";
-import { Suspense } from "react";
-import { getQueryClient, trpc } from "@/trpc/server";
+"use client";
 
-// Skeleton pour une carte
+import { useQuery } from "@tanstack/react-query";
+import { Award, Flame, Star, Trophy } from "lucide-react";
+import { useTRPC } from "@/trpc/client";
+
 function StatCardSkeleton() {
   return (
     <div className="bg-secondary border-4 border-border neo-shadow p-6 animate-pulse">
       <div className="flex items-center gap-4 mb-3">
-        <div className="w-12 h-12 bg-primary/20 border-4 border-border rounded-lg"></div>
+        <div className="w-12 h-12 bg-primary/20 border-4 border-border rounded-lg" />
         <div>
-          <div className="h-4 w-16 bg-foreground/10 rounded mb-2"></div>
-          <div className="h-8 w-20 bg-foreground/10 rounded"></div>
+          <div className="h-4 w-16 bg-foreground/10 rounded mb-2" />
+          <div className="h-8 w-20 bg-foreground/10 rounded" />
         </div>
       </div>
-      <div className="h-4 w-32 bg-foreground/10 rounded"></div>
+      <div className="h-4 w-32 bg-foreground/10 rounded" />
     </div>
   );
 }
 
-// Stat individuelle : Challenges complétés
-async function CompletedStat() {
-  const queryClient = getQueryClient();
-  const challengesCompletions = await queryClient.fetchQuery(
-    trpc.userProgress.getCompletionPercentage.queryOptions({
+function CompletedStat() {
+  const trpc = useTRPC();
+  const { data: completionData, isLoading } = useQuery({
+    ...trpc.userProgress.getCompletionPercentage.queryOptions({
       splitByTheme: false,
     }),
-  );
+  });
+
+  if (isLoading || !completionData) {
+    return <StatCardSkeleton />;
+  }
 
   return (
     <div className="bg-secondary border-4 border-border neo-shadow p-6">
@@ -36,23 +40,26 @@ async function CompletedStat() {
         <div>
           <p className="text-sm font-bold text-foreground">Completed</p>
           <p className="text-3xl font-black text-foreground">
-            {challengesCompletions.completedCount}
+            {completionData.completedCount}
           </p>
         </div>
       </div>
       <p className="text-sm font-bold text-foreground">
-        {challengesCompletions.percentageCompleted}% of all challenges
+        {completionData.percentageCompleted}% of all challenges
       </p>
     </div>
   );
 }
 
-// Stat individuelle : Points XP
-async function XpStat() {
-  const queryClient = getQueryClient();
-  const xpAndRank = await queryClient.fetchQuery(
-    trpc.userProgress.getXpAndRank.queryOptions(),
-  );
+function XpStat() {
+  const trpc = useTRPC();
+  const { data: xpAndRank, isLoading } = useQuery({
+    ...trpc.userProgress.getXpAndRank.queryOptions(),
+  });
+
+  if (isLoading || !xpAndRank) {
+    return <StatCardSkeleton />;
+  }
 
   return (
     <div className="bg-secondary border-4 border-border neo-shadow p-6">
@@ -72,12 +79,15 @@ async function XpStat() {
   );
 }
 
-// Stat individuelle : Rank
-async function RankStat() {
-  const queryClient = getQueryClient();
-  const xpAndRank = await queryClient.fetchQuery(
-    trpc.userProgress.getXpAndRank.queryOptions(),
-  );
+function RankStat() {
+  const trpc = useTRPC();
+  const { data: xpAndRank, isLoading } = useQuery({
+    ...trpc.userProgress.getXpAndRank.queryOptions(),
+  });
+
+  if (isLoading || !xpAndRank) {
+    return <StatCardSkeleton />;
+  }
 
   return (
     <div className="bg-secondary border-4 border-border neo-shadow p-6">
@@ -97,12 +107,15 @@ async function RankStat() {
   );
 }
 
-// Stat individuelle : Streak
-async function StreakStat() {
-  const queryClient = getQueryClient();
-  const streak = await queryClient.fetchQuery(
-    trpc.userProgress.getStreak.queryOptions(),
-  );
+function StreakStat() {
+  const trpc = useTRPC();
+  const { data: streak, isLoading } = useQuery({
+    ...trpc.userProgress.getStreak.queryOptions(),
+  });
+
+  if (isLoading || streak === undefined) {
+    return <StatCardSkeleton />;
+  }
 
   return (
     <div className="bg-secondary border-4 border-border neo-shadow p-6">
@@ -120,25 +133,13 @@ async function StreakStat() {
   );
 }
 
-// Composant parent qui wrap chaque stat avec Suspense
 export function DashboardStats() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-      <Suspense fallback={<StatCardSkeleton />}>
-        <CompletedStat />
-      </Suspense>
-
-      <Suspense fallback={<StatCardSkeleton />}>
-        <XpStat />
-      </Suspense>
-
-      <Suspense fallback={<StatCardSkeleton />}>
-        <RankStat />
-      </Suspense>
-
-      <Suspense fallback={<StatCardSkeleton />}>
-        <StreakStat />
-      </Suspense>
+      <CompletedStat />
+      <XpStat />
+      <RankStat />
+      <StreakStat />
     </div>
   );
 }

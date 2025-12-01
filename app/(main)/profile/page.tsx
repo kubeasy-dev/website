@@ -7,7 +7,7 @@ import { ProfileEmailPreferences } from "@/components/profile-email-preferences"
 import { ProfileHeader } from "@/components/profile-header";
 import { ProfileSettings } from "@/components/profile-settings";
 import { auth } from "@/lib/auth";
-import { getQueryClient, HydrateClient, trpc } from "@/trpc/server";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 export default async function ProfilePage() {
   // Get the authenticated session
@@ -20,11 +20,10 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  // Fetch data in parallel
-  const queryClient = getQueryClient();
-  const [emailCategories, xpData] = await Promise.all([
-    queryClient.fetchQuery(trpc.emailPreference.listCategories.queryOptions()),
-    queryClient.fetchQuery(trpc.userProgress.getXpAndRank.queryOptions()),
+  // Prefetch data in parallel (prefetch won't throw on error, data will be hydrated to client)
+  await Promise.all([
+    prefetch(trpc.emailPreference.listCategories.queryOptions()),
+    prefetch(trpc.userProgress.getXpAndRank.queryOptions()),
   ]);
 
   // Extract user information
@@ -40,7 +39,6 @@ export default async function ProfilePage() {
               firstName={firstName || "User"}
               lastName={lastName || ""}
               email={user.email}
-              rank={xpData.rank}
             />
           </div>
 
@@ -58,7 +56,7 @@ export default async function ProfilePage() {
 
             {/* Email Preferences */}
             <Suspense fallback={<div>Loading Email Preferences...</div>}>
-              <ProfileEmailPreferences initialCategories={emailCategories} />
+              <ProfileEmailPreferences />
             </Suspense>
 
             {/* Danger Zone */}
