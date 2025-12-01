@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 import type { Objective, ObjectiveCategory } from "@/types/cli-api";
@@ -64,34 +65,45 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
   const trpc = useTRPC();
   const [showHistory, setShowHistory] = useState(false);
 
-  // Fetch predefined objectives from database
+  // Check if user is authenticated before making private API calls
+  const { data: session, isPending: isSessionLoading } =
+    authClient.useSession();
+  const isAuthenticated = !!session;
+
+  // Fetch predefined objectives from database (public endpoint)
   const { data: objectivesData, isLoading: isLoadingObjectives } = useQuery({
     ...trpc.challenge.getObjectives.queryOptions({ slug }),
   });
 
-  // Poll every 5 seconds for real-time updates
+  // Poll every 5 seconds for real-time updates (only when authenticated)
   const { data: validationStatus, isLoading: isLoadingValidation } = useQuery({
     ...trpc.userProgress.getLatestValidationStatus.queryOptions({ slug }),
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
+    enabled: isAuthenticated,
   });
 
-  // Fetch submissions for history modal
+  // Fetch submissions for history modal (only when authenticated)
   const { data: submissionsData } = useQuery({
     ...trpc.userProgress.getSubmissions.queryOptions({ slug }),
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
+    enabled: isAuthenticated,
   });
 
-  // Fetch challenge status to determine if it's started or not
+  // Fetch challenge status to determine if it's started or not (only when authenticated)
   const { data: statusData } = useQuery({
     ...trpc.userProgress.getStatus.queryOptions({ slug }),
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
+    enabled: isAuthenticated,
   });
 
   const status = statusData?.status ?? "not_started";
-  const isLoading = isLoadingObjectives || isLoadingValidation;
+  const isLoading =
+    isLoadingObjectives ||
+    isSessionLoading ||
+    (isAuthenticated && isLoadingValidation);
 
   // Merge predefined objectives with submission results
   const displayObjectives = useMemo((): DisplayObjective[] => {

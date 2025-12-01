@@ -1,18 +1,29 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { User } from "lucide-react";
+import { useTRPC } from "@/trpc/client";
 
 interface ProfileHeaderProps {
   firstName: string;
   lastName: string;
   email: string;
-  rank: string;
 }
 
 export function ProfileHeader({
   firstName,
   lastName,
   email,
-  rank,
 }: Readonly<ProfileHeaderProps>) {
+  const trpc = useTRPC();
+
+  // Fetch rank client-side with error handling
+  const { data: xpData } = useQuery({
+    ...trpc.userProgress.getXpAndRank.queryOptions(),
+  });
+
+  const rank = xpData?.rank ?? "Loading...";
+
   return (
     <div className="bg-secondary neo-border neo-shadow p-8 mb-6">
       <div className="flex items-center gap-8">

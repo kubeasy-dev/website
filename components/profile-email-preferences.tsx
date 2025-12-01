@@ -6,26 +6,15 @@ import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { useTRPC } from "@/trpc/client";
 
-interface EmailCategory {
-  id: number;
-  name: string;
-  description: string;
-  forceSubscription: boolean;
-  subscribed: boolean;
-}
-
-interface ProfileEmailPreferencesProps {
-  initialCategories: EmailCategory[];
-}
-
-export function ProfileEmailPreferences({
-  initialCategories,
-}: ProfileEmailPreferencesProps) {
+export function ProfileEmailPreferences() {
   const trpc = useTRPC();
 
-  const { data: categories = initialCategories, refetch } = useQuery({
+  const {
+    data: categories = [],
+    refetch,
+    isLoading,
+  } = useQuery({
     ...trpc.emailPreference.listCategories.queryOptions(),
-    initialData: initialCategories,
   });
 
   const updateMutation = useMutation({
@@ -47,6 +36,22 @@ export function ProfileEmailPreferences({
       subscribed: checked,
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-secondary neo-border neo-shadow p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-primary text-primary-foreground neo-border">
+            <Mail className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black">Email Preferences</h2>
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-secondary neo-border neo-shadow p-6">
