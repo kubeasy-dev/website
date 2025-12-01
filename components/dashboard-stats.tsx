@@ -19,6 +19,14 @@ function StatCardSkeleton() {
   );
 }
 
+// Shared hook for XP and rank data to avoid duplicate queries
+function useXpAndRank() {
+  const trpc = useTRPC();
+  return useQuery({
+    ...trpc.userProgress.getXpAndRank.queryOptions(),
+  });
+}
+
 function CompletedStat() {
   const trpc = useTRPC();
   const { data: completionData, isLoading } = useQuery({
@@ -52,10 +60,7 @@ function CompletedStat() {
 }
 
 function XpStat() {
-  const trpc = useTRPC();
-  const { data: xpAndRank, isLoading } = useQuery({
-    ...trpc.userProgress.getXpAndRank.queryOptions(),
-  });
+  const { data: xpAndRank, isLoading } = useXpAndRank();
 
   if (isLoading || !xpAndRank) {
     return <StatCardSkeleton />;
@@ -80,10 +85,7 @@ function XpStat() {
 }
 
 function RankStat() {
-  const trpc = useTRPC();
-  const { data: xpAndRank, isLoading } = useQuery({
-    ...trpc.userProgress.getXpAndRank.queryOptions(),
-  });
+  const { data: xpAndRank, isLoading } = useXpAndRank();
 
   if (isLoading || !xpAndRank) {
     return <StatCardSkeleton />;

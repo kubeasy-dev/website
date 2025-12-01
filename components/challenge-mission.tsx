@@ -66,7 +66,8 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
   const [showHistory, setShowHistory] = useState(false);
 
   // Check if user is authenticated before making private API calls
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending: isSessionLoading } =
+    authClient.useSession();
   const isAuthenticated = !!session;
 
   // Fetch predefined objectives from database (public endpoint)
@@ -100,7 +101,9 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
 
   const status = statusData?.status ?? "not_started";
   const isLoading =
-    isLoadingObjectives || (isAuthenticated && isLoadingValidation);
+    isLoadingObjectives ||
+    isSessionLoading ||
+    (isAuthenticated && isLoadingValidation);
 
   // Merge predefined objectives with submission results
   const displayObjectives = useMemo((): DisplayObjective[] => {
