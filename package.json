@@ -43,7 +43,7 @@
     "@trpc/tanstack-react-query": "11.7.2",
     "@vercel/analytics": "1.6.1",
     "autoprefixer": "10.4.22",
-    "better-auth": "1.4.5",
+    "better-auth": "1.4.6",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "drizzle-orm": "0.45.0",
@@ -71,7 +71,7 @@
     "@eslint/eslintrc": "3.3.3",
     "@tailwindcss/postcss": "4.1.17",
     "@tanstack/react-query-devtools": "5.91.1",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.2",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitest/ui": "4.0.15",
@@ -79,7 +79,7 @@
     "dotenv-cli": "11.0.0",
     "drizzle-kit": "0.31.8",
     "eslint": "9.39.1",
-    "eslint-config-next": "16.0.7",
+    "eslint-config-next": "16.0.8",
     "husky": "9.1.7",
     "knip": "5.72.0",
     "lint-staged": "16.2.7",
@@ -90,7 +90,7 @@
     "typescript": "5.9.3",
     "vitest": "4.0.15"
   },
-  "packageManager": "pnpm@10.24.0",
+  "packageManager": "pnpm@10.25.0",
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
       "biome check --write --unsafe --files-ignore-unknown=true --no-errors-on-unmatched"
