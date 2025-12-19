@@ -13,8 +13,8 @@ export function CTASection() {
               Ready to master Kubernetes?
             </h2>
             <p className="text-xl font-bold text-white/90 max-w-2xl mx-auto">
-              Join thousands of developers learning Kubernetes through hands-on
-              practice.
+              Start learning Kubernetes through hands-on challenges on your
+              local machine.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button
