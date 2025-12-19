@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { CTASection } from "@/components/cta-section";
+import { EarlyAccessSection } from "@/components/early-access-section";
 import { FeaturesSection } from "@/components/features-section";
 import { HeroSection } from "@/components/hero-section";
 import { HowItWorksSection } from "@/components/how-it-works-section";
 import { OpenSourceSection } from "@/components/open-source-section";
 import { StatsSection } from "@/components/stats-section";
-import { TestimonialsSection } from "@/components/testimonials-section";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = generateSEOMetadata({
@@ -20,7 +20,7 @@ export default function HomePage() {
       <FeaturesSection />
       <HowItWorksSection />
       <OpenSourceSection />
-      <TestimonialsSection />
+      <EarlyAccessSection />
       <CTASection />
     </div>
   );

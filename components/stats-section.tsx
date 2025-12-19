@@ -1,23 +1,23 @@
 export function StatsSection() {
   const stats = [
     {
-      value: "50+",
-      label: "Interactive Challenges",
-      description: "From basics to advanced",
-    },
-    {
       value: "100%",
-      label: "Free Forever",
-      description: "Open source learning",
+      label: "Free & Open Source",
+      description: "No paywalls, ever",
     },
     {
-      value: "10k+",
-      label: "Developers Learning",
-      description: "Join the community",
+      value: "Local",
+      label: "Your Machine",
+      description: "Learn in your own environment",
+    },
+    {
+      value: "Real",
+      label: "Production Scenarios",
+      description: "Not toy examples",
     },
     {
       value: "5min",
-      label: "Average Setup",
+      label: "Quick Setup",
       description: "Start learning fast",
     },
   ];

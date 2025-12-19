@@ -73,40 +73,15 @@ export function OpenSourceSection() {
           </div>
         </div>
 
-        {/* Stats Bar */}
-        <div className="bg-primary border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-primary-foreground mb-2">
-                2.5k+
-              </div>
-              <div className="text-primary-foreground/90 font-bold">
-                GitHub Stars
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-primary-foreground mb-2">
-                150+
-              </div>
-              <div className="text-primary-foreground/90 font-bold">
-                Contributors
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-primary-foreground mb-2">
-                500+
-              </div>
-              <div className="text-primary-foreground/90 font-bold">Forks</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-primary-foreground mb-2">
-                MIT
-              </div>
-              <div className="text-primary-foreground/90 font-bold">
-                License
-              </div>
-            </div>
-          </div>
+        {/* License Badge */}
+        <div className="bg-primary border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center">
+          <p className="text-primary-foreground font-black text-lg">
+            Released under the{" "}
+            <span className="underline underline-offset-4">
+              Apache 2.0 License
+            </span>{" "}
+            — use it however you want
+          </p>
         </div>
       </div>
     </section>
