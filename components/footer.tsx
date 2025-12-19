@@ -86,7 +86,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href={`${siteConfig.links.github}/website/blob/main/LICENSE`}
+                  href={`${siteConfig.links.github}/${siteConfig.github.repo}/blob/main/LICENSE`}
                   target="_blank"
                   className="hover:text-primary transition-colors"
                 >
