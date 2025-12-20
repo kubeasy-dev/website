@@ -39,36 +39,6 @@ export function HeroSection() {
               instant validation when you fix them.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                size="lg"
-                className="text-base font-bold neo-border-thick neo-shadow-lg"
-                asChild
-              >
-                <Link
-                  href="/get-started"
-                  onClick={() => handleCtaClick("Get Started", "/get-started")}
-                >
-                  Get Started
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-base font-bold bg-white neo-border-thick neo-shadow-lg"
-                asChild
-              >
-                <Link
-                  href={siteConfig.links.github}
-                  target="_blank"
-                  onClick={() =>
-                    handleCtaClick("View on GitHub", siteConfig.links.github)
-                  }
-                >
-                  <Icons.gitHub className="mr-2 h-5 w-5" />
-                  View on GitHub
-                </Link>
-              </Button>
             {/* Micro How It Works */}
             <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
               {microSteps.map((step, index) => (
@@ -81,6 +51,7 @@ export function HeroSection() {
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   )}
                 </div>
+              ))}
             </div>
 
             <Button
@@ -89,12 +60,10 @@ export function HeroSection() {
               asChild
             >
               <Link
-                href="/challenges"
-                onClick={() =>
-                  handleCtaClick("Browse Challenges", "/challenges")
-                }
+                href="/get-started"
+                onClick={() => handleCtaClick("Get Started", "/get-started")}
               >
-                Browse Challenges
+                Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
