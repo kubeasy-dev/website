@@ -8,5 +8,22 @@
     "group:allNonMajor",
     ":assignAndReview(pbrissaud)",
     ":automergeLinters"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/biome\\.json$/"],
+      "matchStrings": [
+        "\"\\$schema\":\\s*\"https://biomejs\\.dev/schemas/(?<currentValue>[\\d.]+)/schema\\.json\""
+      ],
+      "depNameTemplate": "@biomejs/biome",
+      "datasourceTemplate": "npm"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["@biomejs/biome"],
+      "groupName": "biome"
+    }
   ]
 }
