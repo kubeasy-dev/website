@@ -4,13 +4,14 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 import type React from "react";
-import { TRPCReactProvider } from "@/trpc/client";
 import {
   generateMetadata,
   generateOrganizationSchema,
+  generateSoftwareApplicationSchema,
   generateWebsiteSchema,
   stringifyJsonLd,
 } from "@/lib/seo";
+import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -33,20 +34,30 @@ export default function RootLayout({
 }>) {
   const organizationSchema = generateOrganizationSchema();
   const websiteSchema = generateWebsiteSchema();
+  const softwareApplicationSchema = generateSoftwareApplicationSchema();
 
   return (
     <html lang="en">
       <head>
         <script
           type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
           dangerouslySetInnerHTML={{
             __html: stringifyJsonLd(organizationSchema),
           }}
         />
         <script
           type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
           dangerouslySetInnerHTML={{
             __html: stringifyJsonLd(websiteSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
+          dangerouslySetInnerHTML={{
+            __html: stringifyJsonLd(softwareApplicationSchema),
           }}
         />
       </head>
