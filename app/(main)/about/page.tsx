@@ -134,28 +134,6 @@ export default function AboutPage() {
             </p>
           </section>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
-            <div className="bg-secondary border-4 border-border neo-shadow p-6 text-center">
-              <div className="text-4xl font-black mb-2">5.6M+</div>
-              <div className="text-sm font-bold text-foreground/70">
-                Kubernetes users worldwide
-              </div>
-            </div>
-            <div className="bg-secondary border-4 border-border neo-shadow p-6 text-center">
-              <div className="text-4xl font-black mb-2">94%</div>
-              <div className="text-sm font-bold text-foreground/70">
-                Organizations using K8s in production
-              </div>
-            </div>
-            <div className="bg-secondary border-4 border-border neo-shadow p-6 text-center">
-              <div className="text-4xl font-black mb-2">???</div>
-              <div className="text-sm font-bold text-foreground/70">
-                Devs who truly understand it
-              </div>
-            </div>
-          </div>
-
           {/* Section: Kubernetes is meant for more than Ops */}
           <section id="devs-ops" className="mb-16 scroll-mt-24">
             <div className="flex items-center gap-3 mb-6">
@@ -440,7 +418,7 @@ export default function AboutPage() {
             </p>
             <div className="bg-background border-4 border-border neo-shadow p-4 font-mono text-sm inline-block">
               <span className="text-foreground/60">$</span> npm install -g
-              @kubeasy/cli
+              @kubeasy-dev/kubeasy-cli
             </div>
           </div>
 
@@ -581,15 +559,15 @@ export default function AboutPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-primary">→</span>
                     <a
-                      href={`${siteConfig.links.github}/challenge-operator`}
+                      href={`${siteConfig.links.github}/website`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline hover:no-underline"
                     >
-                      challenge-operator
+                      website
                     </a>
                     <span className="text-foreground/60">
-                      - Kubernetes operator
+                      - This website (Next.js)
                     </span>
                   </div>
                 </div>
