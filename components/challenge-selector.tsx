@@ -107,7 +107,8 @@ export function GetStartedSteps({
     {
       number: 2,
       title: "Login to Kubeasy",
-      description: "Authenticate to track your progress and earn XP.",
+      description:
+        "Authenticate with your API token to access challenges and track your progress. Generate a token from your profile page.",
       command: "kubeasy login",
     },
     {
