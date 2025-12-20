@@ -4,7 +4,7 @@
  * and can be used in static/ISR page generation
  */
 
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import db from "@/server/db";
 import { challenge, challengeTheme } from "@/server/db/schema";
 
@@ -102,4 +102,34 @@ export async function getChallengeCountByTheme(themeSlug: string) {
     .where(eq(challenge.theme, themeSlug));
 
   return result[0]?.count ?? 0;
+}
+
+/**
+ * Get starter-friendly challenges
+ * Returns challenges marked as beginner-friendly, ordered by difficulty and creation date
+ */
+export async function getStarterChallenges(limit = 5) {
+  const challenges = await db
+    .select({
+      id: challenge.id,
+      slug: challenge.slug,
+      title: challenge.title,
+      description: challenge.description,
+      theme: challengeTheme.name,
+      themeSlug: challenge.theme,
+      difficulty: challenge.difficulty,
+      estimatedTime: challenge.estimatedTime,
+      starterFriendly: challenge.starterFriendly,
+    })
+    .from(challenge)
+    .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+    .where(eq(challenge.starterFriendly, true))
+    .orderBy(
+      // Order by difficulty: easy first, then medium, then hard
+      sql`CASE ${challenge.difficulty} WHEN 'easy' THEN 1 WHEN 'medium' THEN 2 WHEN 'hard' THEN 3 END`,
+      desc(challenge.createdAt),
+    )
+    .limit(limit);
+
+  return challenges;
 }

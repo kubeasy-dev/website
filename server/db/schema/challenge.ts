@@ -44,6 +44,7 @@ export const challenge = pgTable(
     initialSituation: text("initial_situation").notNull(),
     objective: text("objective").notNull(),
     ofTheWeek: boolean("of_the_week").default(false).notNull(),
+    starterFriendly: boolean("starter_friendly").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -61,6 +62,8 @@ export const challenge = pgTable(
     index("challenge_title_idx").on(table.title),
     // Index pour le tri par date de création (utilisé dans getLatest)
     index("challenge_created_at_idx").on(table.createdAt),
+    // Index pour les challenges starter-friendly
+    index("challenge_starter_friendly_idx").on(table.starterFriendly),
   ],
 );
 
