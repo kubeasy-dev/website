@@ -22,6 +22,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import { trackApiTokenCopied } from "@/lib/analytics";
 import { authClient } from "@/lib/auth-client";
 
 export function ProfileApiTokens() {
@@ -100,9 +101,10 @@ export function ProfileApiTokens() {
     }
   };
 
-  const handleCopyToken = (token: string) => {
+  const handleCopyToken = (token: string, tokenName = "newly_created") => {
     navigator.clipboard.writeText(token);
     setCopiedToken(token);
+    trackApiTokenCopied(tokenName);
     toast.success("Token copied to clipboard");
     setTimeout(() => setCopiedToken(null), 2000);
   };

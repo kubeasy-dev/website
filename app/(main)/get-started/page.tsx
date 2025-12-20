@@ -10,6 +10,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GetStartedSteps } from "@/components/challenge-selector";
+import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getStarterChallenges } from "@/server/db/queries";
 
@@ -108,15 +109,17 @@ export default async function GetStartedPage() {
                   {prereq.description}
                 </div>
               </div>
-              <a
+              <TrackedOutboundLink
                 href={prereq.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                linkType="docs"
+                location="get_started_prerequisites"
                 className="flex items-center gap-1 text-primary font-bold hover:underline"
               >
                 Install
                 <ExternalLink className="h-4 w-4" />
-              </a>
+              </TrackedOutboundLink>
             </div>
           ))}
         </div>
@@ -187,15 +190,17 @@ export default async function GetStartedPage() {
           <p className="text-muted-foreground font-bold mb-4">
             Open an issue on GitHub and we&apos;ll help you out.
           </p>
-          <a
+          <TrackedOutboundLink
             href="https://github.com/kubeasy-dev/kubeasy-cli/issues"
             target="_blank"
             rel="noopener noreferrer"
+            linkType="github"
+            location="get_started_help"
             className="inline-flex items-center gap-2 text-primary font-black hover:underline"
           >
             Report an Issue
             <ExternalLink className="h-4 w-4" />
-          </a>
+          </TrackedOutboundLink>
         </div>
       </section>
     </div>

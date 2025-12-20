@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 
@@ -33,9 +34,14 @@ export function CTASection() {
                 className="text-base font-bold bg-secondary text-foreground hover:bg-secondary/90 neo-border-thick neo-shadow-lg border-foreground"
                 asChild
               >
-                <Link href={siteConfig.links.github} target="_blank">
+                <TrackedOutboundLink
+                  href={siteConfig.links.docs}
+                  target="_blank"
+                  linkType="docs"
+                  location="cta_section"
+                >
                   View Documentation
-                </Link>
+                </TrackedOutboundLink>
               </Button>
             </div>
           </div>

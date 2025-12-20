@@ -24,6 +24,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { siteConfig } from "@/config/site";
+import { trackOutboundLinkClicked } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { UserDropdown } from "./user-dropdown";
 
@@ -133,6 +134,11 @@ export function HeaderClient({ user }: HeaderClientProps) {
                           if (!subRoutes) {
                             setIsOpen(false);
                             if (external) {
+                              trackOutboundLinkClicked(
+                                href,
+                                "docs",
+                                "header_mobile",
+                              );
                               window.open(href, "_blank");
                             } else {
                               router.push(href);
@@ -291,6 +297,16 @@ export function HeaderClient({ user }: HeaderClientProps) {
                 <NavigationMenuLink
                   href={href}
                   target={external ? "_blank" : undefined}
+                  onClick={
+                    external
+                      ? () =>
+                          trackOutboundLinkClicked(
+                            href,
+                            "docs",
+                            "header_desktop",
+                          )
+                      : undefined
+                  }
                   className={cn(
                     "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-base font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                   )}

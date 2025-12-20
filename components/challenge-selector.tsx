@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, ChevronDown, Clock } from "lucide-react";
+import { Check, ChevronDown, Clock, Copy } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { DifficultyBadge } from "@/components/dificulty-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { trackCommandCopied } from "@/lib/analytics";
 
 export interface StarterChallenge {
   slug: string;
@@ -96,6 +98,15 @@ export function GetStartedSteps({
   const [selectedSlug, setSelectedSlug] = useState(
     challenges[0]?.slug ?? "pod-crashloop",
   );
+  const [copiedStep, setCopiedStep] = useState<number | null>(null);
+
+  const handleCopyCommand = (command: string, stepNumber: number) => {
+    navigator.clipboard.writeText(command);
+    setCopiedStep(stepNumber);
+    trackCommandCopied(command, "get_started", stepNumber);
+    toast.success("Command copied to clipboard");
+    setTimeout(() => setCopiedStep(null), 2000);
+  };
 
   const steps = [
     {
@@ -164,14 +175,28 @@ export function GetStartedSteps({
                   onSelect={setSelectedSlug}
                 />
               )}
-              <div className="bg-foreground text-background p-4 rounded-lg neo-border font-mono text-sm overflow-x-auto">
-                {step.isMultiline ? (
-                  <pre className="whitespace-pre">{step.command}</pre>
-                ) : (
-                  <>
-                    <span className="text-green-400">$</span> {step.command}
-                  </>
-                )}
+              <div className="bg-foreground text-background p-4 rounded-lg neo-border font-mono text-sm overflow-x-auto flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  {step.isMultiline ? (
+                    <pre className="whitespace-pre">{step.command}</pre>
+                  ) : (
+                    <>
+                      <span className="text-green-400">$</span> {step.command}
+                    </>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCommand(step.command, step.number)}
+                  className="flex-shrink-0 p-2 hover:bg-white/10 rounded transition-colors"
+                  title="Copy command"
+                >
+                  {copiedStep === step.number ? (
+                    <Check className="h-4 w-4 text-green-400" />
+                  ) : (
+                    <Copy className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
