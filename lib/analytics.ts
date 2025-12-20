@@ -19,12 +19,10 @@ export function trackUserSignup(provider: "github" | "google" | "microsoft") {
 
 /**
  * Track API token creation event
- * @param userId - The user ID who created the token
+ * Note: User is already identified via PostHog session, no userId needed
  */
-export function trackApiTokenCreated(userId: string) {
-  posthog.capture("api_token_created", {
-    userId,
-  });
+export function trackApiTokenCreated() {
+  posthog.capture("api_token_created");
 }
 
 /**

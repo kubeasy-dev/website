@@ -37,7 +37,8 @@ export function GetStartedApiToken() {
       setNewlyCreatedToken(data.key);
       setShowForm(false);
       setTokenName("kubeasy-cli");
-      trackApiTokenCreated(data.userId);
+      // Note: userId is not returned in the API response, so we track without it
+      trackApiTokenCreated();
       toast.success("API token created successfully!");
     },
     onError: (error) => {

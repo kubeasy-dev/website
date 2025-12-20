@@ -9,9 +9,14 @@ interface LoginPageProps {
   searchParams: Promise<{ next?: string }>;
 }
 
+function isValidCallbackUrl(url: string): boolean {
+  // Only allow relative paths starting with / (but not //)
+  return url.startsWith("/") && !url.startsWith("//");
+}
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { next } = await searchParams;
-  const callbackUrl = next ?? "/dashboard";
+  const callbackUrl = next && isValidCallbackUrl(next) ? next : "/dashboard";
 
   const session = await auth.api.getSession({
     headers: await headers(),

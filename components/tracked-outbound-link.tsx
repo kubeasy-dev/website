@@ -24,9 +24,27 @@ export function TrackedOutboundLink({
   const resolvedUrl = useMemo(() => {
     if (typeof href === "string") return href;
     const { pathname = "", query, hash = "" } = href;
-    const queryString = query
-      ? `?${new URLSearchParams(query as Record<string, string>).toString()}`
-      : "";
+    let queryString = "";
+    if (query) {
+      if (typeof query === "string") {
+        queryString = query.startsWith("?") ? query : `?${query}`;
+      } else {
+        const params = new URLSearchParams();
+        Object.entries(query).forEach(([key, value]) => {
+          if (value != null) {
+            if (Array.isArray(value)) {
+              for (const v of value) {
+                params.append(key, String(v));
+              }
+            } else {
+              params.append(key, String(value));
+            }
+          }
+        });
+        const qs = params.toString();
+        queryString = qs ? `?${qs}` : "";
+      }
+    }
     return `${pathname}${queryString}${hash}`;
   }, [href]);
 
