@@ -3,9 +3,13 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesView } from "@/components/challenges-view";
+import {
+  HowToRunChallenge,
+  StarterChallengesSection,
+} from "@/components/starter-challenges-section";
 import { UserStats } from "@/components/user-stats";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
-import { getChallenges } from "@/server/db/queries";
+import { getChallenges, getStarterChallenges } from "@/server/db/queries";
 
 // ISR: Revalidate every hour for SEO while keeping content fresh
 export const revalidate = 3600;
@@ -28,7 +32,10 @@ export const metadata: Metadata = generateSEOMetadata({
 
 export default async function ChallengesPage() {
   // Access database directly for ISR (no headers/session needed)
-  const { count } = await getChallenges();
+  const [{ count }, starterChallenges] = await Promise.all([
+    getChallenges(),
+    getStarterChallenges(3),
+  ]);
 
   return (
     <div className="container mx-auto px-4 max-w-7xl">
@@ -62,7 +69,13 @@ export default async function ChallengesPage() {
         </Suspense>
       </ErrorBoundary>
 
-      {/* Challenges View */}
+      {/* How to Run a Challenge - CLI Guide */}
+      <HowToRunChallenge />
+
+      {/* Featured Starter Challenges */}
+      <StarterChallengesSection challenges={starterChallenges} />
+
+      {/* All Challenges View */}
       <ChallengesView />
     </div>
   );

@@ -45,6 +45,7 @@ const challengeSyncSchema = z.object({
   initialSituation: z.string().min(1),
   objective: z.string().min(1),
   ofTheWeek: z.boolean().default(false),
+  starterFriendly: z.boolean().default(false),
   objectives: z.array(objectiveSyncSchema).default([]),
 });
 
@@ -241,6 +242,7 @@ export async function POST(request: Request) {
                 initialSituation: incomingChallenge.initialSituation,
                 objective: incomingChallenge.objective,
                 ofTheWeek: incomingChallenge.ofTheWeek,
+                starterFriendly: incomingChallenge.starterFriendly,
               })
               .returning({ id: challenge.id });
 
@@ -266,7 +268,8 @@ export async function POST(request: Request) {
               existing.initialSituation !==
                 incomingChallenge.initialSituation ||
               existing.objective !== incomingChallenge.objective ||
-              existing.ofTheWeek !== incomingChallenge.ofTheWeek;
+              existing.ofTheWeek !== incomingChallenge.ofTheWeek ||
+              existing.starterFriendly !== incomingChallenge.starterFriendly;
 
             if (needsUpdate) {
               await db
@@ -280,6 +283,7 @@ export async function POST(request: Request) {
                   initialSituation: incomingChallenge.initialSituation,
                   objective: incomingChallenge.objective,
                   ofTheWeek: incomingChallenge.ofTheWeek,
+                  starterFriendly: incomingChallenge.starterFriendly,
                 })
                 .where(eq(challenge.slug, incomingChallenge.slug));
               updated.push(incomingChallenge.slug);
