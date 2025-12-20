@@ -47,7 +47,7 @@ export function HowItWorksSection() {
       title: "Start a challenge",
       description:
         "Deploy the challenge manifests and begin your learning journey.",
-      command: "kubeasy challenge start pod-basic",
+      command: "kubeasy challenge start pod-crashloop",
       color: "bg-cyan-400",
     },
     {
@@ -63,7 +63,7 @@ export function HowItWorksSection() {
       title: "Submit & Validate",
       description:
         "Submit your solution and get instant feedback on your work.",
-      command: "kubeasy challenge submit pod-basic",
+      command: "kubeasy challenge submit pod-crashloop",
       color: "bg-green-400",
     },
   ];

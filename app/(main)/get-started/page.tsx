@@ -14,7 +14,7 @@ import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 export const metadata: Metadata = generateSEOMetadata({
   title: "Get Started",
   description:
-    "Get started with Kubeasy in 5 minutes. Install the CLI, set up your local Kubernetes cluster, and complete your first challenge.",
+    "Get started with Kubeasy quickly. Install the CLI, set up your local Kubernetes cluster, and start your first challenge.",
   url: "/get-started",
   keywords: [
     "kubeasy tutorial",
@@ -135,14 +135,14 @@ export default function GetStartedPage() {
       <div className="mb-12 space-y-6 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground border-4 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <Rocket className="h-4 w-4" />
-          <span>5 Minute Setup</span>
+          <span>Quick Setup</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-black text-balance">
           Get Started with Kubeasy
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-bold">
-          From zero to your first solved challenge in 5 minutes. Follow this
-          guide to set up your local environment and start learning.
+          Set up your local environment and start your first challenge. Follow
+          this guide to begin your Kubernetes learning journey.
         </p>
       </div>
 
@@ -210,20 +210,20 @@ export default function GetStartedPage() {
         </div>
       </section>
 
-      {/* Success Message */}
+      {/* Next Steps */}
       <section className="mb-12">
-        <div className="bg-green-100 border-4 border-green-600 neo-shadow p-8 text-center">
-          <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
-          <h3 className="text-2xl font-black text-green-800 mb-2">
-            Challenge Completed!
+        <div className="bg-blue-100 border-4 border-blue-600 neo-shadow p-8 text-center">
+          <Rocket className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <h3 className="text-2xl font-black text-blue-800 mb-2">
+            Ready to Solve Challenges?
           </h3>
-          <p className="text-green-700 font-bold mb-6">
-            When all validations pass, you&apos;ll earn XP and unlock new
-            challenges.
+          <p className="text-blue-700 font-bold mb-6">
+            Once you fix the issue and submit, you&apos;ll earn XP and unlock
+            new challenges.
           </p>
           <Link
             href="/challenges"
-            className="inline-flex items-center gap-2 bg-green-600 text-white border-4 border-green-800 px-6 py-3 font-black neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+            className="inline-flex items-center gap-2 bg-blue-600 text-white border-4 border-blue-800 px-6 py-3 font-black neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
           >
             Browse All Challenges
             <ArrowRight className="h-5 w-5" />
