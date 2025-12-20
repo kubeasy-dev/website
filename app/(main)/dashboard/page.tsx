@@ -1,8 +1,6 @@
 import { Target, TrendingUp, Trophy } from "lucide-react";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { DashboardChart } from "@/components/dashboard-chart";
@@ -10,7 +8,7 @@ import { DashboardRecentGains } from "@/components/dashboard-recent-gains";
 import { DashboardStats } from "@/components/dashboard-stats";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
@@ -85,13 +83,7 @@ function DashboardChartError() {
 }
 
 export default async function DashboardPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/login");
-  }
+  const session = await requireAuth();
 
   // Prefetch data for client components (prefetch won't throw on auth errors)
   await Promise.all([

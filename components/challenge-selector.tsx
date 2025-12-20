@@ -3,7 +3,12 @@
 import { Check, ChevronDown, Clock, Copy } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  ChallengePreview,
+  type ChallengePreviewData,
+} from "@/components/challenge-preview";
 import { DifficultyBadge } from "@/components/dificulty-badge";
+import { GetStartedApiToken } from "@/components/get-started-api-token";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +26,8 @@ export interface StarterChallenge {
   theme: string;
   difficulty: "easy" | "medium" | "hard";
   estimatedTime: number;
+  initialSituation: string | null;
+  objective: string | null;
 }
 
 interface ChallengeSelectorProps {
@@ -100,6 +107,8 @@ export function GetStartedSteps({
   );
   const [copiedStep, setCopiedStep] = useState<number | null>(null);
 
+  const selectedChallenge = challenges.find((c) => c.slug === selectedSlug);
+
   const handleCopyCommand = (command: string, stepNumber: number) => {
     navigator.clipboard.writeText(command);
     setCopiedStep(stepNumber);
@@ -119,8 +128,9 @@ export function GetStartedSteps({
       number: 2,
       title: "Login to Kubeasy",
       description:
-        "Authenticate with your API token to access challenges and track your progress. Generate a token from your profile page.",
+        "First, create an API token below, then run the login command and paste your token when prompted.",
       command: "kubeasy login",
+      hasApiToken: true,
     },
     {
       number: 3,
@@ -168,12 +178,20 @@ export function GetStartedSteps({
               <p className="text-muted-foreground font-medium">
                 {step.description}
               </p>
+              {step.hasApiToken && <GetStartedApiToken />}
               {step.hasSelector && challenges.length > 0 && (
-                <ChallengeSelector
-                  challenges={challenges}
-                  selectedSlug={selectedSlug}
-                  onSelect={setSelectedSlug}
-                />
+                <>
+                  <ChallengeSelector
+                    challenges={challenges}
+                    selectedSlug={selectedSlug}
+                    onSelect={setSelectedSlug}
+                  />
+                  {selectedChallenge && (
+                    <ChallengePreview
+                      challenge={selectedChallenge as ChallengePreviewData}
+                    />
+                  )}
+                </>
               )}
               <div className="bg-foreground text-background p-4 rounded-lg neo-border font-mono text-sm overflow-x-auto flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">

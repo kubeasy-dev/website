@@ -1,16 +1,26 @@
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { LoginCard } from "@/components/login-card";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 
-export default async function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ next?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { next } = await searchParams;
+  const callbackUrl = next ?? "/dashboard";
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (session) {
+    // If already logged in, redirect to the callback URL
+    redirect(callbackUrl);
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-background">
         <div className="w-full max-w-md space-y-8">
@@ -45,7 +55,7 @@ export default async function LoginPage() {
           </p>
         </div>
 
-        <LoginCard />
+        <LoginCard callbackUrl={callbackUrl} />
         <p className="text-xs text-center text-foreground/60">
           By continuing, you agree to our{" "}
           <Link href="/terms" className="text-primary font-bold">

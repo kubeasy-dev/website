@@ -1,24 +1,14 @@
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ProfileApiTokens } from "@/components/profile-api-tokens";
 import { ProfileDangerZone } from "@/components/profile-danger-zone";
 import { ProfileEmailPreferences } from "@/components/profile-email-preferences";
 import { ProfileHeader } from "@/components/profile-header";
 import { ProfileSettings } from "@/components/profile-settings";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 export default async function ProfilePage() {
-  // Get the authenticated session
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  // Redirect to login if not authenticated
-  if (!session) {
-    redirect("/login");
-  }
+  const session = await requireAuth();
 
   // Prefetch data in parallel (prefetch won't throw on error, data will be hydrated to client)
   await Promise.all([

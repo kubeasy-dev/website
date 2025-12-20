@@ -120,6 +120,8 @@ export async function getStarterChallenges(limit = 5) {
       difficulty: challenge.difficulty,
       estimatedTime: challenge.estimatedTime,
       starterFriendly: challenge.starterFriendly,
+      initialSituation: challenge.initialSituation,
+      objective: challenge.objective,
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
