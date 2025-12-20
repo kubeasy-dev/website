@@ -138,7 +138,11 @@ interface AuthResult {
   provider?: SocialProvider;
 }
 
-export function LoginCard() {
+interface LoginCardProps {
+  callbackUrl?: string;
+}
+
+export function LoginCard({ callbackUrl = "/dashboard" }: LoginCardProps) {
   const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(
     null,
   );
@@ -151,7 +155,7 @@ export function LoginCard() {
       setLoadingProvider(provider);
       setAuthResult({ status: "loading", provider });
 
-      const data = await signInWithSocialProvider(provider, "/dashboard");
+      const data = await signInWithSocialProvider(provider, callbackUrl);
 
       // Si la redirection ne se produit pas, cela signifie qu'il y a eu une erreur
       if (data?.error) {

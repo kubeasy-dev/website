@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { useMemo } from "react";
 import { trackOutboundLinkClicked } from "@/lib/analytics";
 
 type LinkType = "github" | "docs" | "npm" | "twitter" | "other";
@@ -20,9 +21,35 @@ export function TrackedOutboundLink({
   children,
   ...props
 }: TrackedOutboundLinkProps) {
+  const resolvedUrl = useMemo(() => {
+    if (typeof href === "string") return href;
+    const { pathname = "", query, hash = "" } = href;
+    let queryString = "";
+    if (query) {
+      if (typeof query === "string") {
+        queryString = query.startsWith("?") ? query : `?${query}`;
+      } else {
+        const params = new URLSearchParams();
+        Object.entries(query).forEach(([key, value]) => {
+          if (value != null) {
+            if (Array.isArray(value)) {
+              for (const v of value) {
+                params.append(key, String(v));
+              }
+            } else {
+              params.append(key, String(value));
+            }
+          }
+        });
+        const qs = params.toString();
+        queryString = qs ? `?${qs}` : "";
+      }
+    }
+    return `${pathname}${queryString}${hash}`;
+  }, [href]);
+
   const handleClick = () => {
-    const url = typeof href === "string" ? href : href.toString();
-    trackOutboundLinkClicked(url, linkType, location);
+    trackOutboundLinkClicked(resolvedUrl, linkType, location);
   };
 
   return (

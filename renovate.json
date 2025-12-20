@@ -12,9 +12,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/biome\\.json$/"
-      ],
+      "managerFilePatterns": ["/biome\\.json$/"],
       "matchStrings": [
         "\"\\$schema\":\\s*\"https://biomejs\\.dev/schemas/(?<currentValue>[\\d.]+)/schema\\.json\""
       ],
@@ -24,9 +22,7 @@
   ],
   "packageRules": [
     {
-      "matchPackageNames": [
-        "@biomejs/biome"
-      ],
+      "matchPackageNames": ["@biomejs/biome"],
       "groupName": "biome"
     }
   ]
