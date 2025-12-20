@@ -35,9 +35,9 @@ export function CTASection() {
                 asChild
               >
                 <TrackedOutboundLink
-                  href={siteConfig.links.github}
+                  href={siteConfig.links.docs}
                   target="_blank"
-                  linkType="github"
+                  linkType="docs"
                   location="cta_section"
                 >
                   View Documentation

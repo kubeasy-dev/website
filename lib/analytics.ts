@@ -155,7 +155,43 @@ export function trackApiTokenCopied(tokenName: string) {
 }
 
 /**
+ * Sanitize URL by removing sensitive query parameters
+ * @param url - The URL to sanitize
+ * @returns Sanitized URL without sensitive parameters
+ */
+function sanitizeUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const sensitiveParams = [
+      "token",
+      "api_key",
+      "apikey",
+      "key",
+      "secret",
+      "password",
+      "auth",
+      "session",
+      "sid",
+      "access_token",
+      "refresh_token",
+    ];
+
+    for (const param of sensitiveParams) {
+      if (urlObj.searchParams.has(param)) {
+        urlObj.searchParams.set(param, "[REDACTED]");
+      }
+    }
+
+    return urlObj.toString();
+  } catch {
+    // If URL parsing fails, return just the origin or a safe fallback
+    return url.split("?")[0] ?? url;
+  }
+}
+
+/**
  * Track outbound link click event
+ * Uses sendBeacon transport to ensure event delivery before navigation
  * @param url - The external URL clicked
  * @param linkType - Type of link (e.g., "github", "docs", "npm")
  * @param location - Where the link is located (e.g., "footer", "header", "cta_section")
@@ -165,9 +201,13 @@ export function trackOutboundLinkClicked(
   linkType: "github" | "docs" | "npm" | "twitter" | "other",
   location: string,
 ) {
-  posthog.capture("outbound_link_clicked", {
-    url,
-    linkType,
-    location,
-  });
+  posthog.capture(
+    "outbound_link_clicked",
+    {
+      url: sanitizeUrl(url),
+      linkType,
+      location,
+    },
+    { transport: "sendBeacon" },
+  );
 }

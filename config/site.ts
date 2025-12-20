@@ -26,6 +26,7 @@ export const siteConfig = {
   links: {
     github: `https://github.com/${githubOwner}`,
     twitter: "https://twitter.com/kubeasy_dev",
+    docs: "https://docs.kubeasy.dev",
   },
   github: {
     owner: githubOwner,
