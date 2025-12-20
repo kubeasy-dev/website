@@ -9,7 +9,9 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GetStartedSteps } from "@/components/challenge-selector";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
+import { getStarterChallenges } from "@/server/db/queries";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Get Started",
@@ -26,6 +28,9 @@ export const metadata: Metadata = generateSEOMetadata({
   ],
 });
 
+// ISR: Revalidate every hour
+export const revalidate = 3600;
+
 const prerequisites = [
   {
     name: "Docker",
@@ -36,48 +41,6 @@ const prerequisites = [
     name: "kubectl",
     description: "Kubernetes CLI for cluster interaction",
     link: "https://kubernetes.io/docs/tasks/tools/",
-  },
-];
-
-const steps = [
-  {
-    number: 1,
-    title: "Install the CLI",
-    description: "Install the Kubeasy CLI globally using npm.",
-    command: "npm install -g @kubeasy-dev/kubeasy-cli",
-  },
-  {
-    number: 2,
-    title: "Login to Kubeasy",
-    description: "Authenticate to track your progress and earn XP.",
-    command: "kubeasy login",
-  },
-  {
-    number: 3,
-    title: "Set up your cluster",
-    description:
-      "Create a local Kind cluster with all necessary tools (ArgoCD, Kyverno).",
-    command: "kubeasy setup",
-  },
-  {
-    number: 4,
-    title: "Start your first challenge",
-    description: "Deploy a challenge and start debugging.",
-    command: "kubeasy challenge start pod-crashloop",
-  },
-  {
-    number: 5,
-    title: "Debug with kubectl",
-    description: "Investigate the issue using standard Kubernetes tools.",
-    command:
-      "kubectl get pods\nkubectl describe pod <pod-name>\nkubectl logs <pod-name>",
-    isMultiline: true,
-  },
-  {
-    number: 6,
-    title: "Submit your solution",
-    description: "Once fixed, submit to validate and earn XP.",
-    command: "kubeasy challenge submit pod-crashloop",
   },
 ];
 
@@ -108,27 +71,8 @@ const troubleshooting = [
   },
 ];
 
-function CodeBlock({
-  command,
-  isMultiline,
-}: {
-  command: string;
-  isMultiline?: boolean;
-}) {
-  return (
-    <div className="bg-foreground text-background p-4 rounded-lg neo-border font-mono text-sm overflow-x-auto group relative">
-      {isMultiline ? (
-        <pre className="whitespace-pre">{command}</pre>
-      ) : (
-        <>
-          <span className="text-green-400">$</span> {command}
-        </>
-      )}
-    </div>
-  );
-}
-
-export default function GetStartedPage() {
+export default async function GetStartedPage() {
+  const starterChallenges = await getStarterChallenges(5);
   return (
     <div className="container mx-auto px-4 max-w-4xl">
       {/* Hero Section */}
@@ -184,30 +128,7 @@ export default function GetStartedPage() {
           <Terminal className="h-6 w-6 text-primary" />
           Step-by-Step Guide
         </h2>
-        <div className="space-y-6">
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              className="bg-white border-4 border-black neo-shadow p-6"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-black text-lg border-2 border-black">
-                  {step.number}
-                </div>
-                <div className="flex-1 space-y-3">
-                  <h3 className="text-xl font-black">{step.title}</h3>
-                  <p className="text-muted-foreground font-medium">
-                    {step.description}
-                  </p>
-                  <CodeBlock
-                    command={step.command}
-                    isMultiline={step.isMultiline}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <GetStartedSteps challenges={starterChallenges} />
       </section>
 
       {/* Next Steps */}
