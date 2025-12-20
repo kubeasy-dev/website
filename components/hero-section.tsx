@@ -40,12 +40,10 @@ export function HeroSection() {
                 asChild
               >
                 <Link
-                  href="/challenges"
-                  onClick={() =>
-                    handleCtaClick("Start Learning", "/challenges")
-                  }
+                  href="/get-started"
+                  onClick={() => handleCtaClick("Get Started", "/get-started")}
                 >
-                  Start Learning
+                  Get Started
                 </Link>
               </Button>
               <Button

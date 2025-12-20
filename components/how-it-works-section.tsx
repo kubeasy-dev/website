@@ -216,10 +216,10 @@ export function HowItWorksSection() {
             Ready to start your journey?
           </p>
           <Link
-            href="/challenges"
+            href="/get-started"
             className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
           >
-            Browse Challenges
+            Get Started
             <Sparkles className="h-5 w-5" />
           </Link>
         </div>
