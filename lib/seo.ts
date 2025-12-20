@@ -108,6 +108,34 @@ export function generateMetadata({
 }
 
 /**
+ * Generate JSON-LD structured data for SoftwareApplication (CLI tool)
+ */
+export function generateSoftwareApplicationSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Kubeasy CLI",
+    description:
+      "Command-line tool to set up local Kubernetes clusters and run hands-on challenges",
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "macOS, Linux, Windows",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    author: {
+      "@type": "Organization",
+      name: siteConfig.name,
+      url: siteConfig.url,
+    },
+    downloadUrl: "https://www.npmjs.com/package/@kubeasy-dev/kubeasy-cli",
+    softwareVersion: "1.0.0",
+    aggregateRating: undefined,
+  };
+}
+
+/**
  * Generate JSON-LD structured data for organization
  */
 export function generateOrganizationSchema() {

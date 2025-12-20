@@ -13,18 +13,22 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "About Kubeasy | Making Kubernetes Less Mysterious",
+export const metadata: Metadata = generateSEOMetadata({
+  title: "About Kubeasy",
   description:
     "Learn Kubernetes through realistic challenges that run locally. Practice debugging real-world issues in isolated environments without cloud costs or vendor lock-in.",
-  openGraph: {
-    title: "About Kubeasy | Making Kubernetes Less Mysterious",
-    description:
-      "Learn Kubernetes through realistic challenges that run locally. Practice debugging real-world issues in isolated environments.",
-    type: "website",
-  },
-};
+  url: "/about",
+  keywords: [
+    "about kubeasy",
+    "kubernetes learning platform",
+    "learn kubernetes",
+    "kubernetes challenges",
+    "hands-on kubernetes",
+    "kubernetes practice",
+  ],
+});
 
 const sections = [
   { id: "problem", label: "The Problem" },
