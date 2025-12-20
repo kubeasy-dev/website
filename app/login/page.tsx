@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoginCard } from "@/components/login-card";
-import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 
 interface LoginPageProps {
@@ -19,26 +18,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   });
 
   if (session) {
-    // If already logged in, redirect to the callback URL
     redirect(callbackUrl);
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-background">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center space-y-2">
-            <Link href="/" className="inline-flex items-center gap-2 mb-4">
-              <Image src="/logo.png" alt="Kubeasy" width={40} height={40} />
-              <span className="text-2xl font-black">Kubeasy</span>
-            </Link>
-            <h1 className="text-4xl font-black text-balance">
-              You are already logged in
-            </h1>
-            <Button variant="default" size="lg" className="mt-4" asChild>
-              <Link href="/dashboard">Go to Dashboard</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   return (

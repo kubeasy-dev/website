@@ -37,7 +37,7 @@ export function GetStartedApiToken() {
       setNewlyCreatedToken(data.key);
       setShowForm(false);
       setTokenName("kubeasy-cli");
-      trackApiTokenCreated(data.id);
+      trackApiTokenCreated(data.userId);
       toast.success("API token created successfully!");
     },
     onError: (error) => {
@@ -55,7 +55,7 @@ export function GetStartedApiToken() {
   const handleCopyToken = (token: string) => {
     navigator.clipboard.writeText(token);
     setCopiedToken(token);
-    trackApiTokenCopied("kubeasy-cli");
+    trackApiTokenCopied(tokenName);
     toast.success("Token copied to clipboard");
     setTimeout(() => setCopiedToken(null), 2000);
   };
