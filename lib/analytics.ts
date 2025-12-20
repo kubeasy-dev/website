@@ -125,3 +125,49 @@ export function trackCtaClicked(
     targetUrl,
   });
 }
+
+/**
+ * Track CLI command copied event
+ * @param command - The command that was copied
+ * @param location - Where the copy occurred (e.g., "get_started", "challenge_page")
+ * @param stepNumber - Optional step number in a tutorial flow
+ */
+export function trackCommandCopied(
+  command: string,
+  location: string,
+  stepNumber?: number,
+) {
+  posthog.capture("command_copied", {
+    command,
+    location,
+    ...(stepNumber !== undefined && { stepNumber }),
+  });
+}
+
+/**
+ * Track API token copied event
+ * @param tokenName - The name of the token that was copied
+ */
+export function trackApiTokenCopied(tokenName: string) {
+  posthog.capture("api_token_copied", {
+    tokenName,
+  });
+}
+
+/**
+ * Track outbound link click event
+ * @param url - The external URL clicked
+ * @param linkType - Type of link (e.g., "github", "docs", "npm")
+ * @param location - Where the link is located (e.g., "footer", "header", "cta_section")
+ */
+export function trackOutboundLinkClicked(
+  url: string,
+  linkType: "github" | "docs" | "npm" | "twitter" | "other",
+  location: string,
+) {
+  posthog.capture("outbound_link_clicked", {
+    url,
+    linkType,
+    location,
+  });
+}

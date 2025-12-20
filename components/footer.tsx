@@ -1,6 +1,7 @@
 import { Github, Twitter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
 import { siteConfig } from "@/config/site";
 
 export function Footer() {
@@ -50,13 +51,15 @@ export function Footer() {
             <h3 className="font-black mb-4">Community</h3>
             <ul className="space-y-2 text-sm font-medium">
               <li>
-                <Link
+                <TrackedOutboundLink
                   href={siteConfig.links.github}
                   target="_blank"
+                  linkType="github"
+                  location="footer_community"
                   className="hover:text-primary transition-colors"
                 >
                   GitHub
-                </Link>
+                </TrackedOutboundLink>
               </li>
               <li>
                 <Link href="#" className="hover:text-primary transition-colors">
@@ -85,13 +88,15 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
+                <TrackedOutboundLink
                   href={`${siteConfig.links.github}/${siteConfig.github.repo}/blob/main/LICENSE`}
                   target="_blank"
+                  linkType="github"
+                  location="footer_legal"
                   className="hover:text-primary transition-colors"
                 >
                   License
-                </Link>
+                </TrackedOutboundLink>
               </li>
             </ul>
           </div>
@@ -102,20 +107,24 @@ export function Footer() {
             © 2025 {siteConfig.name}. Open source under Apache License 2.0.
           </p>
           <div className="flex items-center gap-4">
-            <Link
+            <TrackedOutboundLink
               href={siteConfig.links.github}
               target="_blank"
+              linkType="github"
+              location="footer_social"
               className="hover:text-primary transition-colors"
             >
               <Github className="h-5 w-5" />
-            </Link>
-            <Link
+            </TrackedOutboundLink>
+            <TrackedOutboundLink
               href={siteConfig.links.twitter}
               target="_blank"
+              linkType="twitter"
+              location="footer_social"
               className="hover:text-primary transition-colors"
             >
               <Twitter className="h-5 w-5" />
-            </Link>
+            </TrackedOutboundLink>
           </div>
         </div>
       </div>
