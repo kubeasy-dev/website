@@ -22,8 +22,8 @@ export function CTASection() {
                 className="text-base font-bold bg-white text-primary hover:bg-white/90 neo-border-thick neo-shadow-lg"
                 asChild
               >
-                <Link href="/challenges">
-                  Browse Challenges
+                <Link href="/get-started">
+                  Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
