@@ -5,9 +5,6 @@ import { ThemeCard } from "@/components/theme-card";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getThemes } from "@/server/db/queries";
 
-// ISR: Revalidate every hour for SEO
-export const revalidate = 3600;
-
 export const metadata: Metadata = generateSEOMetadata({
   title: "Kubernetes Learning Themes",
   description:

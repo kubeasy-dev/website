@@ -11,13 +11,13 @@ const nextConfig: NextConfig = {
     default: {
       stale: 300,      // 5 minutes client-side
       revalidate: 900, // 15 minutes server-side
-      expire: false,   // No expiration
+      expire: Infinity, // No expiration
     },
     // Public data profile (challenges, themes)
     public: {
       stale: 600,       // 10 minutes client-side
       revalidate: 3600, // 1 hour server-side (matches old ISR)
-      expire: false,    // No expiration
+      expire: Infinity, // No expiration
     },
     // User data profile (stats, progress)
     user: {

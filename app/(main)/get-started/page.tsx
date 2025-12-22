@@ -31,9 +31,6 @@ export const metadata: Metadata = generateSEOMetadata({
   ],
 });
 
-// Dynamic page - requires authentication
-export const dynamic = "force-dynamic";
-
 const prerequisites = [
   {
     name: "Docker",

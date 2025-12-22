@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
 import {
   CheckCircle2,
   Circle,
@@ -90,15 +89,17 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
       onData: () => {
         // When validation event received, invalidate queries to refetch latest status
         queryClient.invalidateQueries({
-          queryKey: getQueryKey(trpc.userProgress.getLatestValidationStatus, {
-            slug,
-          }),
+          queryKey:
+            trpc.userProgress.getLatestValidationStatus.getQueryKey?.({
+              slug,
+            }) || [],
         });
         queryClient.invalidateQueries({
-          queryKey: getQueryKey(trpc.userProgress.getSubmissions, { slug }),
+          queryKey:
+            trpc.userProgress.getSubmissions.getQueryKey?.({ slug }) || [],
         });
         queryClient.invalidateQueries({
-          queryKey: getQueryKey(trpc.userProgress.getStatus, { slug }),
+          queryKey: trpc.userProgress.getStatus.getQueryKey?.({ slug }) || [],
         });
       },
     },

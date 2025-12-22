@@ -87,10 +87,10 @@ export default async function ThemePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-
   "use cache";
   cacheLife("public");
+
+  const { slug } = await params;
   cacheTag("themes-page", `theme-${slug}`);
 
   // Verify theme exists (direct DB access with caching)
