@@ -26,6 +26,16 @@ export const auth = betterAuth({
   plugins: [
     apiKey({
       rateLimit: {
+        // Rate limiting disabled because Better Auth's built-in rate limiting only works
+        // with Better Auth's built-in endpoints (/api-key/verify), not when calling
+        // auth.api.verifyApiKey() programmatically in custom API routes.
+        //
+        // Tested behavior:
+        // - No rate limit headers are returned (x-ratelimit-limit, x-ratelimit-remaining)
+        // - No rate limiting is enforced even when enabled
+        //
+        // Alternative solution would be to use enableSessionForAPIKeys + auth.api.getSession()
+        // or implement custom rate limiting middleware.
         enabled: false,
       },
     }),
