@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import {
   CheckCircle2,
   Circle,
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { useTRPC } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 import type { Objective, ObjectiveCategory } from "@/types/cli-api";
 import { SubmissionItem } from "./challenge-status/submission-item";
 
@@ -62,7 +63,7 @@ interface DisplayObjective {
 }
 
 export function ChallengeMission({ slug }: ChallengeMissionProps) {
-  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [showHistory, setShowHistory] = useState(false);
 
   // Check if user is authenticated before making private API calls
@@ -75,27 +76,45 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
     ...trpc.challenge.getObjectives.queryOptions({ slug }),
   });
 
-  // Poll every 5 seconds for real-time updates (only when authenticated)
+  // ✅ Real-time subscription via SSE (no more polling!)
   const { data: validationStatus, isLoading: isLoadingValidation } = useQuery({
     ...trpc.userProgress.getLatestValidationStatus.queryOptions({ slug }),
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
     enabled: isAuthenticated,
   });
 
+  // Subscribe to real-time validation updates via SSE
+  trpc.userProgress.onValidationUpdate.useSubscription(
+    { challengeSlug: slug },
+    {
+      enabled: isAuthenticated,
+      onData: () => {
+        // When validation event received, invalidate queries to refetch latest status
+        queryClient.invalidateQueries({
+          queryKey: getQueryKey(trpc.userProgress.getLatestValidationStatus, {
+            slug,
+          }),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getQueryKey(trpc.userProgress.getSubmissions, { slug }),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getQueryKey(trpc.userProgress.getStatus, { slug }),
+        });
+      },
+    },
+  );
+
   // Fetch submissions for history modal (only when authenticated)
+  // No polling - updates via subscription invalidation
   const { data: submissionsData } = useQuery({
     ...trpc.userProgress.getSubmissions.queryOptions({ slug }),
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
     enabled: isAuthenticated,
   });
 
   // Fetch challenge status to determine if it's started or not (only when authenticated)
+  // No polling - updates via subscription invalidation
   const { data: statusData } = useQuery({
     ...trpc.userProgress.getStatus.queryOptions({ slug }),
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
     enabled: isAuthenticated,
   });
 

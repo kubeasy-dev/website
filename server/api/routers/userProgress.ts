@@ -1,6 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
+import { observable } from "@trpc/server/observable";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import {
   trackChallengeCompletedServer,
@@ -16,6 +18,7 @@ import {
   userXp,
   userXpTransaction,
 } from "@/server/db/schema";
+import { validationEmitter } from "@/server/events/validation-emitter";
 import {
   calculateLevel,
   calculateStreak,
@@ -708,6 +711,17 @@ export const userProgressRouter = createTRPCRouter({
             objectives,
           });
 
+          // Emit validation events for real-time updates
+          for (const result of results) {
+            validationEmitter.emitValidation({
+              userId,
+              challengeSlug,
+              objectiveKey: result.objectiveKey,
+              passed: result.passed,
+              timestamp: new Date(),
+            });
+          }
+
           // If validation failed, return with failed objectives info
           if (!validated) {
             const failedObjectives = objectives.filter((obj) => !obj.passed);
@@ -895,6 +909,14 @@ export const userProgressRouter = createTRPCRouter({
               xpGain.total,
               isFirstChallenge,
             );
+
+            // Invalidate caches after successful completion
+            revalidateTag(`user-${userId}-stats`, "max");
+            revalidateTag(`user-${userId}-progress`, "max");
+            revalidateTag(`user-${userId}-xp`, "max");
+            revalidateTag(`user-${userId}-streak`, "max");
+            revalidateTag(`challenge-${challengeSlug}`, "max");
+            revalidateTag("challenges", "max");
 
             return {
               success: true,
@@ -1123,5 +1145,54 @@ export const userProgressRouter = createTRPCRouter({
         objectives,
         timestamp: latestSubmission.timestamp,
       };
+    }),
+
+  /**
+   * Real-time subscription to validation updates using Server-Sent Events (SSE)
+   * Works on Vercel serverless without WebSocket
+   */
+  onValidationUpdate: privateProcedure
+    .input(
+      z.object({
+        challengeSlug: z.string(),
+      }),
+    )
+    .subscription(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+      const { challengeSlug } = input;
+
+      return observable<{
+        objectiveKey: string;
+        passed: boolean;
+        timestamp: Date;
+      }>((emit) => {
+        logger.info("Client subscribed to validation updates", {
+          userId,
+          challengeSlug,
+        });
+
+        // Subscribe to validation events for this user and challenge
+        const unsubscribe = validationEmitter.onValidation(
+          userId,
+          challengeSlug,
+          (event) => {
+            // Emit validation event to the client via SSE
+            emit.next({
+              objectiveKey: event.objectiveKey,
+              passed: event.passed,
+              timestamp: event.timestamp,
+            });
+          },
+        );
+
+        // Cleanup on unsubscribe
+        return () => {
+          logger.info("Client unsubscribed from validation updates", {
+            userId,
+            challengeSlug,
+          });
+          unsubscribe();
+        };
+      });
     }),
 });
