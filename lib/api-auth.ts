@@ -128,12 +128,13 @@ export async function authenticateApiRequest(
         span.setAttribute("userId", user.id);
 
         // Create a mock session object for tRPC context
+        // Session expiry: 30 days for better security (previously 365 days)
         const mockSession: Session = {
           id: `api-key-${verifyResult.key.id}`,
           userId: user.id,
           expiresAt:
             verifyResult.key.expiresAt ||
-            new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           token: token,
           createdAt: verifyResult.key.createdAt,
           updatedAt: verifyResult.key.updatedAt,

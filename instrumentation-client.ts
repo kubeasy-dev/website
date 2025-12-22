@@ -8,16 +8,39 @@ import posthog from "posthog-js";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-// Initialize PostHog
+// Initialize PostHog with error handling and development mode disabling
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-if (posthogKey) {
-  posthog.init(posthogKey, {
-    api_host: "/ingest",
-    ui_host: "https://eu.posthog.com",
-    defaults: "2025-05-24",
-    capture_exceptions: true, // This enables capturing exceptions using Error Tracking
-    debug: isDevelopment,
-  });
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+
+if (posthogKey && posthogHost) {
+  try {
+    posthog.init(posthogKey, {
+      api_host: "/ingest",
+      ui_host: posthogHost,
+      defaults: "2025-05-24",
+      capture_exceptions: true, // This enables capturing exceptions using Error Tracking
+      debug: false, // Disable debug logs to reduce console noise
+      loaded: (posthog) => {
+        // Disable PostHog in development to reduce console noise
+        if (isDevelopment) {
+          posthog.opt_out_capturing();
+          console.info(
+            "[PostHog] Disabled in development mode - no events will be captured",
+          );
+        }
+      },
+      // Disable automatic features in development
+      autocapture: !isDevelopment,
+      capture_pageview: !isDevelopment,
+    });
+  } catch (error) {
+    // Log initialization errors but don't break the app
+    console.error("[PostHog] Failed to initialize:", error);
+  }
+} else if (isDevelopment) {
+  console.info(
+    "[PostHog] Not initialized: Missing NEXT_PUBLIC_POSTHOG_KEY or NEXT_PUBLIC_POSTHOG_HOST environment variables",
+  );
 }
 
 // Initialize Sentry
