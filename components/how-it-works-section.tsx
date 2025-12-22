@@ -128,14 +128,14 @@ export function HowItWorksSection() {
             role="group"
             aria-label="Interactive steps carousel"
           >
-            <div className="relative bg-card neo-border neo-shadow p-8 md:p-12 rounded-2xl transition-all duration-500 min-h-[400px] flex flex-col justify-between">
+            <div className="relative bg-card neo-border neo-shadow p-8 md:p-12 rounded-xl transition-all duration-500 min-h-[400px] flex flex-col justify-between">
               <div className="absolute -top-4 -left-4 w-16 h-16 bg-foreground text-background rounded-full flex items-center justify-center font-black text-2xl neo-border shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                 {currentStep + 1}
               </div>
 
               <div className="space-y-6 flex-1">
                 <div
-                  className={`inline-flex p-5 rounded-2xl ${currentStepData.color} neo-border neo-shadow`}
+                  className={`inline-flex p-5 rounded-xl ${currentStepData.color} neo-border neo-shadow`}
                 >
                   <Icon
                     className="h-12 w-12 text-foreground"

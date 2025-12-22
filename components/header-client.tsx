@@ -278,7 +278,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                           <NavigationMenuLink asChild>
                             <Link
                               href={subRoute.href}
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                              className="block select-none space-y-1 rounded-lg p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                             >
                               <div className="text-sm font-bold leading-none">
                                 {subRoute.label}
@@ -308,7 +308,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                       : undefined
                   }
                   className={cn(
-                    "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-base font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
+                    "group inline-flex h-9 w-max items-center justify-center rounded-lg bg-background px-4 py-2 text-base font-bold transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50",
                   )}
                 >
                   {label}

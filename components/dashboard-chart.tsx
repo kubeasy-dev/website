@@ -66,7 +66,7 @@ export function DashboardChart() {
           />
         </RadarChart>
       </ResponsiveContainer>
-      <div className="mt-4 p-4 bg-secondary border-4 border-border rounded-lg">
+      <div className="mt-4 p-4 bg-secondary border-4 border-border rounded-xl">
         {bestTheme && bestTheme.percentageCompleted > 0 && bestThemeName ? (
           <p className="text-sm font-bold text-center">
             Your best theme is{" "}
