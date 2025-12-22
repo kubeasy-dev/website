@@ -109,6 +109,18 @@ export async function authenticateApiRequest(
           banned: userResult.banned ?? false,
         };
 
+        // Security check: Reject banned users
+        if (user.banned) {
+          logger.warn("Banned user attempted API access", {
+            userId: user.id,
+            tokenPrefix: token.substring(0, 8),
+          });
+          return {
+            success: false,
+            error: "Account has been banned",
+          };
+        }
+
         logger.info("API request authenticated successfully", {
           userId: user.id,
         });
