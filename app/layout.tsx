@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 import type React from "react";
+import { Suspense } from "react";
 import {
   generateMetadata,
   generateOrganizationSchema,
@@ -65,7 +66,9 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <TRPCReactProvider>
           <ReactQueryDevtools initialIsOpen={false} />
-          <Providers>{children}</Providers>
+          <Providers>
+            <Suspense fallback={null}>{children}</Suspense>
+          </Providers>
           <Toaster richColors position="bottom-right" />
         </TRPCReactProvider>
         <Analytics />
