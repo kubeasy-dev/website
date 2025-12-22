@@ -373,28 +373,36 @@ export default function AboutPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
                 <div className="bg-secondary border-4 border-border neo-shadow p-4">
-                  <div className="text-3xl mb-2">💸</div>
+                  <div className="text-3xl mb-2" suppressHydrationWarning>
+                    💸
+                  </div>
                   <div className="font-black mb-1">No cloud billing</div>
                   <div className="text-sm text-foreground/70">
                     Everything runs on your machine
                   </div>
                 </div>
                 <div className="bg-secondary border-4 border-border neo-shadow p-4">
-                  <div className="text-3xl mb-2">⚡</div>
+                  <div className="text-3xl mb-2" suppressHydrationWarning>
+                    ⚡
+                  </div>
                   <div className="font-black mb-1">Instant start</div>
                   <div className="text-sm text-foreground/70">
                     No waiting for cloud clusters
                   </div>
                 </div>
                 <div className="bg-secondary border-4 border-border neo-shadow p-4">
-                  <div className="text-3xl mb-2">🔒</div>
+                  <div className="text-3xl mb-2" suppressHydrationWarning>
+                    🔒
+                  </div>
                   <div className="font-black mb-1">Complete privacy</div>
                   <div className="text-sm text-foreground/70">
                     No data leaves your computer
                   </div>
                 </div>
                 <div className="bg-secondary border-4 border-border neo-shadow p-4">
-                  <div className="text-3xl mb-2">🎯</div>
+                  <div className="text-3xl mb-2" suppressHydrationWarning>
+                    🎯
+                  </div>
                   <div className="font-black mb-1">Isolated environments</div>
                   <div className="text-sm text-foreground/70">
                     Each challenge in its own namespace
