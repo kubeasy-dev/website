@@ -5,40 +5,6 @@ const nextConfig: NextConfig = {
   // Enable Cache Components (Next.js 16 use cache directive)
   cacheComponents: true,
 
-  // Cache lifetime profiles for use cache directive
-  cacheLife: {
-    // Default profile (5 min client, 15 min server)
-    default: {
-      stale: 300,      // 5 minutes client-side
-      revalidate: 900, // 15 minutes server-side
-      expire: Infinity, // No expiration
-    },
-    // Public data profile (challenges, themes)
-    public: {
-      stale: 600,       // 10 minutes client-side
-      revalidate: 3600, // 1 hour server-side (matches old ISR)
-      expire: Infinity, // No expiration
-    },
-    // User data profile (stats, progress)
-    user: {
-      stale: 30,       // 30 seconds client-side
-      revalidate: 300, // 5 minutes server-side
-      expire: 900,     // 15 minutes max
-    },
-    // Frequently changing data (like real-time validation)
-    minutes: {
-      stale: 30,       // 30 seconds client-side
-      revalidate: 60,  // 1 minute server-side
-      expire: 300,     // 5 minutes max
-    },
-    // Slow-changing data (XP, ranks)
-    hours: {
-      stale: 300,      // 5 minutes client-side
-      revalidate: 900, // 15 minutes server-side
-      expire: 3600,    // 1 hour max
-    },
-  },
-
   async rewrites() {
     return [
       {

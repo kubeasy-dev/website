@@ -27,7 +27,7 @@ export const metadata: Metadata = generateSEOMetadata({
 
 export default async function ChallengesPage() {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
   cacheTag("challenges");
 
   // Access database directly with caching (no headers/session needed)

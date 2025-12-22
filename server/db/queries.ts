@@ -16,7 +16,7 @@ import { challenge, challengeTheme } from "@/server/db/schema";
  */
 export async function getChallenges() {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
   cacheTag("challenges");
 
   const challenges = await db
@@ -50,7 +50,7 @@ export async function getChallenges() {
  */
 export async function getChallengeBySlug(slug: string) {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
   cacheTag("challenges", `challenge-${slug}`);
 
   const [challengeItem] = await db
@@ -83,7 +83,7 @@ export async function getChallengeBySlug(slug: string) {
  */
 export async function getThemes() {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
   cacheTag("themes");
 
   const themes = await db
@@ -100,7 +100,7 @@ export async function getThemes() {
  */
 export async function getThemeBySlug(slug: string) {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
   cacheTag("themes", `theme-${slug}`);
 
   const [theme] = await db
@@ -119,7 +119,7 @@ export async function getThemeBySlug(slug: string) {
  */
 export async function getChallengeCountByTheme(themeSlug: string) {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
   cacheTag("challenges", `theme-${themeSlug}`);
 
   const result = await db
@@ -137,7 +137,7 @@ export async function getChallengeCountByTheme(themeSlug: string) {
  */
 export async function getStarterChallenges(limit = 5) {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
   cacheTag("challenges", "starter-challenges");
 
   const challenges = await db
