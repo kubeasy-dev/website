@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/nextjs";
-import { observable } from "@trpc/server/observable";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
@@ -9,6 +8,7 @@ import {
   trackChallengeStartedServer,
   trackChallengeValidationFailedServer,
 } from "@/lib/analytics-server";
+import { publishValidationEvent } from "@/lib/redis";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import {
   challenge,
@@ -18,7 +18,6 @@ import {
   userXp,
   userXpTransaction,
 } from "@/server/db/schema";
-import { validationEmitter } from "@/server/events/validation-emitter";
 import {
   calculateLevel,
   calculateStreak,
@@ -711,11 +710,9 @@ export const userProgressRouter = createTRPCRouter({
             objectives,
           });
 
-          // Emit validation events for real-time updates
+          // Publish validation events to Redis for SSE real-time updates
           for (const result of results) {
-            validationEmitter.emitValidation({
-              userId,
-              challengeSlug,
+            await publishValidationEvent(userId, challengeSlug, {
               objectiveKey: result.objectiveKey,
               passed: result.passed,
               timestamp: new Date(),
@@ -1147,52 +1144,6 @@ export const userProgressRouter = createTRPCRouter({
       };
     }),
 
-  /**
-   * Real-time subscription to validation updates using Server-Sent Events (SSE)
-   * Works on Vercel serverless without WebSocket
-   */
-  onValidationUpdate: privateProcedure
-    .input(
-      z.object({
-        challengeSlug: z.string(),
-      }),
-    )
-    .subscription(async ({ ctx, input }) => {
-      const userId = ctx.user.id;
-      const { challengeSlug } = input;
-
-      return observable<{
-        objectiveKey: string;
-        passed: boolean;
-        timestamp: Date;
-      }>((emit) => {
-        logger.info("Client subscribed to validation updates", {
-          userId,
-          challengeSlug,
-        });
-
-        // Subscribe to validation events for this user and challenge
-        const unsubscribe = validationEmitter.onValidation(
-          userId,
-          challengeSlug,
-          (event) => {
-            // Emit validation event to the client via SSE
-            emit.next({
-              objectiveKey: event.objectiveKey,
-              passed: event.passed,
-              timestamp: event.timestamp,
-            });
-          },
-        );
-
-        // Cleanup on unsubscribe
-        return () => {
-          logger.info("Client unsubscribed from validation updates", {
-            userId,
-            challengeSlug,
-          });
-          unsubscribe();
-        };
-      });
-    }),
+  // Note: SSE real-time updates are now handled via /api/sse/validation route
+  // This uses Redis Pub/Sub instead of tRPC subscriptions for better serverless compatibility
 });

@@ -9,7 +9,7 @@ import {
   Target,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -82,14 +82,24 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
     enabled: isAuthenticated,
   });
 
-  // ✅ Real-time subscription via SSE (no more polling!)
+  // ✅ Real-time updates via Server-Sent Events (SSE) with Redis Pub/Sub
   // Automatically invalidates queries when validation events are received
-  trpc.userProgress.onValidationUpdate.useSubscription(
-    { challengeSlug: slug },
-    {
-      enabled: isAuthenticated,
-      onData: () => {
-        // When validation event received, invalidate queries to refetch latest status
+  useEffect(() => {
+    if (!isAuthenticated || !session?.user?.id) return;
+
+    const userId = session.user.id;
+    const eventSource = new EventSource(
+      `/api/sse/validation/${userId}/${slug}`,
+    );
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        // Skip connection message
+        if (data.type === "connected") return;
+
+        // Validation event received - invalidate queries to refetch
         queryClient.invalidateQueries({
           queryKey: trpc.userProgress.getLatestValidationStatus.getQueryKey({
             slug,
@@ -101,9 +111,20 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
         queryClient.invalidateQueries({
           queryKey: trpc.userProgress.getStatus.getQueryKey({ slug }),
         });
-      },
-    },
-  );
+      } catch (error) {
+        console.error("Error parsing SSE event:", error);
+      }
+    };
+
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
+
+    // Cleanup on unmount
+    return () => {
+      eventSource.close();
+    };
+  }, [isAuthenticated, session?.user?.id, slug, queryClient, trpc]);
 
   // Fetch submissions for history modal (only when authenticated)
   // No polling - updates via subscription invalidation
