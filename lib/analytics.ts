@@ -8,11 +8,59 @@
 import posthog from "posthog-js";
 
 /**
+ * Check if PostHog is ready and enabled for tracking
+ * @returns true if PostHog is initialized and not opted out
+ */
+function isPostHogReady(): boolean {
+  try {
+    return (
+      posthog &&
+      typeof posthog.capture === "function" &&
+      !posthog.has_opted_out_capturing()
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Safe wrapper for PostHog capture calls with error handling
+ * @param eventName - The name of the event to track
+ * @param properties - Event properties
+ * @param options - PostHog options (e.g., transport: "sendBeacon")
+ */
+function safeCapture(
+  eventName: string,
+  properties?: Record<string, unknown>,
+  options?: Record<string, unknown>,
+): void {
+  if (!isPostHogReady()) {
+    // In development, log that the event was skipped
+    if (process.env.NODE_ENV === "development") {
+      console.debug(
+        `[PostHog] Event not captured (disabled): ${eventName}`,
+        properties,
+      );
+    }
+    return;
+  }
+
+  try {
+    posthog.capture(eventName, properties, options);
+  } catch (error) {
+    // Log errors in development, silent in production
+    if (process.env.NODE_ENV === "development") {
+      console.error(`[PostHog] Failed to capture event "${eventName}":`, error);
+    }
+  }
+}
+
+/**
  * Track user signup event
  * @param provider - The authentication provider used (github, google, microsoft)
  */
 export function trackUserSignup(provider: "github" | "google" | "microsoft") {
-  posthog.capture("user_signup", {
+  safeCapture("user_signup", {
     provider,
   });
 }
@@ -22,7 +70,7 @@ export function trackUserSignup(provider: "github" | "google" | "microsoft") {
  * Note: User is already identified via PostHog session, no userId needed
  */
 export function trackApiTokenCreated() {
-  posthog.capture("api_token_created");
+  safeCapture("api_token_created");
 }
 
 /**
@@ -36,7 +84,7 @@ export function trackChallengeStarted(
   challengeSlug: string,
   difficulty: string,
 ) {
-  posthog.capture("challenge_started", {
+  safeCapture("challenge_started", {
     challengeId,
     challengeSlug,
     difficulty,
@@ -56,7 +104,7 @@ export function trackChallengeCompleted(
   difficulty: string,
   timeSpent?: number,
 ) {
-  posthog.capture("challenge_completed", {
+  safeCapture("challenge_completed", {
     challengeId,
     challengeSlug,
     difficulty,
@@ -78,14 +126,37 @@ export function identifyUser(
     provider?: string;
   },
 ) {
-  posthog.identify(userId, properties);
+  if (!isPostHogReady()) {
+    if (process.env.NODE_ENV === "development") {
+      console.debug("[PostHog] User identification skipped (disabled)");
+    }
+    return;
+  }
+
+  try {
+    posthog.identify(userId, properties);
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[PostHog] Failed to identify user:", error);
+    }
+  }
 }
 
 /**
  * Reset PostHog state (call on logout)
  */
 export function resetAnalytics() {
-  posthog.reset();
+  if (!isPostHogReady()) {
+    return;
+  }
+
+  try {
+    posthog.reset();
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[PostHog] Failed to reset:", error);
+    }
+  }
 }
 
 /**
@@ -99,7 +170,7 @@ export function trackChallengeCardClicked(
   difficulty: string,
   fromPage: string,
 ) {
-  posthog.capture("challenge_card_clicked", {
+  safeCapture("challenge_card_clicked", {
     challengeSlug,
     difficulty,
     fromPage,
@@ -117,7 +188,7 @@ export function trackCtaClicked(
   ctaLocation: string,
   targetUrl: string,
 ) {
-  posthog.capture("cta_clicked", {
+  safeCapture("cta_clicked", {
     ctaText,
     ctaLocation,
     targetUrl,
@@ -135,7 +206,7 @@ export function trackCommandCopied(
   location: string,
   stepNumber?: number,
 ) {
-  posthog.capture("command_copied", {
+  safeCapture("command_copied", {
     command,
     location,
     ...(stepNumber !== undefined && { stepNumber }),
@@ -147,7 +218,7 @@ export function trackCommandCopied(
  * @param tokenName - The name of the token that was copied
  */
 export function trackApiTokenCopied(tokenName: string) {
-  posthog.capture("api_token_copied", {
+  safeCapture("api_token_copied", {
     tokenName,
   });
 }
@@ -199,7 +270,7 @@ export function trackOutboundLinkClicked(
   linkType: "github" | "docs" | "npm" | "twitter" | "other",
   location: string,
 ) {
-  posthog.capture(
+  safeCapture(
     "outbound_link_clicked",
     {
       url: sanitizeUrl(url),
