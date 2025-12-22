@@ -1,8 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,21 +12,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useTRPC } from "@/trpc/client";
+import { useTRPCMutation } from "@/hooks/use-trpc-mutation";
+import { trpc } from "@/trpc/client";
 
 export function ProfileDangerZone() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  const router = useRouter();
-  const trpc = useTRPC();
 
-  const resetProgressMutation = useMutation({
-    ...trpc.user.resetProgress.mutationOptions(),
+  const resetProgressMutation = useTRPCMutation(trpc.user.resetProgress, {
+    invalidateQueries: [
+      // Invalidate all user-related queries
+      trpc.userProgress.getCompletionPercentage.getQueryKey?.() || [],
+      trpc.userProgress.getXpAndRank.getQueryKey?.() || [],
+      trpc.userProgress.getStreak.getQueryKey?.() || [],
+    ],
     onSuccess: (data) => {
       toast.success("Progress reset successfully", {
         description: `Deleted ${data.deletedChallenges} challenges and ${data.deletedXp} XP`,
       });
       setResetDialogOpen(false);
-      router.refresh();
     },
     onError: (error) => {
       toast.error("Failed to reset progress", {

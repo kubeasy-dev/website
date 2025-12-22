@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import type { User } from "better-auth";
 import { eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateApiRequest } from "@/lib/api-auth";
@@ -320,6 +321,25 @@ export async function POST(request: Request) {
           created: created.length,
           updated: updated.length,
           deleted: deleted.length,
+        });
+
+        // 🔥 CRITICAL: Invalidate cache after synchronization
+        // Use revalidateTag with 'max' for stale-while-revalidate
+        revalidateTag("challenges", "max");
+        revalidateTag("themes", "max");
+
+        // Invalidate specific challenges that were modified or deleted
+        for (const slug of [...updated, ...deleted]) {
+          revalidateTag(`challenge-${slug}`, "max");
+        }
+
+        logger.info("Cache invalidated after sync", {
+          invalidatedTags: [
+            "challenges",
+            "themes",
+            ...updated.map((s) => `challenge-${s}`),
+            ...deleted.map((s) => `challenge-${s}`),
+          ],
         });
 
         return NextResponse.json({

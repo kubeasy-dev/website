@@ -1,32 +1,70 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { useTRPC } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 
 export function ProfileEmailPreferences() {
-  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const {
     data: categories = [],
-    refetch,
     isLoading,
   } = useQuery({
     ...trpc.emailPreference.listCategories.queryOptions(),
   });
 
-  const updateMutation = useMutation({
-    ...trpc.emailPreference.updateSubscription.mutationOptions(),
-    onSuccess: () => {
-      toast.success("Email preferences updated");
-      refetch();
+  const updateMutation = trpc.emailPreference.updateSubscription.useMutation({
+    // Optimistic update for instant UI feedback
+    onMutate: async (variables) => {
+      // Cancel outgoing queries
+      await queryClient.cancelQueries({
+        queryKey: getQueryKey(trpc.emailPreference.listCategories),
+      });
+
+      // Snapshot previous value
+      const previousCategories = queryClient.getQueryData(
+        getQueryKey(trpc.emailPreference.listCategories),
+      );
+
+      // Optimistically update UI
+      queryClient.setQueryData(
+        getQueryKey(trpc.emailPreference.listCategories),
+        (old: typeof categories) => {
+          if (!old) return old;
+          return old.map((cat) =>
+            cat.id === variables.categoryId
+              ? { ...cat, subscribed: variables.subscribed }
+              : cat,
+          );
+        },
+      );
+
+      return { previousCategories };
     },
-    onError: (error) => {
+    // Rollback on error
+    onError: (error, _variables, context) => {
+      if (context?.previousCategories) {
+        queryClient.setQueryData(
+          getQueryKey(trpc.emailPreference.listCategories),
+          context.previousCategories,
+        );
+      }
       toast.error("Failed to update preferences", {
         description: error.message,
       });
+    },
+    // Refetch on success to sync with server
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: getQueryKey(trpc.emailPreference.listCategories),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Email preferences updated");
     },
   });
 

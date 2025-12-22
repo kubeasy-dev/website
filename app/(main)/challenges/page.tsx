@@ -2,14 +2,12 @@ import { ArrowRight, Terminal, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesView } from "@/components/challenges-view";
 import { UserStats } from "@/components/user-stats";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getChallenges } from "@/server/db/queries";
-
-// ISR: Revalidate every hour for SEO while keeping content fresh
-export const revalidate = 3600;
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Kubernetes Challenges",
@@ -28,7 +26,11 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default async function ChallengesPage() {
-  // Access database directly for ISR (no headers/session needed)
+  "use cache";
+  cacheLife("public");
+  cacheTag("challenges-page");
+
+  // Access database directly with caching (no headers/session needed)
   const { count } = await getChallenges();
 
   return (

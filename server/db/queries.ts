@@ -1,18 +1,24 @@
 /**
- * Direct database queries for ISR pages
- * These queries don't require request context (headers, session)
- * and can be used in static/ISR page generation
+ * Direct database queries for static/cached pages
+ * These queries use Next.js 16 'use cache' directive with cache tags
+ * for granular cache invalidation
  */
 
 import { asc, desc, eq, sql } from "drizzle-orm";
+import { cacheLife, cacheTag } from "next/cache";
 import db from "@/server/db";
 import { challenge, challengeTheme } from "@/server/db/schema";
 
 /**
  * Get all challenges
  * Returns basic challenge info without user-specific data
+ * Cached with 'public' profile (1 hour revalidation)
  */
 export async function getChallenges() {
+  "use cache";
+  cacheLife("public");
+  cacheTag("challenges");
+
   const challenges = await db
     .select({
       id: challenge.id,
@@ -40,8 +46,13 @@ export async function getChallenges() {
 
 /**
  * Get a single challenge by slug
+ * Cached with 'public' profile and specific challenge tag
  */
 export async function getChallengeBySlug(slug: string) {
+  "use cache";
+  cacheLife("public");
+  cacheTag("challenges", `challenge-${slug}`);
+
   const [challengeItem] = await db
     .select({
       id: challenge.id,
@@ -68,8 +79,13 @@ export async function getChallengeBySlug(slug: string) {
 
 /**
  * Get all themes
+ * Cached with 'public' profile
  */
 export async function getThemes() {
+  "use cache";
+  cacheLife("public");
+  cacheTag("themes");
+
   const themes = await db
     .select()
     .from(challengeTheme)
@@ -80,8 +96,13 @@ export async function getThemes() {
 
 /**
  * Get a single theme by slug
+ * Cached with 'public' profile and specific theme tag
  */
 export async function getThemeBySlug(slug: string) {
+  "use cache";
+  cacheLife("public");
+  cacheTag("themes", `theme-${slug}`);
+
   const [theme] = await db
     .select()
     .from(challengeTheme)
@@ -94,8 +115,13 @@ export async function getThemeBySlug(slug: string) {
 /**
  * Get challenge count for a specific theme
  * Efficient count query without fetching all challenge data
+ * Cached with 'public' profile
  */
 export async function getChallengeCountByTheme(themeSlug: string) {
+  "use cache";
+  cacheLife("public");
+  cacheTag("challenges", `theme-${themeSlug}`);
+
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(challenge)
@@ -107,8 +133,13 @@ export async function getChallengeCountByTheme(themeSlug: string) {
 /**
  * Get starter-friendly challenges
  * Returns challenges marked as beginner-friendly, ordered by difficulty and creation date
+ * Cached with 'public' profile
  */
 export async function getStarterChallenges(limit = 5) {
+  "use cache";
+  cacheLife("public");
+  cacheTag("challenges", "starter-challenges");
+
   const challenges = await db
     .select({
       id: challenge.id,

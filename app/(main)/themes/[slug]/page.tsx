@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesGrid } from "@/components/challenges-grid";
 import { ThemeHero } from "@/components/theme-hero";
@@ -18,9 +19,6 @@ import {
   getThemeBySlug,
   getThemes,
 } from "@/server/db/queries";
-
-// ISR: Revalidate every hour for SEO
-export const revalidate = 3600;
 
 // Generate static params for all themes at build time
 export async function generateStaticParams() {
@@ -91,7 +89,11 @@ export default async function ThemePage({
 }) {
   const { slug } = await params;
 
-  // Verify theme exists (direct DB access for ISR)
+  "use cache";
+  cacheLife("public");
+  cacheTag("themes-page", `theme-${slug}`);
+
+  // Verify theme exists (direct DB access with caching)
   const theme = await getThemeBySlug(slug);
 
   if (!theme) {
