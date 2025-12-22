@@ -121,13 +121,12 @@ export function HowItWorksSection() {
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <button
-            type="button"
+          <div
             className="relative w-full text-left"
             onMouseEnter={() => setIsAutoPlaying(false)}
             onMouseLeave={() => setIsAutoPlaying(true)}
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-            aria-label="Interactive steps carousel - hover to pause, click to play/pause"
+            role="group"
+            aria-label="Interactive steps carousel"
           >
             <div className="relative bg-card neo-border neo-shadow p-8 md:p-12 rounded-2xl transition-all duration-500 min-h-[400px] flex flex-col justify-between">
               <div className="absolute -top-4 -left-4 w-16 h-16 bg-foreground text-background rounded-full flex items-center justify-center font-black text-2xl neo-border shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
@@ -210,7 +209,7 @@ export function HowItWorksSection() {
                 Auto-playing
               </div>
             )}
-          </button>
+          </div>
         </div>
 
         <div className="text-center mt-20">
