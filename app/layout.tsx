@@ -1,5 +1,4 @@
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { RealtimeProvider } from "@upstash/realtime/client";
 import { Analytics } from "@vercel/analytics/next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
@@ -15,6 +14,7 @@ import {
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = generateMetadata();
 
@@ -64,11 +64,9 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <TRPCReactProvider>
-          <RealtimeProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
-            {children}
-            <Toaster richColors position="bottom-right" />
-          </RealtimeProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+          <Providers>{children}</Providers>
+          <Toaster richColors position="bottom-right" />
         </TRPCReactProvider>
         <Analytics />
       </body>
