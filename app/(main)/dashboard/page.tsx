@@ -82,7 +82,32 @@ function DashboardChartError() {
   );
 }
 
-export default async function DashboardPage() {
+function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="mb-12">
+          <div className="h-16 w-64 bg-foreground/10 rounded animate-pulse mb-4"></div>
+          <div className="h-6 w-96 bg-foreground/10 rounded animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-secondary border-4 border-border neo-shadow p-6 h-32 animate-pulse"
+            ></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <DashboardChartSkeleton />
+          <DashboardRecentGainsSkeleton />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function DashboardContent() {
   const session = await requireAuth();
 
   // Prefetch data for client components (prefetch won't throw on auth errors)
@@ -178,5 +203,13 @@ export default async function DashboardPage() {
         </div>
       </div>
     </HydrateClient>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   );
 }

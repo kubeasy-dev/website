@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
 import type React from "react";
+import { Suspense } from "react";
 import {
   generateMetadata,
   generateOrganizationSchema,
@@ -14,6 +15,7 @@ import {
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = generateMetadata();
 
@@ -64,7 +66,9 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <TRPCReactProvider>
           <ReactQueryDevtools initialIsOpen={false} />
-          {children}
+          <Providers>
+            <Suspense fallback={null}>{children}</Suspense>
+          </Providers>
           <Toaster richColors position="bottom-right" />
         </TRPCReactProvider>
         <Analytics />

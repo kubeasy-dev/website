@@ -1,12 +1,14 @@
 import * as Sentry from "@sentry/nextjs";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import {
   trackChallengeCompletedServer,
   trackChallengeStartedServer,
   trackChallengeValidationFailedServer,
 } from "@/lib/analytics-server";
+import { realtime } from "@/lib/realtime";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import {
   challenge,
@@ -708,6 +710,16 @@ export const userProgressRouter = createTRPCRouter({
             objectives,
           });
 
+          // Publish validation events to Upstash Realtime for real-time updates
+          const channel = realtime.channel(`${userId}:${challengeSlug}`);
+          for (const result of results) {
+            await channel.emit("validation.update", {
+              objectiveKey: result.objectiveKey,
+              passed: result.passed,
+              timestamp: new Date(),
+            });
+          }
+
           // If validation failed, return with failed objectives info
           if (!validated) {
             const failedObjectives = objectives.filter((obj) => !obj.passed);
@@ -895,6 +907,14 @@ export const userProgressRouter = createTRPCRouter({
               xpGain.total,
               isFirstChallenge,
             );
+
+            // Invalidate caches after successful completion
+            revalidateTag(`user-${userId}-stats`, "max");
+            revalidateTag(`user-${userId}-progress`, "max");
+            revalidateTag(`user-${userId}-xp`, "max");
+            revalidateTag(`user-${userId}-streak`, "max");
+            revalidateTag(`challenge-${challengeSlug}`, "max");
+            revalidateTag("challenges", "max");
 
             return {
               success: true,
@@ -1124,4 +1144,7 @@ export const userProgressRouter = createTRPCRouter({
         timestamp: latestSubmission.timestamp,
       };
     }),
+
+  // Note: SSE real-time updates are now handled via /api/sse/validation route
+  // This uses Redis Pub/Sub instead of tRPC subscriptions for better serverless compatibility
 });

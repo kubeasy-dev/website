@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import { userProgress, userXp, userXpTransaction } from "@/server/db/schema";
@@ -31,6 +32,9 @@ export const userRouter = createTRPCRouter({
             name: fullName,
           })
           .where(eq(user.id, userId));
+
+        // Invalidate user-related caches
+        revalidateTag(`user-${userId}-profile`, "max");
 
         logger.info("User name updated", {
           userId,
@@ -99,6 +103,12 @@ export const userRouter = createTRPCRouter({
 
           // Delete user XP record
           await ctx.db.delete(userXp).where(eq(userXp.userId, userId));
+
+          // Invalidate all user-related caches
+          revalidateTag(`user-${userId}-stats`, "max");
+          revalidateTag(`user-${userId}-progress`, "max");
+          revalidateTag(`user-${userId}-xp`, "max");
+          revalidateTag(`user-${userId}-streak`, "max");
 
           logger.info("User progress reset", {
             userId,

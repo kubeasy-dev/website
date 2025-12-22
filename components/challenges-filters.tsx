@@ -29,7 +29,7 @@ export function ChallengesFilters({
   const [difficulty, setDifficulty] = useState<
     (ChallengeDifficulty | "all") | undefined
   >(undefined);
-  const [search, setSearch] = useState<string | undefined>(undefined);
+  const [search, setSearch] = useState<string>("");
 
   const trpc = useTRPC();
   const { data: themes } = useSuspenseQuery(trpc.theme.list.queryOptions());
@@ -40,13 +40,13 @@ export function ChallengesFilters({
       onFilterChange({
         theme: undefined,
         difficulty: difficulty === "all" ? undefined : difficulty,
-        search,
+        search: search === "" ? undefined : search,
       });
     } else {
       onFilterChange({
         theme: value,
         difficulty: difficulty === "all" ? undefined : difficulty,
-        search,
+        search: search === "" ? undefined : search,
       });
     }
   };
@@ -54,9 +54,17 @@ export function ChallengesFilters({
   const handleDifficultyChange = (value: ChallengeDifficulty | "all") => {
     setDifficulty(value);
     if (value === "all") {
-      onFilterChange({ theme, difficulty: undefined, search });
+      onFilterChange({
+        theme,
+        difficulty: undefined,
+        search: search === "" ? undefined : search,
+      });
     } else {
-      onFilterChange({ theme, difficulty: value, search });
+      onFilterChange({
+        theme,
+        difficulty: value,
+        search: search === "" ? undefined : search,
+      });
     }
   };
 
@@ -65,7 +73,7 @@ export function ChallengesFilters({
     onFilterChange({
       theme,
       difficulty: difficulty === "all" ? undefined : difficulty,
-      search: value,
+      search: value === "" ? undefined : value,
     });
   };
 

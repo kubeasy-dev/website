@@ -7,7 +7,28 @@ import { ProfileSettings } from "@/components/profile-settings";
 import { requireAuth } from "@/lib/require-auth";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
-export default async function ProfilePage() {
+function ProfileSkeleton() {
+  return (
+    <div className="min-h-screen bg-background py-8">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="mb-8">
+          <div className="h-16 w-64 bg-foreground/10 rounded animate-pulse mb-4"></div>
+          <div className="h-6 w-96 bg-foreground/10 rounded animate-pulse"></div>
+        </div>
+        <div className="grid gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-32 bg-secondary border-4 border-border neo-shadow animate-pulse"
+            ></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function ProfileContent() {
   const session = await requireAuth();
 
   // Prefetch data in parallel (prefetch won't throw on error, data will be hydrated to client)
@@ -55,5 +76,13 @@ export default async function ProfilePage() {
         </div>
       </div>
     </HydrateClient>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfileSkeleton />}>
+      <ProfileContent />
+    </Suspense>
   );
 }

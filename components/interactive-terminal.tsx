@@ -141,7 +141,7 @@ export function InteractiveTerminal() {
             terminal
           </span>
         </div>
-        <div className="space-y-2 font-bold min-h-[150px]">
+        <div className="space-y-2 font-bold min-h-[250px]">
           <div>
             <span className="text-primary">$</span>{" "}
             <span className="text-foreground">{displayedCommand}</span>

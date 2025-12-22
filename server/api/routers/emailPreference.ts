@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { env } from "@/env";
 import { updateContactSubscription } from "@/lib/resend";
@@ -192,6 +193,9 @@ export const emailPreferenceRouter = createTRPCRouter({
             previouslySubscribed: wasSubscribed,
           });
         }
+
+        // Invalidate email preferences cache
+        revalidateTag(`user-${ctx.user.id}-email-prefs`, "max");
 
         return { success: true };
       } catch (error) {

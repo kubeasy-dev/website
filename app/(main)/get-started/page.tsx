@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { GetStartedSteps } from "@/components/challenge-selector";
 import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
 import { requireAuth } from "@/lib/require-auth";
@@ -30,9 +31,6 @@ export const metadata: Metadata = generateSEOMetadata({
     "kubernetes setup",
   ],
 });
-
-// Dynamic page - requires authentication
-export const dynamic = "force-dynamic";
 
 const prerequisites = [
   {
@@ -74,7 +72,27 @@ const troubleshooting = [
   },
 ];
 
-export default async function GetStartedPage() {
+function GetStartedSkeleton() {
+  return (
+    <div className="container mx-auto px-4 max-w-4xl">
+      <div className="mb-12 space-y-6 text-center">
+        <div className="h-12 w-32 bg-foreground/10 rounded mx-auto animate-pulse"></div>
+        <div className="h-12 w-96 bg-foreground/10 rounded mx-auto animate-pulse"></div>
+        <div className="h-6 w-full max-w-2xl bg-foreground/10 rounded mx-auto animate-pulse"></div>
+      </div>
+      <div className="mb-12 space-y-4">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-20 bg-secondary border-4 border-border neo-shadow animate-pulse"
+          ></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function GetStartedContent() {
   await requireAuth();
   const starterChallenges = await getStarterChallenges(5);
 
@@ -219,5 +237,13 @@ export default async function GetStartedPage() {
         </section>
       </div>
     </HydrateClient>
+  );
+}
+
+export default function GetStartedPage() {
+  return (
+    <Suspense fallback={<GetStartedSkeleton />}>
+      <GetStartedContent />
+    </Suspense>
   );
 }

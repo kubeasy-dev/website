@@ -2,7 +2,6 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { Save, User } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,15 +18,14 @@ export function ProfileSettings({
   initialFirstName,
   initialLastName,
 }: ProfileSettingsProps) {
+  const trpc = useTRPC();
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
-  const router = useRouter();
-  const trpc = useTRPC();
 
   const updateNameMutation = useMutation({
     ...trpc.user.updateName.mutationOptions(),
     onSuccess: () => {
-      router.refresh();
+      toast.success("Profile updated successfully!");
     },
     onError: (error) => {
       toast.error("Failed to update profile", {

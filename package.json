@@ -41,6 +41,8 @@
     "@trpc/client": "11.8.0",
     "@trpc/server": "11.8.0",
     "@trpc/tanstack-react-query": "11.8.0",
+    "@upstash/realtime": "^1.0.0",
+    "@upstash/redis": "^1.35.8",
     "@vercel/analytics": "1.6.1",
     "autoprefixer": "10.4.23",
     "better-auth": "1.4.7",
@@ -103,6 +105,14 @@
     "overrides": {
       "@types/react": "19.2.7",
       "@types/react-dom": "19.2.3"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "@tailwindcss/oxide",
+      "core-js",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }
