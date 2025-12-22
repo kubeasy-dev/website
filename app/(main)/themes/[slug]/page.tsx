@@ -88,7 +88,7 @@ export default async function ThemePage({
   params: Promise<{ slug: string }>;
 }) {
   "use cache";
-  cacheLife("public");
+  cacheLife("hours");
 
   const { slug } = await params;
   cacheTag("themes-page", `theme-${slug}`);

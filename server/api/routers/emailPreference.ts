@@ -195,7 +195,7 @@ export const emailPreferenceRouter = createTRPCRouter({
         }
 
         // Invalidate email preferences cache
-        revalidateTag(`user-${ctx.user.id}-email-prefs`, "max");
+        revalidateTag(`user-${ctx.user.id}-email-prefs`);
 
         return { success: true };
       } catch (error) {

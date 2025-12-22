@@ -28,7 +28,7 @@ export const metadata: Metadata = generateSEOMetadata({
 export default async function ChallengesPage() {
   "use cache";
   cacheLife("public");
-  cacheTag("challenges-page");
+  cacheTag("challenges");
 
   // Access database directly with caching (no headers/session needed)
   const { count } = await getChallenges();

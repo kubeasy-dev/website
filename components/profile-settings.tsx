@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTRPCMutation } from "@/hooks/use-trpc-mutation";
-import { trpc } from "@/trpc/client";
+import { useTRPC } from "@/trpc/client";
 
 interface ProfileSettingsProps {
   initialFirstName: string;
@@ -18,6 +18,7 @@ export function ProfileSettings({
   initialFirstName,
   initialLastName,
 }: ProfileSettingsProps) {
+  const trpc = useTRPC();
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
 

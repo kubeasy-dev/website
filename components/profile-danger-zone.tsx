@@ -13,9 +13,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTRPCMutation } from "@/hooks/use-trpc-mutation";
-import { trpc } from "@/trpc/client";
+import { useTRPC } from "@/trpc/client";
 
 export function ProfileDangerZone() {
+  const trpc = useTRPC();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const resetProgressMutation = useTRPCMutation(trpc.user.resetProgress, {

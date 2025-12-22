@@ -34,7 +34,7 @@ export const userRouter = createTRPCRouter({
           .where(eq(user.id, userId));
 
         // Invalidate user-related caches
-        revalidateTag(`user-${userId}-profile`, "max");
+        revalidateTag(`user-${userId}-profile`);
 
         logger.info("User name updated", {
           userId,
@@ -105,10 +105,10 @@ export const userRouter = createTRPCRouter({
           await ctx.db.delete(userXp).where(eq(userXp.userId, userId));
 
           // Invalidate all user-related caches
-          revalidateTag(`user-${userId}-stats`, "max");
-          revalidateTag(`user-${userId}-progress`, "max");
-          revalidateTag(`user-${userId}-xp`, "max");
-          revalidateTag(`user-${userId}-streak`, "max");
+          revalidateTag(`user-${userId}-stats`);
+          revalidateTag(`user-${userId}-progress`);
+          revalidateTag(`user-${userId}-xp`);
+          revalidateTag(`user-${userId}-streak`);
 
           logger.info("User progress reset", {
             userId,

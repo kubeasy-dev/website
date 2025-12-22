@@ -324,13 +324,12 @@ export async function POST(request: Request) {
         });
 
         // 🔥 CRITICAL: Invalidate cache after synchronization
-        // Use revalidateTag with 'max' for stale-while-revalidate
-        revalidateTag("challenges", "max");
-        revalidateTag("themes", "max");
+        revalidateTag("challenges");
+        revalidateTag("themes");
 
         // Invalidate specific challenges that were modified or deleted
         for (const slug of [...updated, ...deleted]) {
-          revalidateTag(`challenge-${slug}`, "max");
+          revalidateTag(`challenge-${slug}`);
         }
 
         logger.info("Cache invalidated after sync", {

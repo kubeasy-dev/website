@@ -4,9 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { trpc } from "@/trpc/client";
+import { useTRPC } from "@/trpc/client";
 
 export function ProfileEmailPreferences() {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const {

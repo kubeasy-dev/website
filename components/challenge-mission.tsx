@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { trpc } from "@/trpc/client";
+import { useTRPC } from "@/trpc/client";
 import type { Objective, ObjectiveCategory } from "@/types/cli-api";
 import { SubmissionItem } from "./challenge-status/submission-item";
 
@@ -62,6 +62,7 @@ interface DisplayObjective {
 }
 
 export function ChallengeMission({ slug }: ChallengeMissionProps) {
+  const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [showHistory, setShowHistory] = useState(false);
 
