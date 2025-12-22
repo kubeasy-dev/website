@@ -8,7 +8,7 @@ export function CTASection() {
   return (
     <section className="py-20 px-4">
       <div className="container mx-auto max-w-4xl">
-        <div className="relative overflow-hidden rounded-2xl bg-primary p-12 text-center neo-border-thick neo-shadow-xl">
+        <div className="relative overflow-hidden rounded-xl bg-primary p-12 text-center neo-border-thick neo-shadow-xl">
           <div className="relative space-y-6">
             <h2 className="text-4xl md:text-5xl font-black text-balance text-white">
               Ready to master Kubernetes?

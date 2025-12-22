@@ -29,7 +29,7 @@ export function OpenSourceSection() {
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {/* GitHub Repository Card */}
           <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
-            <div className="w-16 h-16 bg-black rounded-2xl border-4 border-black flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-black rounded-xl border-4 border-black flex items-center justify-center mb-6">
               <Github className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-2xl font-black mb-3">Free Forever</h3>
@@ -44,7 +44,7 @@ export function OpenSourceSection() {
 
           {/* Community Contributions Card */}
           <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
-            <div className="w-16 h-16 bg-secondary rounded-2xl border-4 border-black flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-secondary rounded-xl border-4 border-black flex items-center justify-center mb-6">
               <Users className="w-8 h-8 text-black" />
             </div>
             <h3 className="text-2xl font-black mb-3">Community Driven</h3>
@@ -59,7 +59,7 @@ export function OpenSourceSection() {
 
           {/* Fork & Customize Card */}
           <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
-            <div className="w-16 h-16 bg-accent rounded-2xl border-4 border-black flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-accent rounded-xl border-4 border-black flex items-center justify-center mb-6">
               <GitFork className="w-8 h-8 text-black" />
             </div>
             <h3 className="text-2xl font-black mb-3">Fork & Customize</h3>
