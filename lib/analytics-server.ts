@@ -8,12 +8,56 @@
 import { PostHog } from "posthog-node";
 
 // Initialize PostHog client for server-side tracking
-const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY ?? "";
-const posthogClient = new PostHog(posthogKey, {
-  host: "https://eu.posthog.com",
-  flushAt: 1, // Send events immediately (useful for CLI interactions)
-  flushInterval: 0, // Disable automatic flushing
-});
+const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+const isDevelopment = process.env.NODE_ENV === "development";
+
+// Only initialize PostHog if credentials are available
+let posthogClient: PostHog | null = null;
+
+if (posthogKey && posthogHost) {
+  try {
+    posthogClient = new PostHog(posthogKey, {
+      host: posthogHost,
+      flushAt: 1, // Send events immediately (useful for CLI interactions)
+      flushInterval: 0, // Disable automatic flushing
+      // Disable in development
+      disabled: isDevelopment,
+    });
+
+    if (isDevelopment) {
+      console.info("[PostHog Server] Disabled in development mode");
+    }
+  } catch (error) {
+    console.error("[PostHog Server] Failed to initialize:", error);
+  }
+} else if (isDevelopment) {
+  console.info(
+    "[PostHog Server] Not initialized: Missing environment variables",
+  );
+}
+
+/**
+ * Safe wrapper for PostHog server-side operations
+ */
+async function safePostHogOperation<T>(
+  operation: string,
+  fn: () => Promise<T>,
+): Promise<void> {
+  if (!posthogClient) {
+    if (isDevelopment) {
+      console.debug(`[PostHog Server] ${operation} - Not initialized`);
+    }
+    return;
+  }
+
+  try {
+    await fn();
+  } catch (error) {
+    // Log but don't throw - analytics failures shouldn't break the application
+    console.error(`[PostHog Server] ${operation} failed:`, error);
+  }
+}
 
 /**
  * Track user signup event (server-side)
@@ -26,15 +70,17 @@ export async function trackUserSignupServer(
   provider: "github" | "google" | "microsoft",
   email?: string,
 ) {
-  posthogClient.capture({
-    distinctId: userId,
-    event: "user_signup",
-    properties: {
-      provider,
-      ...(email && { email }),
-    },
+  await safePostHogOperation("trackUserSignupServer", async () => {
+    posthogClient?.capture({
+      distinctId: userId,
+      event: "user_signup",
+      properties: {
+        provider,
+        ...(email && { email }),
+      },
+    });
+    await posthogClient?.flush();
   });
-  await posthogClient.flush();
 }
 
 /**
@@ -42,14 +88,16 @@ export async function trackUserSignupServer(
  * @param userId - The user ID who created the token
  */
 export async function trackApiTokenCreatedServer(userId: string) {
-  posthogClient.capture({
-    distinctId: userId,
-    event: "api_token_created",
-    properties: {
-      source: "server",
-    },
+  await safePostHogOperation("trackApiTokenCreatedServer", async () => {
+    posthogClient?.capture({
+      distinctId: userId,
+      event: "api_token_created",
+      properties: {
+        source: "server",
+      },
+    });
+    await posthogClient?.flush();
   });
-  await posthogClient.flush();
 }
 
 /**
@@ -65,17 +113,19 @@ export async function trackChallengeStartedServer(
   challengeSlug: string,
   challengeTitle: string,
 ) {
-  posthogClient.capture({
-    distinctId: userId,
-    event: "challenge_started",
-    properties: {
-      challengeId,
-      challengeSlug,
-      challengeTitle,
-      source: "cli",
-    },
+  await safePostHogOperation("trackChallengeStartedServer", async () => {
+    posthogClient?.capture({
+      distinctId: userId,
+      event: "challenge_started",
+      properties: {
+        challengeId,
+        challengeSlug,
+        challengeTitle,
+        source: "cli",
+      },
+    });
+    await posthogClient?.flush();
   });
-  await posthogClient.flush();
 }
 
 /**
@@ -95,19 +145,21 @@ export async function trackChallengeCompletedServer(
   xpAwarded: number,
   isFirstChallenge: boolean,
 ) {
-  posthogClient.capture({
-    distinctId: userId,
-    event: "challenge_completed",
-    properties: {
-      challengeId,
-      challengeSlug,
-      difficulty,
-      xpAwarded,
-      isFirstChallenge,
-      source: "cli",
-    },
+  await safePostHogOperation("trackChallengeCompletedServer", async () => {
+    posthogClient?.capture({
+      distinctId: userId,
+      event: "challenge_completed",
+      properties: {
+        challengeId,
+        challengeSlug,
+        difficulty,
+        xpAwarded,
+        isFirstChallenge,
+        source: "cli",
+      },
+    });
+    await posthogClient?.flush();
   });
-  await posthogClient.flush();
 }
 
 /**
@@ -123,11 +175,13 @@ export async function identifyUserServer(
     provider?: string;
   },
 ) {
-  posthogClient.identify({
-    distinctId: userId,
-    properties,
+  await safePostHogOperation("identifyUserServer", async () => {
+    posthogClient?.identify({
+      distinctId: userId,
+      properties,
+    });
+    await posthogClient?.flush();
   });
-  await posthogClient.flush();
 }
 
 /**
@@ -145,23 +199,36 @@ export async function trackChallengeValidationFailedServer(
   failedObjectiveCount: number,
   failedObjectiveIds: string[],
 ) {
-  posthogClient.capture({
-    distinctId: userId,
-    event: "challenge_validation_failed",
-    properties: {
-      challengeId,
-      challengeSlug,
-      failedObjectiveCount,
-      failedObjectiveIds,
-      source: "cli",
+  await safePostHogOperation(
+    "trackChallengeValidationFailedServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "challenge_validation_failed",
+        properties: {
+          challengeId,
+          challengeSlug,
+          failedObjectiveCount,
+          failedObjectiveIds,
+          source: "cli",
+        },
+      });
+      await posthogClient?.flush();
     },
-  });
-  await posthogClient.flush();
+  );
 }
 
 /**
  * Shutdown PostHog client (call on server shutdown)
  */
 export async function shutdownPostHog() {
-  await posthogClient.shutdown();
+  if (!posthogClient) {
+    return;
+  }
+
+  try {
+    await posthogClient.shutdown();
+  } catch (error) {
+    console.error("[PostHog Server] Failed to shutdown:", error);
+  }
 }
