@@ -9,7 +9,7 @@ import {
   Target,
   XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
+import { useRealtime } from "@/lib/realtime-client";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 import type { Objective, ObjectiveCategory } from "@/types/cli-api";
@@ -82,49 +83,27 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
     enabled: isAuthenticated,
   });
 
-  // ✅ Real-time updates via Server-Sent Events (SSE) with Redis Pub/Sub
+  // ✅ Real-time updates via Upstash Realtime
   // Automatically invalidates queries when validation events are received
-  useEffect(() => {
-    if (!isAuthenticated || !session?.user?.id) return;
-
-    const userId = session.user.id;
-    const eventSource = new EventSource(
-      `/api/sse/validation/${userId}/${slug}`,
-    );
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
-        // Skip connection message
-        if (data.type === "connected") return;
-
-        // Validation event received - invalidate queries to refetch
-        queryClient.invalidateQueries({
-          queryKey: trpc.userProgress.getLatestValidationStatus.queryKey({
-            slug,
-          }),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.userProgress.getSubmissions.queryKey({ slug }),
-        });
-        queryClient.invalidateQueries({
-          queryKey: trpc.userProgress.getStatus.queryKey({ slug }),
-        });
-      } catch (error) {
-        console.error("Error parsing SSE event:", error);
-      }
-    };
-
-    eventSource.onerror = () => {
-      eventSource.close();
-    };
-
-    // Cleanup on unmount
-    return () => {
-      eventSource.close();
-    };
-  }, [isAuthenticated, session?.user?.id, slug, queryClient, trpc]);
+  useRealtime({
+    enabled: isAuthenticated && !!session?.user?.id,
+    channels: session?.user?.id ? [`${session.user.id}:${slug}`] : [],
+    events: ["validation.update"],
+    onData() {
+      // Validation event received - invalidate queries to refetch
+      queryClient.invalidateQueries({
+        queryKey: trpc.userProgress.getLatestValidationStatus.queryKey({
+          slug,
+        }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: trpc.userProgress.getSubmissions.queryKey({ slug }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: trpc.userProgress.getStatus.queryKey({ slug }),
+      });
+    },
+  });
 
   // Fetch submissions for history modal (only when authenticated)
   // No polling - updates via subscription invalidation

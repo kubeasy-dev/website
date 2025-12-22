@@ -1,4 +1,5 @@
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { RealtimeProvider } from "@upstash/realtime/client";
 import { Analytics } from "@vercel/analytics/next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
@@ -63,9 +64,11 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <TRPCReactProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-          {children}
-          <Toaster richColors position="bottom-right" />
+          <RealtimeProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+            {children}
+            <Toaster richColors position="bottom-right" />
+          </RealtimeProvider>
         </TRPCReactProvider>
         <Analytics />
       </body>

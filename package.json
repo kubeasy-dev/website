@@ -41,6 +41,7 @@
     "@trpc/client": "11.8.0",
     "@trpc/server": "11.8.0",
     "@trpc/tanstack-react-query": "11.8.0",
+    "@upstash/realtime": "^1.0.0",
     "@upstash/redis": "^1.35.8",
     "@vercel/analytics": "1.6.1",
     "autoprefixer": "10.4.23",

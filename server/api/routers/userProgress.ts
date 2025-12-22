@@ -8,7 +8,7 @@ import {
   trackChallengeStartedServer,
   trackChallengeValidationFailedServer,
 } from "@/lib/analytics-server";
-import { publishValidationEvent } from "@/lib/redis";
+import { realtime } from "@/lib/realtime";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import {
   challenge,
@@ -710,9 +710,10 @@ export const userProgressRouter = createTRPCRouter({
             objectives,
           });
 
-          // Publish validation events to Redis for SSE real-time updates
+          // Publish validation events to Upstash Realtime for real-time updates
+          const channel = realtime.channel(`${userId}:${challengeSlug}`);
           for (const result of results) {
-            await publishValidationEvent(userId, challengeSlug, {
+            await channel.emit("validation.update", {
               objectiveKey: result.objectiveKey,
               passed: result.passed,
               timestamp: new Date(),
