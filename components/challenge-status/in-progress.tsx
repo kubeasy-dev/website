@@ -8,10 +8,9 @@ import { SubmissionItem } from "./submission-item";
 
 interface InProgressProps {
   slug: string;
-  objective: string;
 }
 
-export function InProgress({ slug, objective }: InProgressProps) {
+export function InProgress({ slug }: InProgressProps) {
   const trpc = useTRPC();
 
   // Fetch submissions
