@@ -1,17 +1,10 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, Play, Terminal, Wrench } from "lucide-react";
+import { ArrowRight, Terminal } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { trackCtaClicked } from "@/lib/analytics";
 import { InteractiveTerminal } from "./interactive-terminal";
-
-const microSteps = [
-  { icon: Terminal, label: "Install CLI" },
-  { icon: Play, label: "Start Challenge" },
-  { icon: Wrench, label: "Fix Issue" },
-  { icon: CheckCircle2, label: "Auto-Validate" },
-];
 
 export function HeroSection() {
   const handleCtaClick = (ctaText: string, targetUrl: string) => {
@@ -39,34 +32,35 @@ export function HeroSection() {
               instant validation when you fix them.
             </p>
 
-            {/* Micro How It Works */}
-            <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
-              {microSteps.map((step, index) => (
-                <div key={step.label} className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white neo-border rounded-lg">
-                    <step.icon className="h-4 w-4 text-primary" />
-                    <span>{step.label}</span>
-                  </div>
-                  {index < microSteps.length - 1 && (
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <Button
-              size="lg"
-              className="text-base font-bold neo-border-thick neo-shadow-lg"
-              asChild
-            >
-              <Link
-                href="/get-started"
-                onClick={() => handleCtaClick("Get Started", "/get-started")}
+            <div className="space-x-4">
+              <Button
+                size="lg"
+                className="text-base font-bold neo-border-thick neo-shadow-lg"
+                asChild
               >
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+                <Link
+                  href="/get-started"
+                  onClick={() => handleCtaClick("Get Started", "/get-started")}
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                className="text-base font-bold bg-secondary text-foreground hover:bg-secondary/90 neo-border-thick neo-shadow-lg border-foreground"
+                asChild
+              >
+                <Link
+                  href="/challenges"
+                  onClick={() =>
+                    handleCtaClick("Browse Challenges", "/challenges")
+                  }
+                >
+                  Browse Challenges
+                </Link>
+              </Button>
+            </div>
           </div>
 
           <div className="flex-1 w-full">
