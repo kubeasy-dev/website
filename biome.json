@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!**/*.css"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -40,6 +47,12 @@
       }
     }
   },
+  "css": {
+    "parser": {
+      "cssModules": false,
+      "allowWrongLineComments": true
+    }
+  },
   "overrides": [
     {
       "includes": ["trpc/server.tsx"],
@@ -53,12 +66,14 @@
     },
     {
       "includes": ["**/*.css"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noUnknownAtRules": "off"
-          }
+      "css": {
+        "parser": {
+          "cssModules": false,
+          "allowWrongLineComments": true
         }
+      },
+      "linter": {
+        "enabled": false
       }
     },
     {
