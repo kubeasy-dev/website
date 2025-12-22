@@ -324,12 +324,12 @@ export async function POST(request: Request) {
         });
 
         // 🔥 CRITICAL: Invalidate cache after synchronization
-        revalidateTag("challenges");
-        revalidateTag("themes");
+        revalidateTag("challenges", "max");
+        revalidateTag("themes", "max");
 
         // Invalidate specific challenges that were modified or deleted
         for (const slug of [...updated, ...deleted]) {
-          revalidateTag(`challenge-${slug}`);
+          revalidateTag(`challenge-${slug}`, "max");
         }
 
         logger.info("Cache invalidated after sync", {

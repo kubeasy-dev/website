@@ -911,12 +911,12 @@ export const userProgressRouter = createTRPCRouter({
             );
 
             // Invalidate caches after successful completion
-            revalidateTag(`user-${userId}-stats`);
-            revalidateTag(`user-${userId}-progress`);
-            revalidateTag(`user-${userId}-xp`);
-            revalidateTag(`user-${userId}-streak`);
-            revalidateTag(`challenge-${challengeSlug}`);
-            revalidateTag("challenges");
+            revalidateTag(`user-${userId}-stats`, "max");
+            revalidateTag(`user-${userId}-progress`, "max");
+            revalidateTag(`user-${userId}-xp`, "max");
+            revalidateTag(`user-${userId}-streak`, "max");
+            revalidateTag(`challenge-${challengeSlug}`, "max");
+            revalidateTag("challenges", "max");
 
             return {
               success: true,

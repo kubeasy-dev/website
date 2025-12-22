@@ -76,13 +76,14 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
     ...trpc.challenge.getObjectives.queryOptions({ slug }),
   });
 
-  // ✅ Real-time subscription via SSE (no more polling!)
+  // Load initial validation status (real-time updates via SSE subscription below)
   const { data: validationStatus, isLoading: isLoadingValidation } = useQuery({
     ...trpc.userProgress.getLatestValidationStatus.queryOptions({ slug }),
     enabled: isAuthenticated,
   });
 
-  // Subscribe to real-time validation updates via SSE
+  // ✅ Real-time subscription via SSE (no more polling!)
+  // Automatically invalidates queries when validation events are received
   trpc.userProgress.onValidationUpdate.useSubscription(
     { challengeSlug: slug },
     {
@@ -90,17 +91,15 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
       onData: () => {
         // When validation event received, invalidate queries to refetch latest status
         queryClient.invalidateQueries({
-          queryKey:
-            trpc.userProgress.getLatestValidationStatus.getQueryKey?.({
-              slug,
-            }) || [],
+          queryKey: trpc.userProgress.getLatestValidationStatus.getQueryKey({
+            slug,
+          }),
         });
         queryClient.invalidateQueries({
-          queryKey:
-            trpc.userProgress.getSubmissions.getQueryKey?.({ slug }) || [],
+          queryKey: trpc.userProgress.getSubmissions.getQueryKey({ slug }),
         });
         queryClient.invalidateQueries({
-          queryKey: trpc.userProgress.getStatus.getQueryKey?.({ slug }) || [],
+          queryKey: trpc.userProgress.getStatus.getQueryKey({ slug }),
         });
       },
     },
