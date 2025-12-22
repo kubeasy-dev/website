@@ -1,12 +1,12 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { Save, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTRPCMutation } from "@/hooks/use-trpc-mutation";
 import { useTRPC } from "@/trpc/client";
 
 interface ProfileSettingsProps {
@@ -22,11 +22,8 @@ export function ProfileSettings({
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
 
-  const updateNameMutation = useTRPCMutation(trpc.user.updateName, {
-    invalidateQueries: [
-      // Invalidate queries to refresh UI automatically
-      trpc.user.getCurrent.getQueryKey?.() || [],
-    ],
+  const updateNameMutation = useMutation({
+    ...trpc.user.updateName.mutationOptions(),
     onSuccess: () => {
       toast.success("Profile updated successfully!");
     },

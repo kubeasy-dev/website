@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 /**
  * Server-Sent Events (SSE) endpoint for real-time validation updates
@@ -36,18 +36,17 @@ export async function GET(
       );
 
       // Subscribe to Redis channel
-      // Note: Upstash Redis HTTP API doesn't support long-polling subscribe
-      // We use a polling approach with BLPOP on a list instead
+      // Note: Upstash Redis HTTP API doesn't support BLPOP (blocking operations)
+      // We use a polling approach with LPOP on a list instead
       const listKey = `events:${channel}`;
 
-      // Poll for events (Upstash limitation: no native SUBSCRIBE over HTTP)
+      // Poll for events (Upstash limitation: no native SUBSCRIBE or BLPOP over HTTP)
       const pollInterval = setInterval(async () => {
         try {
-          // BLPOP with 5 second timeout
-          const result = await redis.blpop<string>(listKey, 5);
+          // LPOP to get and remove the oldest event from the list
+          const payload = await redis.lpop<string>(listKey);
 
-          if (result && result[1]) {
-            const payload = result[1];
+          if (payload) {
             controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
           }
         } catch (error) {

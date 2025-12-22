@@ -101,15 +101,15 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
 
         // Validation event received - invalidate queries to refetch
         queryClient.invalidateQueries({
-          queryKey: trpc.userProgress.getLatestValidationStatus.getQueryKey({
+          queryKey: trpc.userProgress.getLatestValidationStatus.queryKey({
             slug,
           }),
         });
         queryClient.invalidateQueries({
-          queryKey: trpc.userProgress.getSubmissions.getQueryKey({ slug }),
+          queryKey: trpc.userProgress.getSubmissions.queryKey({ slug }),
         });
         queryClient.invalidateQueries({
-          queryKey: trpc.userProgress.getStatus.getQueryKey({ slug }),
+          queryKey: trpc.userProgress.getStatus.queryKey({ slug }),
         });
       } catch (error) {
         console.error("Error parsing SSE event:", error);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,21 +13,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useTRPCMutation } from "@/hooks/use-trpc-mutation";
 import { useTRPC } from "@/trpc/client";
 
 export function ProfileDangerZone() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
-  const resetProgressMutation = useTRPCMutation(trpc.user.resetProgress, {
-    invalidateQueries: [
+  const resetProgressMutation = useMutation({
+    ...trpc.user.resetProgress.mutationOptions(),
+    onSuccess: async (data) => {
       // Invalidate all user-related queries
-      trpc.userProgress.getCompletionPercentage.getQueryKey?.() || [],
-      trpc.userProgress.getXpAndRank.getQueryKey?.() || [],
-      trpc.userProgress.getStreak.getQueryKey?.() || [],
-    ],
-    onSuccess: (data) => {
+      await queryClient.invalidateQueries({
+        queryKey: trpc.userProgress.getCompletionPercentage.queryKey(),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: trpc.userProgress.getXpAndRank.queryKey(),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: trpc.userProgress.getStreak.queryKey(),
+      });
+
       toast.success("Progress reset successfully", {
         description: `Deleted ${data.deletedChallenges} challenges and ${data.deletedXp} XP`,
       });
