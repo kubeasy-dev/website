@@ -46,7 +46,7 @@ export default function AboutPage() {
     <div className="container mx-auto px-4 max-w-7xl">
       {/* Hero Section */}
       <div className="mb-16 space-y-6 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-foreground border-4 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-foreground neo-border-thick font-bold neo-shadow">
           <BookOpen className="w-5 h-5" />
           <span>About Kubeasy</span>
         </div>
@@ -72,7 +72,7 @@ export default function AboutPage() {
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="block text-sm py-2 px-3 rounded hover:bg-secondary transition-colors font-medium text-foreground/70 hover:text-foreground border-l-2 border-transparent hover:border-primary"
+                className="block text-sm py-2 px-3 rounded hover:bg-secondary transition-colors font-medium text-foreground/70 hover:text-foreground neo-border border-t-0 border-r-0 border-b-0 border-transparent hover:border-primary"
               >
                 {section.label}
               </a>
@@ -83,7 +83,7 @@ export default function AboutPage() {
         {/* Main Content */}
         <article className="lg:order-1 max-w-4xl">
           {/* TL;DR Section */}
-          <div className="bg-primary/10 border-4 border-primary neo-shadow p-8 mb-16">
+          <div className="bg-primary/10 neo-border-thick neo-border-primary neo-shadow p-8 mb-16">
             <h2 className="text-2xl font-black mb-4 flex items-center gap-2">
               <Target className="w-6 h-6" />
               TL;DR
@@ -141,7 +141,7 @@ export default function AboutPage() {
           {/* Section: Kubernetes is meant for more than Ops */}
           <section id="devs-ops" className="mb-16 scroll-mt-24">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary border-4 border-border neo-shadow p-3">
+              <div className="bg-primary neo-border-thick neo-shadow p-3">
                 <Users className="w-6 h-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl md:text-3xl font-black">
@@ -176,7 +176,7 @@ export default function AboutPage() {
                 complexity of the underlying network or storage layer.
               </p>
 
-              <div className="bg-primary/10 border-l-4 border-primary p-6 my-6">
+              <div className="bg-primary/10 neo-border-thick border-t-0 border-r-0 border-b-0 neo-border-primary p-6 my-6">
                 <p className="text-xl font-black italic">
                   But in practice, we've often gone the opposite way.
                 </p>
@@ -198,11 +198,11 @@ export default function AboutPage() {
           </section>
 
           {/* CTA 1 */}
-          <div className="bg-secondary border-4 border-border neo-shadow p-8 text-center my-16">
+          <div className="bg-secondary neo-border-thick neo-shadow p-8 text-center my-16">
             <p className="text-lg font-bold mb-4">Sound familiar?</p>
             <Link
               href="/challenges"
-              className="inline-flex items-center gap-2 bg-primary border-4 border-border text-primary-foreground neo-shadow px-6 py-3 font-black hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              className="inline-flex items-center gap-2 bg-primary neo-border-thick text-primary-foreground neo-shadow px-6 py-3 font-black hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
             >
               Start Learning Now
               <ArrowRight className="w-5 h-5" />
@@ -212,7 +212,7 @@ export default function AboutPage() {
           {/* Section: Documentation is not enough */}
           <section id="docs" className="mb-16 scroll-mt-24">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary border-4 border-border neo-shadow p-3">
+              <div className="bg-primary neo-border-thick neo-shadow p-3">
                 <Code2 className="w-6 h-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl md:text-3xl font-black">
@@ -232,7 +232,7 @@ export default function AboutPage() {
                 fail, and learn from it.
               </p>
 
-              <div className="bg-secondary border-4 border-border neo-shadow p-6 my-6">
+              <div className="bg-secondary neo-border-thick neo-shadow p-6 my-6">
                 <p className="text-lg font-black mb-3">
                   Most tutorials work perfectly... if you follow the steps.
                 </p>
@@ -255,7 +255,7 @@ export default function AboutPage() {
           {/* Section: What is Kubeasy */}
           <section id="solution" className="mb-16 scroll-mt-24">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary border-4 border-border neo-shadow p-3">
+              <div className="bg-primary neo-border-thick neo-shadow p-3">
                 <Zap className="w-6 h-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl md:text-3xl font-black">
@@ -279,7 +279,7 @@ export default function AboutPage() {
                 solve it.
               </p>
 
-              <div className="bg-primary text-primary-foreground border-4 border-border neo-shadow p-8 my-6">
+              <div className="bg-primary text-primary-foreground neo-border-thick neo-shadow p-8 my-6">
                 <p className="text-xl md:text-2xl font-black mb-3">
                   There's no guided path. No script to follow.
                 </p>
@@ -304,7 +304,7 @@ export default function AboutPage() {
             </div>
 
             {/* Code example */}
-            <div className="bg-background border-4 border-border neo-shadow p-6 my-6 font-mono text-sm">
+            <div className="bg-background neo-border-thick neo-shadow p-6 my-6 font-mono text-sm">
               <div className="flex items-center gap-2 mb-4 font-sans">
                 <Terminal className="w-4 h-4" />
                 <span className="font-black text-xs uppercase">
@@ -347,7 +347,7 @@ export default function AboutPage() {
           {/* Section: Everything runs locally */}
           <section id="local" className="mb-16 scroll-mt-24">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary border-4 border-border neo-shadow p-3">
+              <div className="bg-primary neo-border-thick neo-shadow p-3">
                 <Shield className="w-6 h-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl md:text-3xl font-black">
@@ -372,7 +372,7 @@ export default function AboutPage() {
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
-                <div className="bg-secondary border-4 border-border neo-shadow p-4">
+                <div className="bg-secondary neo-border-thick neo-shadow p-4">
                   <div className="text-3xl mb-2" suppressHydrationWarning>
                     💸
                   </div>
@@ -381,7 +381,7 @@ export default function AboutPage() {
                     Everything runs on your machine
                   </div>
                 </div>
-                <div className="bg-secondary border-4 border-border neo-shadow p-4">
+                <div className="bg-secondary neo-border-thick neo-shadow p-4">
                   <div className="text-3xl mb-2" suppressHydrationWarning>
                     ⚡
                   </div>
@@ -390,7 +390,7 @@ export default function AboutPage() {
                     No waiting for cloud clusters
                   </div>
                 </div>
-                <div className="bg-secondary border-4 border-border neo-shadow p-4">
+                <div className="bg-secondary neo-border-thick neo-shadow p-4">
                   <div className="text-3xl mb-2" suppressHydrationWarning>
                     🔒
                   </div>
@@ -399,7 +399,7 @@ export default function AboutPage() {
                     No data leaves your computer
                   </div>
                 </div>
-                <div className="bg-secondary border-4 border-border neo-shadow p-4">
+                <div className="bg-secondary neo-border-thick neo-shadow p-4">
                   <div className="text-3xl mb-2" suppressHydrationWarning>
                     🎯
                   </div>
@@ -421,14 +421,14 @@ export default function AboutPage() {
           </section>
 
           {/* CTA 2 */}
-          <div className="bg-primary border-4 border-border neo-shadow p-8 text-center my-16">
+          <div className="bg-primary neo-border-thick neo-shadow p-8 text-center my-16">
             <p className="text-xl font-black text-primary-foreground mb-2">
               Ready to get hands-on?
             </p>
             <p className="text-primary-foreground/90 mb-6">
               Install the CLI and start your first challenge
             </p>
-            <div className="bg-background border-4 border-border neo-shadow p-4 font-mono text-sm inline-block">
+            <div className="bg-background neo-border-thick neo-shadow p-4 font-mono text-sm inline-block">
               <span className="text-foreground/60">$</span> npm install -g
               @kubeasy-dev/kubeasy-cli
             </div>
@@ -445,25 +445,25 @@ export default function AboutPage() {
                 make sure developers feel confident enough to:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
-                <div className="flex items-start gap-3 bg-secondary/50 border-2 border-border p-4">
+                <div className="flex items-start gap-3 bg-secondary/50 neo-border p-4">
                   <ArrowRight className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <span className="font-medium">
                     Understand what's happening inside the cluster
                   </span>
                 </div>
-                <div className="flex items-start gap-3 bg-secondary/50 border-2 border-border p-4">
+                <div className="flex items-start gap-3 bg-secondary/50 neo-border p-4">
                   <ArrowRight className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <span className="font-medium">
                     Debug their own applications
                   </span>
                 </div>
-                <div className="flex items-start gap-3 bg-secondary/50 border-2 border-border p-4">
+                <div className="flex items-start gap-3 bg-secondary/50 neo-border p-4">
                   <ArrowRight className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <span className="font-medium">
                     Fix common misconfigurations
                   </span>
                 </div>
-                <div className="flex items-start gap-3 bg-secondary/50 border-2 border-border p-4">
+                <div className="flex items-start gap-3 bg-secondary/50 neo-border p-4">
                   <ArrowRight className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <span className="font-medium">
                     Handle basic runtime issues
@@ -498,7 +498,7 @@ export default function AboutPage() {
                 and building internal tools to simplify life for both devs and
                 ops.
               </p>
-              <div className="bg-secondary/50 border-l-4 border-primary p-6 my-6">
+              <div className="bg-secondary/50 neo-border-thick border-t-0 border-r-0 border-b-0 neo-border-primary p-6 my-6">
                 <p className="text-lg font-medium italic">
                   "What people needed wasn't more tooling. It was better
                   understanding. And that only comes with exposure and
@@ -515,7 +515,7 @@ export default function AboutPage() {
           {/* Section: Open source */}
           <section id="open-source" className="mb-16 scroll-mt-24">
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-primary border-4 border-border neo-shadow p-3">
+              <div className="bg-primary neo-border-thick neo-shadow p-3">
                 <Heart className="w-6 h-6 text-primary-foreground" />
               </div>
               <h2 className="text-2xl md:text-3xl font-black">
@@ -534,7 +534,7 @@ export default function AboutPage() {
                 or adapt existing ones to match your stack.
               </p>
 
-              <div className="bg-background border-4 border-border neo-shadow p-6 my-6">
+              <div className="bg-background neo-border-thick neo-shadow p-6 my-6">
                 <h3 className="font-black mb-4 flex items-center gap-2">
                   <Github className="w-5 h-5" />
                   Open Source Repositories
@@ -595,7 +595,7 @@ export default function AboutPage() {
 
           {/* Final CTA Section */}
           <section className="mb-16">
-            <div className="bg-primary border-4 border-border neo-shadow p-12 text-center">
+            <div className="bg-primary neo-border-thick neo-shadow p-12 text-center">
               <h2 className="text-3xl md:text-4xl font-black text-primary-foreground mb-6">
                 Ready to start learning?
               </h2>
@@ -607,7 +607,7 @@ export default function AboutPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link
                   href="/challenges"
-                  className="bg-secondary border-4 border-border neo-shadow px-8 py-4 font-black text-lg md:text-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
+                  className="bg-secondary neo-border-thick neo-shadow px-8 py-4 font-black text-lg md:text-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
                 >
                   Browse Challenges
                   <ArrowRight className="w-5 h-5" />
@@ -616,7 +616,7 @@ export default function AboutPage() {
                   href={siteConfig.links.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-background border-4 border-border neo-shadow px-8 py-4 font-black text-lg md:text-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
+                  className="bg-background neo-border-thick neo-shadow px-8 py-4 font-black text-lg md:text-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
                 >
                   <Github className="w-5 h-5" />
                   View on GitHub

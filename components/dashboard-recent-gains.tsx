@@ -11,9 +11,9 @@ export async function DashboardRecentGains() {
   );
 
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-8">
+    <div className="bg-secondary neo-border-thick neo-shadow p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-primary border-4 border-border neo-shadow rounded-lg">
+        <div className="p-2 bg-primary neo-border-thick neo-shadow rounded-lg">
           <Clock className="w-5 h-5 text-white" />
         </div>
         <h2 className="text-2xl font-black">Recent Activity</h2>
@@ -22,10 +22,10 @@ export async function DashboardRecentGains() {
         {recentGains.map((activity) => (
           <div
             key={activity.id}
-            className="p-4 bg-background border-4 border-border neo-shadow-sm border-l-8"
+            className="p-4 bg-background neo-border-thick neo-shadow-sm relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-2 before:bg-primary"
           >
             <div className="flex items-start gap-3">
-              <div className="p-2 border-4 border-border neo-shadow-sm rounded-lg"></div>
+              <div className="p-2 neo-border-thick neo-shadow-sm rounded-lg"></div>
               <div className="flex-1">
                 <Link
                   href={`/challenges/${activity.challengeSlug}`}
@@ -38,7 +38,7 @@ export async function DashboardRecentGains() {
                 </p>
                 {activity.xpAmount > 0 && (
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="px-2 py-1 bg-primary border-2 border-border rounded">
+                    <div className="px-2 py-1 bg-primary neo-border rounded">
                       <span className="text-xs font-black text-primary-foreground">
                         +{activity.xpAmount} XP
                       </span>

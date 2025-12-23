@@ -21,13 +21,13 @@ export const metadata: Metadata = generateSEOMetadata({
 
 function DashboardChartSkeleton() {
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-8">
+    <div className="bg-secondary neo-border-thick neo-shadow p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-9 h-9 bg-primary/20 border-4 border-border rounded-lg"></div>
+        <div className="w-9 h-9 bg-primary/20 neo-border-thick rounded-lg"></div>
         <div className="h-8 w-48 bg-foreground/10 rounded"></div>
       </div>
       <div className="h-[200px] bg-foreground/5 rounded animate-pulse"></div>
-      <div className="mt-4 p-4 bg-secondary border-4 border-border rounded-lg">
+      <div className="mt-4 p-4 bg-secondary neo-border-thick rounded-lg">
         <div className="h-4 w-full bg-foreground/10 rounded"></div>
       </div>
     </div>
@@ -36,19 +36,19 @@ function DashboardChartSkeleton() {
 
 function DashboardRecentGainsSkeleton() {
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-8">
+    <div className="bg-secondary neo-border-thick neo-shadow p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-9 h-9 bg-primary/20 border-4 border-border rounded-lg"></div>
+        <div className="w-9 h-9 bg-primary/20 neo-border-thick rounded-lg"></div>
         <div className="h-8 w-48 bg-foreground/10 rounded"></div>
       </div>
       <div className="space-y-4">
         {Array.from({ length: 3 }, (_, i) => `skeleton-${i}`).map((key) => (
           <div
             key={key}
-            className="p-4 bg-background border-4 border-border neo-shadow-sm border-l-8 animate-pulse"
+            className="p-4 bg-background neo-border-thick neo-shadow-sm animate-pulse"
           >
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 border-4 border-border rounded-lg bg-foreground/10"></div>
+              <div className="w-8 h-8 neo-border-thick rounded-lg bg-foreground/10"></div>
               <div className="flex-1 space-y-2">
                 <div className="h-5 w-48 bg-foreground/10 rounded"></div>
                 <div className="h-4 w-full bg-foreground/10 rounded"></div>
@@ -66,14 +66,14 @@ function DashboardRecentGainsSkeleton() {
 
 function DashboardChartError() {
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-8">
+    <div className="bg-secondary neo-border-thick neo-shadow p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-primary border-4 border-border neo-shadow rounded-lg">
+        <div className="p-2 bg-primary neo-border-thick neo-shadow rounded-lg">
           <TrendingUp className="w-5 h-5 text-primary-foreground" />
         </div>
         <h2 className="text-2xl font-black">Skills by Themes</h2>
       </div>
-      <div className="h-[400px] flex items-center justify-center bg-destructive/10 border-4 border-destructive rounded-lg">
+      <div className="h-[400px] flex items-center justify-center bg-destructive/10 neo-border-thick neo-border-destructive rounded-lg">
         <p className="text-lg font-bold text-destructive">
           Failed to load chart
         </p>
@@ -94,7 +94,7 @@ function DashboardSkeleton() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="bg-secondary border-4 border-border neo-shadow p-6 h-32 animate-pulse"
+              className="bg-secondary neo-border-thick neo-shadow p-6 h-32 animate-pulse"
             ></div>
           ))}
         </div>
@@ -163,7 +163,7 @@ async function DashboardContent() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-primary border-4 border-border neo-shadow p-8">
+          <div className="bg-primary neo-border-thick neo-shadow p-8">
             <h2 className="text-2xl font-black text-primary-foreground mb-6">
               Quick Actions
             </h2>

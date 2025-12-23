@@ -6,7 +6,7 @@ import { siteConfig } from "@/config/site";
 
 export function Footer() {
   return (
-    <footer className="border-t-4 border-border py-12 px-4">
+    <footer className="py-12 px-4 mt-8 bg-secondary">
       <div className="container mx-auto max-w-6xl">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div className="space-y-4">
@@ -102,7 +102,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t-2 border-border flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm font-bold">
             © 2025 {siteConfig.name}. Open source under Apache License 2.0.
           </p>

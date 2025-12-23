@@ -105,7 +105,7 @@ export function HowItWorksSection() {
 
       <div className="container mx-auto  px-4 max-w-7xl relative z-10">
         <div className="text-center mb-20 space-y-6">
-          <div className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-black text-sm uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground neo-border-thick neo-shadow font-black text-sm uppercase tracking-wider">
             <Sparkles className="h-5 w-5" />
             How it works
           </div>
@@ -129,7 +129,7 @@ export function HowItWorksSection() {
             aria-label="Interactive steps carousel"
           >
             <div className="relative bg-card neo-border neo-shadow p-8 md:p-12 rounded-xl transition-all duration-500 min-h-[400px] flex flex-col justify-between">
-              <div className="absolute -top-4 -left-4 w-16 h-16 bg-foreground text-background rounded-full flex items-center justify-center font-black text-2xl neo-border shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <div className="absolute -top-4 -left-4 w-16 h-16 bg-foreground text-background rounded-full flex items-center justify-center font-black text-2xl neo-border neo-shadow-lg">
                 {currentStep + 1}
               </div>
 
@@ -160,7 +160,7 @@ export function HowItWorksSection() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-8 pt-8 border-t-4 border-foreground">
+              <div className="flex items-center justify-between mt-8 pt-8 neo-border-thick border-l-0 border-r-0 border-b-0">
                 <button
                   type="button"
                   onClick={prevStep}

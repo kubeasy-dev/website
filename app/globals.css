@@ -185,4 +185,20 @@
   .neo-border-destructive {
     border: 3px solid oklch(0.6 0.25 25);
   }
+
+  .neo-border-primary {
+    border: 3px solid oklch(0.55 0.25 280);
+  }
+
+  .neo-border-blue {
+    border: 3px solid oklch(0.55 0.22 255);
+  }
+
+  .neo-border-green {
+    border: 3px solid oklch(0.55 0.22 145);
+  }
+
+  .neo-border-amber {
+    border: 3px solid oklch(0.7 0.18 75);
+  }
 }

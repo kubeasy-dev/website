@@ -5,7 +5,7 @@ import { Header } from "@/components/header";
 
 function HeaderSkeleton() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b-4 border-border bg-background neo-shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 neo-border-thick border-t-0 border-l-0 border-r-0 bg-background neo-shadow-sm">
       <div className="container mx-auto flex h-20 items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <div className="w-8 h-8 bg-foreground/10 rounded animate-pulse" />

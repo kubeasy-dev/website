@@ -1,9 +1,9 @@
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { cacheLife, cacheTag } from "next/cache";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesGrid } from "@/components/challenges-grid";
 import { ThemeHero } from "@/components/theme-hero";
@@ -62,7 +62,7 @@ function ChallengesGridSkeleton() {
       {Array.from({ length: 6 }, (_, i) => `skeleton-${i}`).map((key) => (
         <div
           key={key}
-          className="bg-secondary border-4 border-black neo-shadow p-6 animate-pulse h-64"
+          className="bg-secondary neo-border-thick neo-shadow p-6 animate-pulse h-64"
         />
       ))}
     </div>
@@ -135,7 +135,7 @@ export default async function ThemePage({
       {/* Back Button */}
       <Link
         href="/themes"
-        className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-secondary border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all font-black"
+        className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-secondary neo-border-thick neo-shadow hover:neo-shadow-lg hover:-translate-y-0.5 transition-all font-black"
       >
         <ArrowLeft className="h-4 w-4" />
         All Themes

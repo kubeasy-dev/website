@@ -167,10 +167,10 @@ export function GetStartedSteps({
       {steps.map((step) => (
         <div
           key={step.number}
-          className="bg-white border-4 border-black neo-shadow p-6"
+          className="bg-white neo-border-thick neo-shadow p-6"
         >
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-black text-lg border-2 border-black">
+            <div className="flex-shrink-0 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-black text-lg neo-border">
               {step.number}
             </div>
             <div className="flex-1 space-y-3">

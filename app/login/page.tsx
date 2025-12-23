@@ -31,7 +31,7 @@ function LoginSkeleton() {
           {Array.from({ length: 2 }).map((_, i) => (
             <div
               key={i}
-              className="h-12 bg-secondary border-4 border-border neo-shadow animate-pulse"
+              className="h-12 bg-secondary neo-border-thick neo-shadow animate-pulse"
             ></div>
           ))}
         </div>

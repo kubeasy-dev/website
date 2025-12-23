@@ -84,7 +84,7 @@ function GetStartedSkeleton() {
         {Array.from({ length: 2 }).map((_, i) => (
           <div
             key={i}
-            className="h-20 bg-secondary border-4 border-border neo-shadow animate-pulse"
+            className="h-20 bg-secondary neo-border-thick neo-shadow animate-pulse"
           ></div>
         ))}
       </div>
@@ -110,7 +110,7 @@ async function GetStartedContent() {
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Hero Section */}
         <div className="mb-12 space-y-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground border-4 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground neo-border-thick font-bold neo-shadow">
             <Rocket className="h-4 w-4" />
             <span>Quick Setup</span>
           </div>
@@ -133,7 +133,7 @@ async function GetStartedContent() {
             {prerequisites.map((prereq) => (
               <div
                 key={prereq.name}
-                className="flex items-center justify-between p-4 bg-secondary border-4 border-black neo-shadow"
+                className="flex items-center justify-between p-4 bg-secondary neo-border-thick neo-shadow"
               >
                 <div>
                   <div className="font-black text-lg">{prereq.name}</div>
@@ -168,7 +168,7 @@ async function GetStartedContent() {
 
         {/* Next Steps */}
         <section className="mb-12">
-          <div className="bg-blue-100 border-4 border-blue-600 neo-shadow p-8 text-center">
+          <div className="bg-blue-100 neo-border-thick neo-border-blue-600 neo-shadow p-8 text-center">
             <Rocket className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-2xl font-black text-blue-800 mb-2">
               Ready to Solve Challenges?
@@ -179,7 +179,7 @@ async function GetStartedContent() {
             </p>
             <Link
               href="/challenges"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white border-4 border-blue-800 px-6 py-3 font-black neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              className="inline-flex items-center gap-2 bg-blue-600 text-white neo-border-thick neo-border-blue-800 px-6 py-3 font-black neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
             >
               Browse All Challenges
               <ArrowRight className="h-5 w-5" />
@@ -197,7 +197,7 @@ async function GetStartedContent() {
             {troubleshooting.map((item) => (
               <details
                 key={item.error}
-                className="bg-white border-4 border-black neo-shadow group"
+                className="bg-white neo-border-thick neo-shadow group"
               >
                 <summary className="p-4 cursor-pointer font-black flex items-center gap-2 hover:bg-secondary/50 transition-colors">
                   <ChevronRight className="h-5 w-5 group-open:rotate-90 transition-transform" />
@@ -205,7 +205,7 @@ async function GetStartedContent() {
                     {item.error}
                   </span>
                 </summary>
-                <div className="p-4 pt-0 border-t-2 border-black">
+                <div className="p-4 pt-0 neo-border border-l-0 border-r-0 border-b-0">
                   <p className="font-medium text-muted-foreground">
                     {item.solution}
                   </p>
@@ -217,7 +217,7 @@ async function GetStartedContent() {
 
         {/* Help Section */}
         <section className="mb-12">
-          <div className="bg-secondary border-4 border-black neo-shadow p-8 text-center">
+          <div className="bg-secondary neo-border-thick neo-shadow p-8 text-center">
             <h3 className="text-xl font-black mb-2">Still stuck?</h3>
             <p className="text-muted-foreground font-bold mb-4">
               Open an issue on GitHub and we&apos;ll help you out.

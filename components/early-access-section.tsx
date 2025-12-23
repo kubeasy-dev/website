@@ -7,13 +7,13 @@ export function EarlyAccessSection() {
   return (
     <section className="py-24 px-4 bg-background relative overflow-hidden">
       {/* Decorative elements */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-secondary border-4 border-black rotate-12 opacity-20" />
-      <div className="absolute bottom-20 right-10 w-40 h-40 bg-accent border-4 border-black -rotate-12 opacity-20" />
+      <div className="absolute top-20 left-10 w-32 h-32 bg-secondary neo-border-thick rotate-12 opacity-20" />
+      <div className="absolute bottom-20 right-10 w-40 h-40 bg-accent neo-border-thick -rotate-12 opacity-20" />
 
       <div className="max-w-4xl px-4 mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-secondary border-4 border-black px-6 py-2 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="inline-flex items-center gap-2 bg-secondary neo-border-thick px-6 py-2 mb-6 neo-shadow">
             <Beaker className="w-5 h-5" />
             <span className="font-black text-sm uppercase tracking-wider">
               Early Access
@@ -31,7 +31,7 @@ export function EarlyAccessSection() {
         {/* Cards */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Feedback Card */}
-          <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="bg-white neo-border-thick p-8 neo-shadow-xl">
             <div className="mb-4">
               <MessageSquare className="w-10 h-10 text-primary" />
             </div>
@@ -57,7 +57,7 @@ export function EarlyAccessSection() {
           </div>
 
           {/* Contribute Card */}
-          <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="bg-white neo-border-thick p-8 neo-shadow-xl">
             <div className="mb-4">
               <Github className="w-10 h-10 text-primary" />
             </div>

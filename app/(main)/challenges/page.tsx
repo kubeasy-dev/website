@@ -1,8 +1,8 @@
 import { ArrowRight, Terminal, Trophy } from "lucide-react";
 import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
-import { cacheLife, cacheTag } from "next/cache";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesView } from "@/components/challenges-view";
 import { UserStats } from "@/components/user-stats";
@@ -37,7 +37,7 @@ export default async function ChallengesPage() {
     <div className="container mx-auto px-4 max-w-7xl">
       {/* Hero Section */}
       <div className="mb-12 space-y-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-foreground border-4 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-foreground neo-border-thick font-bold neo-shadow">
           <Trophy className="h-4 w-4" />
           <span>{count} Challenges Available</span>
         </div>
@@ -55,9 +55,9 @@ export default async function ChallengesPage() {
         <Suspense
           fallback={
             <div className="grid grid-cols-3 gap-6 mb-8">
-              <div className="p-6 bg-secondary border-4 border-black animate-pulse h-32" />
-              <div className="p-6 bg-primary border-4 border-black animate-pulse h-32" />
-              <div className="p-6 bg-[#FF6B6B] border-4 border-black animate-pulse h-32" />
+              <div className="p-6 bg-secondary neo-border-thick animate-pulse h-32" />
+              <div className="p-6 bg-primary neo-border-thick animate-pulse h-32" />
+              <div className="p-6 bg-[#FF6B6B] neo-border-thick animate-pulse h-32" />
             </div>
           }
         >
@@ -66,7 +66,7 @@ export default async function ChallengesPage() {
       </ErrorBoundary>
 
       {/* Quick Start CTA */}
-      <div className="mb-8 p-4 bg-secondary border-4 border-black neo-shadow flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mb-8 p-4 bg-secondary neo-border-thick neo-shadow flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Terminal className="h-5 w-5 text-primary" />
           <span className="font-bold">
@@ -76,7 +76,7 @@ export default async function ChallengesPage() {
         </div>
         <Link
           href="/get-started"
-          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 font-bold border-2 border-black hover:translate-x-0.5 hover:translate-y-0.5 transition-transform whitespace-nowrap"
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 font-bold neo-border hover:translate-x-0.5 hover:translate-y-0.5 transition-transform whitespace-nowrap"
         >
           Get Started
           <ArrowRight className="h-4 w-4" />

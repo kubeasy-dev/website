@@ -28,7 +28,7 @@ export default async function ThemeListPage() {
     <div className="container mx-auto px-4 max-w-7xl">
       {/* Hero Section */}
       <div className="mb-12 space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white border-4 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] uppercase text-sm">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white neo-border-thick font-black neo-shadow uppercase text-sm">
           <TrendingUp className="h-4 w-4" />
           <span>Browse by Theme</span>
         </div>
