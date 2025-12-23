@@ -13,6 +13,10 @@
   --popover-foreground: oklch(0.15 0 0);
   --primary: oklch(0.55 0.25 280); /* Vibrant purple from logo */
   --primary-foreground: oklch(1 0 0); /* White text on purple */
+  --primary-light: oklch(0.75 0.20 280); /* Light purple variant */
+  --primary-light-foreground: oklch(0.15 0 0); /* Dark text on light purple */
+  --primary-dark: oklch(0.40 0.28 280); /* Dark purple variant */
+  --primary-dark-foreground: oklch(1 0 0); /* White text on dark purple */
   --secondary: oklch(0.95 0.05 85); /* Light yellow accent */
   --secondary-foreground: oklch(0.15 0 0);
   --muted: oklch(0.92 0.01 90);
@@ -50,6 +54,10 @@
   --popover-foreground: oklch(0.15 0 0);
   --primary: oklch(0.55 0.25 280);
   --primary-foreground: oklch(1 0 0);
+  --primary-light: oklch(0.75 0.20 280);
+  --primary-light-foreground: oklch(0.15 0 0);
+  --primary-dark: oklch(0.40 0.28 280);
+  --primary-dark-foreground: oklch(1 0 0);
   --secondary: oklch(0.95 0.05 85);
   --secondary-foreground: oklch(0.15 0 0);
   --muted: oklch(0.92 0.01 90);
@@ -85,6 +93,10 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-light-foreground: var(--primary-light-foreground);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-dark-foreground: var(--primary-dark-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);

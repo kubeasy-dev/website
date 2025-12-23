@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 import type { ChallengeDifficulty } from "@/schemas/challengeFilters";
 
 const difficultyColors: Record<ChallengeDifficulty, string> = {
-  easy: "bg-green-400",
-  medium: "bg-yellow-400",
-  hard: "bg-red-400",
+  easy: "bg-primary-light text-foreground",
+  medium: "bg-primary text-primary-foreground",
+  hard: "bg-primary-dark text-white",
 };
 
 const difficultySizes: Record<"sm" | "md" | "lg", string> = {
