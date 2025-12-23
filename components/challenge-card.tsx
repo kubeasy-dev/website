@@ -75,7 +75,7 @@ export function ChallengeCard({
             {/* Triangle background for better visibility */}
             <div className="absolute top-0 right-0 w-0 h-0 border-l-[128px] border-l-transparent border-t-[128px] border-t-primary/5"></div>
             {/* Ribbon */}
-            <div className="absolute top-6 -right-8 w-40 text-center bg-primary text-primary-foreground font-black text-[10px] py-1.5 transform rotate-45 border-y-4 border-black shadow-[0_2px_0px_0px_rgba(0,0,0,1)]">
+            <div className="absolute top-6 -right-8 w-40 text-center bg-primary text-primary-foreground font-black text-[10px] py-1.5 transform rotate-45 border-y-4 border-black shadow-xs">
               ⭐ OF THE WEEK
             </div>
           </div>
