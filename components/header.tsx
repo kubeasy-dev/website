@@ -8,7 +8,7 @@ export async function Header() {
   });
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background neo-shadow-sm pb-1">
+    <header className="fixed top-0 left-0 right-0 z-50 neo-border-thick border-t-0 border-l-0 border-r-0 bg-background neo-shadow-sm">
       <div className="container mx-auto flex h-20 items-center justify-between px-4">
         <HeaderClient user={session?.user} />
       </div>

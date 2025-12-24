@@ -168,7 +168,7 @@ async function GetStartedContent() {
 
         {/* Next Steps */}
         <section className="mb-12">
-          <div className="bg-blue-100 neo-border-thick neo-border-blue-600 neo-shadow p-8 text-center">
+          <div className="bg-blue-100 neo-border-thick neo-border-blue neo-shadow p-8 text-center">
             <Rocket className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-2xl font-black text-blue-800 mb-2">
               Ready to Solve Challenges?
@@ -179,7 +179,7 @@ async function GetStartedContent() {
             </p>
             <Link
               href="/challenges"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white neo-border-thick neo-border-blue-800 px-6 py-3 font-black neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              className="inline-flex items-center gap-2 bg-blue-600 text-white neo-border-thick neo-border-blue px-6 py-3 font-black neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
             >
               Browse All Challenges
               <ArrowRight className="h-5 w-5" />

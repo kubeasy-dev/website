@@ -113,7 +113,7 @@ export function GetStartedApiToken() {
   // If user already has tokens, show a success message
   if (hasTokens) {
     return (
-      <div className="flex items-center gap-3 p-4 bg-green-50 neo-border-thick rounded-lg">
+      <div className="flex items-center gap-3 p-4 bg-green-50 neo-border-thick neo-border-green rounded-lg">
         <Check className="h-5 w-5 text-green-600 shrink-0" />
         <div className="flex-1">
           <p className="font-bold text-green-800">
@@ -172,7 +172,7 @@ export function GetStartedApiToken() {
 
   // No tokens - show prompt to create
   return (
-    <div className="flex items-center gap-3 p-4 bg-amber-50 neo-border-thick rounded-lg">
+    <div className="flex items-center gap-3 p-4 bg-amber-50 neo-border-thick neo-border-amber rounded-lg">
       <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
       <div className="flex-1">
         <p className="font-bold text-amber-800">

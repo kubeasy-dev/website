@@ -1,4 +1,4 @@
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock, Trophy } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getQueryClient, trpc } from "@/trpc/server";
@@ -25,7 +25,9 @@ export async function DashboardRecentGains() {
             className="p-4 bg-background neo-border-thick neo-shadow-sm relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-2 before:bg-primary"
           >
             <div className="flex items-start gap-3">
-              <div className="p-2 neo-border-thick neo-shadow-sm rounded-lg"></div>
+              <div className="p-2 neo-border-thick neo-shadow-sm rounded-lg bg-secondary">
+                <Trophy className="w-4 h-4 text-primary" />
+              </div>
               <div className="flex-1">
                 <Link
                   href={`/challenges/${activity.challengeSlug}`}
