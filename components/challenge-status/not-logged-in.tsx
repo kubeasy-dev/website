@@ -10,7 +10,7 @@ interface NotLoggedInProps {
 export function NotLoggedIn({ slug }: NotLoggedInProps) {
   return (
     <div className="space-y-6">
-      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-primary text-primary-foreground">
+      <Card className="neo-border-thick neo-shadow-xl bg-primary text-primary-foreground">
         <CardHeader>
           <div className="flex items-center gap-3">
             <Terminal className="h-6 w-6" />
@@ -24,14 +24,14 @@ export function NotLoggedIn({ slug }: NotLoggedInProps) {
             Log in and use the Kubeasy CLI to start this challenge on your local
             Kubernetes cluster.
           </p>
-          <div className="bg-black text-green-400 p-4 rounded-lg border-4 border-black font-mono text-sm">
+          <div className="bg-black text-green-400 p-4 rounded-lg neo-border-thick font-mono text-sm">
             <span className="text-gray-500">$</span> kubeasy challenge start{" "}
             {slug}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-secondary">
+      <Card className="neo-border-thick neo-shadow-xl bg-secondary">
         <CardContent className="pt-6">
           <div className="text-center space-y-4">
             <h3 className="text-2xl font-black">Need the CLI?</h3>
@@ -40,7 +40,7 @@ export function NotLoggedIn({ slug }: NotLoggedInProps) {
             </p>
             <Button
               size="lg"
-              className="border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] transition-all font-black text-lg px-8"
+              className="neo-border-thick neo-shadow-lg hover:neo-shadow-sm hover:translate-x-[3px] hover:translate-y-[3px] transition-all font-black text-lg px-8"
               asChild
             >
               <Link href="/login">Log In to Get Started</Link>

@@ -120,7 +120,7 @@ export default async function ChallengePage({
       {/* Back Button */}
       <Button
         variant="ghost"
-        className="mb-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+        className="mb-6 neo-border-thick neo-shadow hover:neo-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
         asChild
       >
         <Link href="/challenges">
@@ -135,12 +135,12 @@ export default async function ChallengePage({
           <DifficultyBadge difficulty={challenge.difficulty} size="lg" />
           <Badge
             variant="secondary"
-            className="capitalize border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-1.5 text-base font-bold"
+            className="capitalize neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold"
           >
             {challenge.theme}
           </Badge>
           {challenge.ofTheWeek && (
-            <Badge className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-4 py-1.5 text-base font-bold bg-accent text-black">
+            <Badge className="neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold bg-accent text-black">
               Challenge of the Week
             </Badge>
           )}
@@ -164,7 +164,7 @@ export default async function ChallengePage({
       <Separator className="my-8 h-1 bg-black" />
 
       {/* Initial Situation */}
-      <Card className="mb-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-secondary">
+      <Card className="mb-8 neo-border-thick neo-shadow-xl bg-secondary">
         <CardHeader>
           <div className="flex items-center gap-3">
             <Clock className="h-6 w-6" />

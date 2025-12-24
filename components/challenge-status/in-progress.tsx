@@ -24,7 +24,7 @@ export function InProgress({ slug }: InProgressProps) {
   const hasSubmissions = submissions.length > 0;
 
   return (
-    <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-primary text-primary-foreground">
+    <Card className="neo-border-thick neo-shadow-xl bg-primary text-primary-foreground">
       <CardHeader>
         <div className="flex items-center gap-3">
           <AlertCircle className="h-6 w-6" />
@@ -38,7 +38,7 @@ export function InProgress({ slug }: InProgressProps) {
           <p className="text-base font-medium">
             Work on solving this challenge in your local Kubernetes cluster.
           </p>
-          <div className="bg-black text-green-400 p-4 rounded-lg border-4 border-black font-mono text-sm space-y-2">
+          <div className="bg-black text-green-400 p-4 rounded-lg neo-border-thick font-mono text-sm space-y-2">
             <div>
               <span className="text-gray-500">$</span> kubeasy challenge submit{" "}
               {slug}

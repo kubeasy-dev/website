@@ -25,14 +25,14 @@ export function UserDropdown({ user }: { user: User }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-10 w-10 rounded-lg neo-border p-0"
+          className="relative h-10 w-10 rounded-xl neo-border p-0"
         >
-          <Avatar className="h-full w-full rounded-md">
+          <Avatar className="h-full w-full rounded-lg">
             <AvatarImage
               src={user.image ?? undefined}
               alt={user.name || "User"}
             />
-            <AvatarFallback className="bg-primary text-primary-foreground font-black rounded-md">
+            <AvatarFallback className="bg-primary text-primary-foreground font-black rounded-lg">
               {user.name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>

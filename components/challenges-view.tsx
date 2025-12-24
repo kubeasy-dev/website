@@ -42,7 +42,7 @@ export function ChallengesView() {
                 })
               }
               disabled={!session || isPending}
-              className="border-4 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-shadow px-6 py-6 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              className="neo-border-thick font-black neo-shadow hover:neo-shadow-lg transition-shadow px-6 py-6 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               title={
                 !session ? "Sign in to filter completed challenges" : undefined
               }

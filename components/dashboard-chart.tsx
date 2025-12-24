@@ -41,9 +41,9 @@ export function DashboardChart() {
     : null;
 
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-8">
+    <div className="bg-secondary neo-border-thick neo-shadow p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-primary border-4 border-border neo-shadow rounded-lg">
+        <div className="p-2 bg-primary neo-border-thick neo-shadow rounded-lg">
           <TrendingUp className="w-5 h-5 text-primary-foreground" />
         </div>
         <h2 className="text-2xl font-black">Skills by Themes</h2>
@@ -66,7 +66,7 @@ export function DashboardChart() {
           />
         </RadarChart>
       </ResponsiveContainer>
-      <div className="mt-4 p-4 bg-secondary border-4 border-border rounded-lg">
+      <div className="mt-4 p-4 bg-secondary neo-border-thick rounded-xl">
         {bestTheme && bestTheme.percentageCompleted > 0 && bestThemeName ? (
           <p className="text-sm font-bold text-center">
             Your best theme is{" "}

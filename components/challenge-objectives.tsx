@@ -71,7 +71,7 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-secondary">
+      <Card className="neo-border-thick neo-shadow-xl bg-secondary">
         <CardHeader>
           <CardTitle className="text-2xl font-black flex items-center gap-3">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -84,7 +84,7 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
 
   if (!validationStatus?.hasSubmission || !validationStatus.objectives) {
     return (
-      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-secondary">
+      <Card className="neo-border-thick neo-shadow-xl bg-secondary">
         <CardHeader>
           <CardTitle className="text-2xl font-black">Objectives</CardTitle>
         </CardHeader>
@@ -92,7 +92,7 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
           <p className="text-base font-medium text-muted-foreground">
             Submit your solution to see validation objectives.
           </p>
-          <div className="mt-4 bg-black text-green-400 p-4 rounded-lg border-4 border-black font-mono text-sm">
+          <div className="mt-4 bg-black text-green-400 p-4 rounded-lg neo-border-thick font-mono text-sm">
             <div>
               <span className="text-gray-500">$</span> kubeasy challenge submit{" "}
               {slug}
@@ -115,7 +115,7 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
   return (
     <Card
       className={cn(
-        "border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
+        "neo-border-thick neo-shadow-xl",
         allPassed ? "bg-green-100" : "bg-secondary",
       )}
     >
@@ -150,7 +150,7 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
           return (
             <div
               key={category}
-              className="border-4 border-black rounded-lg overflow-hidden bg-card"
+              className="neo-border-thick rounded-lg overflow-hidden bg-card"
             >
               {/* Category Header */}
               <button
@@ -177,12 +177,9 @@ export function ChallengeObjectives({ slug }: ChallengeObjectivesProps) {
 
               {/* Objective Items */}
               {isExpanded && (
-                <div className="border-t-4 border-black bg-muted/50">
+                <div className="bg-muted/50">
                   {categoryObjectives.map((objective) => (
-                    <div
-                      key={objective.id}
-                      className="px-4 py-3 border-b-2 border-border last:border-b-0"
-                    >
+                    <div key={objective.id} className="px-4 py-3">
                       <div className="flex items-start gap-3">
                         {objective.passed ? (
                           <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />

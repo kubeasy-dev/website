@@ -113,7 +113,7 @@ function SocialButton({
     <Button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full h-14 text-lg font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed ${config.bgColor} ${config.textColor}`}
+      className={`w-full h-14 text-lg font-bold neo-border-thick neo-shadow hover:neo-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed ${config.bgColor} ${config.textColor}`}
     >
       {isLoading ? (
         <>
@@ -187,7 +187,7 @@ export function LoginCard({ callbackUrl = "/dashboard" }: LoginCardProps) {
   };
 
   return (
-    <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <Card className="neo-border-thick neo-shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl font-black">Sign In</CardTitle>
         <CardDescription className="text-base">
@@ -197,7 +197,7 @@ export function LoginCard({ callbackUrl = "/dashboard" }: LoginCardProps) {
       <CardContent className="space-y-3">
         {/* Status Alert */}
         {authResult.status === "error" && authResult.message && (
-          <Alert variant="destructive" className="border-4 border-red-500">
+          <Alert variant="destructive" className="neo-border-thick">
             <AlertCircle className="h-5 w-5" />
             <AlertDescription className="font-semibold">
               {authResult.message}
@@ -206,7 +206,7 @@ export function LoginCard({ callbackUrl = "/dashboard" }: LoginCardProps) {
         )}
 
         {authResult.status === "success" && authResult.message && (
-          <Alert className="border-4 border-green-500 bg-green-50">
+          <Alert className="neo-border-thick bg-green-50">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
             <AlertDescription className="font-semibold text-green-800">
               {authResult.message}

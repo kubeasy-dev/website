@@ -135,7 +135,7 @@ export function ProfileApiTokens() {
 
       {/* Newly created token alert */}
       {newlyCreatedToken && (
-        <Alert className="mb-4 border-4 border-accent bg-accent/10">
+        <Alert className="mb-4 neo-border-thick bg-accent/10">
           <AlertCircle className="h-5 w-5 text-accent" />
           <AlertDescription className="font-semibold">
             <p className="mb-2">

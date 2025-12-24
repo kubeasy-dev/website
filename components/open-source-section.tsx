@@ -10,7 +10,7 @@ export function OpenSourceSection() {
 
       <div className="max-w-7xl  px-4 mx-auto">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6 font-black text-sm uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 neo-border-thick neo-shadow mb-6 font-black text-sm uppercase tracking-wider">
             <Heart className="w-5 h-5" />
             Open Source
           </div>
@@ -28,8 +28,8 @@ export function OpenSourceSection() {
 
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {/* GitHub Repository Card */}
-          <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
-            <div className="w-16 h-16 bg-black rounded-2xl border-4 border-black flex items-center justify-center mb-6">
+          <div className="bg-white neo-border-thick p-8 neo-shadow-xl hover:neo-shadow-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
+            <div className="w-16 h-16 bg-black rounded-xl neo-border-thick flex items-center justify-center mb-6">
               <Github className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-2xl font-black mb-3">Free Forever</h3>
@@ -37,14 +37,14 @@ export function OpenSourceSection() {
               All challenges and tools are free to use. No hidden costs, no
               premium tiers. Just pure learning.
             </p>
-            <Button className="w-full bg-black text-white border-4 border-black font-black text-lg py-6 hover:bg-gray-800">
+            <Button className="w-full bg-black text-white neo-border-thick font-black text-lg py-6 hover:bg-gray-800">
               View on GitHub
             </Button>
           </div>
 
           {/* Community Contributions Card */}
-          <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
-            <div className="w-16 h-16 bg-secondary rounded-2xl border-4 border-black flex items-center justify-center mb-6">
+          <div className="bg-white neo-border-thick p-8 neo-shadow-xl hover:neo-shadow-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
+            <div className="w-16 h-16 bg-secondary rounded-xl neo-border-thick flex items-center justify-center mb-6">
               <Users className="w-8 h-8 text-black" />
             </div>
             <h3 className="text-2xl font-black mb-3">Community Driven</h3>
@@ -52,14 +52,14 @@ export function OpenSourceSection() {
               Challenges are created and reviewed by the community. Share your
               knowledge and help others learn.
             </p>
-            <Button className="w-full bg-secondary text-secondary-foreground border-4 border-black font-black text-lg py-6 hover:bg-secondary/80">
+            <Button className="w-full bg-secondary text-secondary-foreground neo-border-thick font-black text-lg py-6 hover:bg-secondary/80">
               Contribute
             </Button>
           </div>
 
           {/* Fork & Customize Card */}
-          <div className="bg-white border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
-            <div className="w-16 h-16 bg-accent rounded-2xl border-4 border-black flex items-center justify-center mb-6">
+          <div className="bg-white neo-border-thick p-8 neo-shadow-xl hover:neo-shadow-xl hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all">
+            <div className="w-16 h-16 bg-accent rounded-xl neo-border-thick flex items-center justify-center mb-6">
               <GitFork className="w-8 h-8 text-black" />
             </div>
             <h3 className="text-2xl font-black mb-3">Fork & Customize</h3>
@@ -67,14 +67,14 @@ export function OpenSourceSection() {
               Create your own challenges, customize the platform, or use it for
               your team&apos;s training needs.
             </p>
-            <Button className="w-full bg-accent text-accent-foreground border-4 border-black font-black text-lg py-6 hover:bg-accent/80">
+            <Button className="w-full bg-accent text-accent-foreground neo-border-thick font-black text-lg py-6 hover:bg-accent/80">
               Fork Project
             </Button>
           </div>
         </div>
 
         {/* License Badge */}
-        <div className="bg-primary border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center">
+        <div className="bg-primary neo-border-thick p-6 neo-shadow-xl text-center">
           <p className="text-primary-foreground font-black text-lg">
             Released under the{" "}
             <span className="underline underline-offset-4">

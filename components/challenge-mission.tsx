@@ -191,7 +191,7 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
   return (
     <Card
       className={cn(
-        "border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]",
+        "neo-border-thick neo-shadow-xl",
         allPassed ? "bg-green-100" : "bg-secondary",
       )}
     >
@@ -219,7 +219,7 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
 
         {/* Success Message - only when completed */}
         {isCompleted && (
-          <div className="bg-green-50 border-4 border-green-600 rounded-lg p-4">
+          <div className="bg-green-50 neo-border-thick rounded-lg p-4">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
               <p className="font-bold text-green-900">
@@ -241,7 +241,7 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
                 <div
                   key={obj.id}
                   className={cn(
-                    "flex items-start gap-3 p-3 rounded-lg border-2 border-black",
+                    "flex items-start gap-3 p-3 rounded-lg neo-border",
                     obj.status === true
                       ? "bg-green-50"
                       : obj.status === false
@@ -300,7 +300,7 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
           {isCompleted ? (
             <>
               <p className="text-sm font-bold">Clean up the resources with:</p>
-              <div className="bg-black text-green-400 p-3 rounded-lg border-4 border-black font-mono text-sm">
+              <div className="bg-black text-green-400 p-3 rounded-lg neo-border-thick font-mono text-sm">
                 <span className="text-gray-500">$</span> kubeasy challenge clean{" "}
                 {slug}
               </div>
@@ -310,7 +310,7 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
               <p className="text-sm font-bold">
                 Start this challenge in your local Kubernetes cluster:
               </p>
-              <div className="bg-black text-green-400 p-3 rounded-lg border-4 border-black font-mono text-sm">
+              <div className="bg-black text-green-400 p-3 rounded-lg neo-border-thick font-mono text-sm">
                 <span className="text-gray-500">$</span> kubeasy challenge start{" "}
                 {slug}
               </div>
@@ -318,7 +318,7 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
           ) : (
             <>
               <p className="text-sm font-bold">Submit your solution:</p>
-              <div className="bg-black text-green-400 p-3 rounded-lg border-4 border-black font-mono text-sm">
+              <div className="bg-black text-green-400 p-3 rounded-lg neo-border-thick font-mono text-sm">
                 <span className="text-gray-500">$</span> kubeasy challenge
                 submit {slug}
               </div>
@@ -332,13 +332,13 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-2 border-black font-bold"
+                  className="neo-border font-bold"
                 >
                   <Clock className="h-4 w-4 mr-2" />
                   View History ({submissionsData.submissions.length})
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto border-4 border-black">
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto neo-border-thick">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-black">
                     Submission History

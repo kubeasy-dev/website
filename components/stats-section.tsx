@@ -23,7 +23,7 @@ export function StatsSection() {
   ];
 
   return (
-    <section className="py-20 px-4 border-y-4 border-border">
+    <section className="py-20 px-4 bg-secondary">
       <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((stat) => (

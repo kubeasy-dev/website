@@ -6,9 +6,9 @@ import { useTRPC } from "@/trpc/client";
 
 function StatCardSkeleton() {
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-6 animate-pulse">
+    <div className="bg-secondary neo-border-thick neo-shadow p-6 animate-pulse">
       <div className="flex items-center gap-4 mb-3">
-        <div className="w-12 h-12 bg-primary/20 border-4 border-border rounded-lg" />
+        <div className="w-12 h-12 bg-primary/20 neo-border-thick rounded-lg" />
         <div>
           <div className="h-4 w-16 bg-foreground/10 rounded mb-2" />
           <div className="h-8 w-20 bg-foreground/10 rounded" />
@@ -40,9 +40,9 @@ function CompletedStat() {
   }
 
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-6">
+    <div className="bg-secondary neo-border-thick neo-shadow p-6">
       <div className="flex items-center gap-4 mb-3">
-        <div className="p-3 bg-primary border-4 border-border neo-shadow rounded-lg">
+        <div className="p-3 bg-primary neo-border-thick neo-shadow rounded-lg">
           <Award className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
@@ -67,9 +67,9 @@ function XpStat() {
   }
 
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-6">
+    <div className="bg-secondary neo-border-thick neo-shadow p-6">
       <div className="flex items-center gap-4 mb-3">
-        <div className="p-3 bg-primary border-4 border-border neo-shadow rounded-lg">
+        <div className="p-3 bg-primary neo-border-thick neo-shadow rounded-lg">
           <Trophy className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
@@ -92,9 +92,9 @@ function RankStat() {
   }
 
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-6">
+    <div className="bg-secondary neo-border-thick neo-shadow p-6">
       <div className="flex items-center gap-4 mb-3">
-        <div className="p-3 bg-primary border-4 border-border neo-shadow rounded-lg">
+        <div className="p-3 bg-primary neo-border-thick neo-shadow rounded-lg">
           <Star className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
@@ -120,9 +120,9 @@ function StreakStat() {
   }
 
   return (
-    <div className="bg-secondary border-4 border-border neo-shadow p-6">
+    <div className="bg-secondary neo-border-thick neo-shadow p-6">
       <div className="flex items-center gap-4 mb-3">
-        <div className="p-3 bg-primary border-4 border-border neo-shadow rounded-lg">
+        <div className="p-3 bg-primary neo-border-thick neo-shadow rounded-lg">
           <Flame className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>

@@ -9,9 +9,9 @@ const difficultyColors: Record<ChallengeDifficulty, string> = {
 };
 
 const difficultySizes: Record<"sm" | "md" | "lg", string> = {
-  sm: "text-xs border-2",
-  md: "text-sm px-2 py-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]",
-  lg: "text-md px-4 py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
+  sm: "text-xs",
+  md: "text-sm px-2 py-0.5 neo-shadow-sm",
+  lg: "text-md px-4 py-1.5 neo-shadow",
 };
 
 export function DifficultyBadge({

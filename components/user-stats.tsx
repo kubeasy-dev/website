@@ -37,9 +37,9 @@ export function UserStats() {
   return (
     <div className="grid grid-cols-3 gap-6 mb-8">
       {/* Challenges Completed Card */}
-      <div className="p-6 bg-secondary border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-shadow">
+      <div className="p-6 bg-secondary neo-border-thick neo-shadow-lg hover:neo-shadow-xl transition-shadow">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary border-3 border-black">
+          <div className="p-2 bg-primary neo-border">
             <Award className="h-6 w-6 text-white" />
           </div>
           <div className="text-4xl font-black text-foreground">
@@ -55,9 +55,9 @@ export function UserStats() {
       </div>
 
       {/* Rank Card */}
-      <div className="p-6 bg-primary border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-shadow">
+      <div className="p-6 bg-primary neo-border-thick neo-shadow-lg hover:neo-shadow-xl transition-shadow">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-white border-3 border-black">
+          <div className="p-2 bg-white neo-border">
             <Star className="h-6 w-6 text-accent" />
           </div>
           <div className="text-2xl font-black text-white leading-tight">
@@ -73,9 +73,9 @@ export function UserStats() {
       </div>
 
       {/* Streak Card */}
-      <div className="p-6 bg-[#FF6B6B] border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-shadow">
+      <div className="p-6 bg-[#FF6B6B] neo-border-thick neo-shadow-lg hover:neo-shadow-xl transition-shadow">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-white border-3 border-black">
+          <div className="p-2 bg-white neo-border">
             <Flame className="h-6 w-6 text-[#FF6B6B]" />
           </div>
           <div className="text-4xl font-black text-white">{streak}</div>

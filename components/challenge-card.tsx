@@ -119,7 +119,7 @@ export function ChallengeCard({
               {challenge.theme}
             </Badge>
           </div>
-          <div className="flex items-center justify-between text-sm font-bold pt-2 border-t-2 border-border">
+          <div className="flex items-center justify-between text-sm font-bold pt-4">
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
               <span>{challenge.estimatedTime} min</span>

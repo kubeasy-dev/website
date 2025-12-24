@@ -54,7 +54,7 @@ export function ChallengePreview({ challenge }: ChallengePreviewProps) {
   const objectives = objectivesData?.objectives ?? [];
 
   return (
-    <div className="bg-white border-4 border-black neo-shadow p-6 space-y-4">
+    <div className="bg-white neo-border-thick neo-shadow p-6 space-y-4">
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
@@ -79,7 +79,7 @@ export function ChallengePreview({ challenge }: ChallengePreviewProps) {
 
       {/* Initial Situation */}
       {challenge.initialSituation && (
-        <div className="bg-secondary/50 border-2 border-border rounded-lg p-3">
+        <div className="bg-secondary/50 neo-border rounded-lg p-3">
           <p className="text-xs font-bold text-muted-foreground mb-1">
             Situation
           </p>
@@ -89,7 +89,7 @@ export function ChallengePreview({ challenge }: ChallengePreviewProps) {
 
       {/* Objective */}
       {challenge.objective && (
-        <div className="bg-primary/10 border-2 border-primary/30 rounded-lg p-3">
+        <div className="bg-primary/10 neo-border neo-border-primary/30 rounded-lg p-3">
           <p className="text-xs font-bold text-primary mb-1">Your Goal</p>
           <p className="text-sm font-medium">{challenge.objective}</p>
         </div>

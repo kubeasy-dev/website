@@ -19,7 +19,7 @@ function ProfileSkeleton() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="h-32 bg-secondary border-4 border-border neo-shadow animate-pulse"
+              className="h-32 bg-secondary neo-border-thick neo-shadow animate-pulse"
             ></div>
           ))}
         </div>

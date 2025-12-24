@@ -37,7 +37,7 @@ export function SubmissionItem({ submission }: SubmissionItemProps) {
   return (
     <div
       className={cn(
-        "p-4 rounded-lg border-4 border-black bg-white",
+        "p-4 rounded-lg neo-border-thick bg-white",
         "flex items-center justify-between gap-4",
       )}
     >

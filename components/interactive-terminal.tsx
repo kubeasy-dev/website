@@ -121,8 +121,8 @@ export function InteractiveTerminal() {
   }, [currentSequence]);
   return (
     <div className="relative">
-      <div className="relative bg-card neo-border-thick neo-shadow-xl rounded-lg p-6 font-mono text-sm">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-border">
+      <div className="relative bg-card neo-border-thick neo-shadow-xl rounded-xl p-6 font-mono text-sm">
+        <div className="flex items-center gap-2 mb-4 pb-3">
           <div className="flex gap-1.5">
             <div
               className="w-3 h-3 rounded-full bg-destructive neo-border"
