@@ -24,6 +24,19 @@ function isPostHogReady(): boolean {
 }
 
 /**
+ * Check if PostHog is initialized (regardless of opt-out status)
+ * Used for operations that should work even when user has opted out (e.g., reset on logout)
+ * @returns true if PostHog is loaded and available
+ */
+function isPostHogInitialized(): boolean {
+  try {
+    return posthog && typeof posthog.reset === "function";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Safe wrapper for PostHog capture calls with error handling
  * @param eventName - The name of the event to track
  * @param properties - Event properties
@@ -144,9 +157,11 @@ export function identifyUser(
 
 /**
  * Reset PostHog state (call on logout)
+ * Note: Uses isPostHogInitialized() instead of isPostHogReady() to ensure
+ * reset works even when user has opted out of tracking
  */
 export function resetAnalytics() {
-  if (!isPostHogReady()) {
+  if (!isPostHogInitialized()) {
     return;
   }
 
