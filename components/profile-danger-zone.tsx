@@ -56,9 +56,9 @@ export function ProfileDangerZone() {
   };
 
   return (
-    <div className="bg-red-50 neo-border border-red-600 neo-shadow shadow-red-600 p-6">
+    <div className="bg-red-50 neo-border-destructive shadow-danger p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-red-600 text-white neo-border border-red-800">
+        <div className="p-3 bg-red-600 text-white neo-border-destructive">
           <AlertTriangle className="w-6 h-6" />
         </div>
         <div>
@@ -69,7 +69,7 @@ export function ProfileDangerZone() {
         </div>
       </div>
 
-      <div className="p-4 bg-white neo-border border-red-600 mb-4">
+      <div className="p-4 bg-white neo-border-destructive mb-4">
         <h3 className="font-black mb-2">Reset All Progress</h3>
         <p className="text-sm text-muted-foreground mb-4">
           This will permanently delete all your completed challenges, progress,
@@ -78,7 +78,7 @@ export function ProfileDangerZone() {
         <Button
           onClick={handleResetProgress}
           disabled={resetProgressMutation.isPending}
-          className="bg-red-600 text-white neo-border border-red-800 neo-shadow shadow-red-800 hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-red-600 text-white neo-border-destructive shadow-danger hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <AlertTriangle className="w-4 h-4 mr-2" />
           Reset All Progress
@@ -87,7 +87,7 @@ export function ProfileDangerZone() {
 
       {/* Reset Confirmation Dialog */}
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-        <DialogContent className="border-red-600 shadow-[8px_8px_0px_0px_rgba(220,38,38,1)]">
+        <DialogContent className="neo-border-destructive shadow-danger">
           <DialogHeader>
             <DialogTitle className="text-red-600 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
@@ -120,7 +120,7 @@ export function ProfileDangerZone() {
             <Button
               onClick={confirmReset}
               disabled={resetProgressMutation.isPending}
-              className="bg-red-600 text-white neo-border border-red-800 neo-shadow shadow-red-800 hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all font-bold"
+              className="bg-red-600 text-white neo-border-destructive shadow-danger hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all font-bold"
             >
               <AlertTriangle className="w-4 h-4 mr-2" />
               {resetProgressMutation.isPending
