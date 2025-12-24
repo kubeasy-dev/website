@@ -143,10 +143,24 @@ export function identifyUser(
 }
 
 /**
+ * Check if PostHog is initialized (regardless of opt-out status)
+ * @returns true if PostHog is initialized
+ */
+function isPostHogInitialized(): boolean {
+  try {
+    return posthog && typeof posthog.reset === "function";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Reset PostHog state (call on logout)
+ * Note: This should work even if user has opted out of tracking,
+ * to properly clear their identity on logout.
  */
 export function resetAnalytics() {
-  if (!isPostHogReady()) {
+  if (!isPostHogInitialized()) {
     return;
   }
 
