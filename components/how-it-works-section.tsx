@@ -164,13 +164,10 @@ export function HowItWorksSection() {
                 <button
                   type="button"
                   onClick={prevStep}
-                  className="p-3 bg-card neo-border neo-shadow rounded-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                  className="p-3 bg-card neo-border neo-shadow rounded-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center"
                   aria-label="Previous step"
                 >
-                  <ChevronLeft
-                    className="h-6 w-6 text-foreground"
-                    strokeWidth={3}
-                  />
+                  <ChevronLeft className="h-6 w-6 stroke-foreground stroke-[3]" />
                 </button>
 
                 <div className="flex gap-3">
@@ -192,13 +189,10 @@ export function HowItWorksSection() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="p-3 bg-card neo-border neo-shadow rounded-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                  className="p-3 bg-card neo-border neo-shadow rounded-xl hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center"
                   aria-label="Next step"
                 >
-                  <ChevronRight
-                    className="h-6 w-6 text-foreground"
-                    strokeWidth={3}
-                  />
+                  <ChevronRight className="h-6 w-6 stroke-foreground stroke-[3]" />
                 </button>
               </div>
             </div>
