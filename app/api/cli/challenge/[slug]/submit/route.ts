@@ -1,6 +1,9 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { authenticateApiRequest, createApiCaller } from "@/lib/api-auth";
 import type { ObjectiveResult } from "@/types/cli-api";
+
+const { logger } = Sentry;
 
 /**
  * POST /api/cli/challenge/[slug]/submit
@@ -70,9 +73,8 @@ export async function POST(
       );
     }
 
-    // Debug logging
     const allPassed = results.every((r) => r.passed);
-    console.log("[SUBMIT]", {
+    logger.info("Challenge submission received", {
       slug,
       allPassed,
       resultsCount: results.length,
@@ -90,10 +92,13 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[SUBMIT ERROR]", {
+    logger.error("Challenge submission failed", {
       slug,
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+    });
+    Sentry.captureException(error, {
+      tags: { operation: "cli.challenge.submit" },
+      contexts: { challenge: { slug } },
     });
     const message = error instanceof Error ? error.message : "Unknown error";
 

@@ -7,7 +7,7 @@ import {
   ChallengePreview,
   type ChallengePreviewData,
 } from "@/components/challenge-preview";
-import { DifficultyBadge } from "@/components/dificulty-badge";
+import { DifficultyBadge } from "@/components/difficulty-badge";
 import { GetStartedApiToken } from "@/components/get-started-api-token";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

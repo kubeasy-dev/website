@@ -83,44 +83,6 @@ export const createCallerFactory = t.createCallerFactory;
  */
 export const createTRPCRouter = t.router;
 
-/**
- * Middleware for timing procedure execution and adding an artificial delay in development.
- *
- * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
- * network latency that would occur in production but not in local development.
- */
-const _timingMiddleware = t.middleware(async ({ next, path }) => {
-  const start = Date.now();
-
-  if (t._config.isDev) {
-    // artificial delay in dev
-    const waitMs = Math.floor(Math.random() * 400) + 100;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
-  }
-
-  const result = await next();
-
-  const end = Date.now();
-  const duration = end - start;
-
-  // Log all requests in development
-  if (t._config.isDev) {
-    console.log(`[TRPC] ${path} took ${duration}ms to execute`);
-  }
-
-  // In production, only log slow queries (>1000ms) to Sentry
-  if (!t._config.isDev && duration > 1000) {
-    const { logger } = Sentry;
-    logger.warn("Slow tRPC query detected", {
-      path,
-      duration,
-      threshold: 1000,
-    });
-  }
-
-  return result;
-});
-
 const sentryMiddleware = t.middleware(
   Sentry.trpcMiddleware({
     attachRpcInput: true,
@@ -134,9 +96,7 @@ const sentryMiddleware = t.middleware(
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure
-  //.use(timingMiddleware)
-  .use(sentryMiddleware);
+export const publicProcedure = t.procedure.use(sentryMiddleware);
 
 /**
  * Protected (authenticated) procedure
