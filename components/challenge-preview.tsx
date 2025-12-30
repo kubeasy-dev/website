@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Circle, Clock, Loader2, Target } from "lucide-react";
 import Link from "next/link";
-import { DifficultyBadge } from "@/components/dificulty-badge";
+import { DifficultyBadge } from "@/components/difficulty-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

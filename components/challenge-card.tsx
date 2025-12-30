@@ -3,7 +3,7 @@
 import { CheckCircle2, Circle, Clock, PlayCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DifficultyBadge } from "@/components/dificulty-badge";
+import { DifficultyBadge } from "@/components/difficulty-badge";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
