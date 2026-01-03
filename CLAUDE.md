@@ -1,352 +1,565 @@
-# Claude Code Configuration - SPARC Development Environment
+# CLAUDE.md
 
-## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT
-
-**ABSOLUTE RULES**:
-1. ALL operations MUST be concurrent/parallel in a single message
-2. **NEVER save working files, text/mds and tests to the root folder**
-3. ALWAYS organize files in appropriate subdirectories
-4. **USE CLAUDE CODE'S TASK TOOL** for spawning agents concurrently, not just MCP
-
-### ⚡ GOLDEN RULE: "1 MESSAGE = ALL RELATED OPERATIONS"
-
-**MANDATORY PATTERNS:**
-- **TodoWrite**: ALWAYS batch ALL todos in ONE call (5-10+ todos minimum)
-- **Task tool (Claude Code)**: ALWAYS spawn ALL agents in ONE message with full instructions
-- **File operations**: ALWAYS batch ALL reads/writes/edits in ONE message
-- **Bash commands**: ALWAYS batch ALL terminal operations in ONE message
-- **Memory operations**: ALWAYS batch ALL memory store/retrieve in ONE message
-
-### 🎯 CRITICAL: Claude Code Task Tool for Agent Execution
-
-**Claude Code's Task tool is the PRIMARY way to spawn agents:**
-```javascript
-// ✅ CORRECT: Use Claude Code's Task tool for parallel agent execution
-[Single Message]:
-  Task("Research agent", "Analyze requirements and patterns...", "researcher")
-  Task("Coder agent", "Implement core features...", "coder")
-  Task("Tester agent", "Create comprehensive tests...", "tester")
-  Task("Reviewer agent", "Review code quality...", "reviewer")
-  Task("Architect agent", "Design system architecture...", "system-architect")
-```
-
-**MCP tools are ONLY for coordination setup:**
-- `mcp__claude-flow__swarm_init` - Initialize coordination topology
-- `mcp__claude-flow__agent_spawn` - Define agent types for coordination
-- `mcp__claude-flow__task_orchestrate` - Orchestrate high-level workflows
-
-### 📁 File Organization Rules
-
-**NEVER save to root folder. Use these directories:**
-- `/src` - Source code files
-- `/tests` - Test files
-- `/docs` - Documentation and markdown files
-- `/config` - Configuration files
-- `/scripts` - Utility scripts
-- `/examples` - Example code
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-This project uses SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology with Claude-Flow orchestration for systematic Test-Driven Development.
+Kubeasy is a Next.js 15 application for learning Kubernetes through interactive challenges. It's built with:
+- **Next.js 15** (React 19) with App Router
+- **TypeScript** for type safety
+- **Drizzle ORM** with PostgreSQL (Neon serverless)
+- **Better Auth** for authentication with social providers (GitHub, Google, Microsoft)
+- **tRPC** for type-safe API endpoints
+- **Tailwind CSS 4** for styling
+- **shadcn/ui** components (Radix UI primitives)
+- **Biome** for linting and formatting
+- **Husky + lint-staged** for pre-commit hooks
 
-## SPARC Commands
-
-### Core Commands
-- `npx claude-flow sparc modes` - List available modes
-- `npx claude-flow sparc run <mode> "<task>"` - Execute specific mode
-- `npx claude-flow sparc tdd "<feature>"` - Run complete TDD workflow
-- `npx claude-flow sparc info <mode>` - Get mode details
-
-### Batchtools Commands
-- `npx claude-flow sparc batch <modes> "<task>"` - Parallel execution
-- `npx claude-flow sparc pipeline "<task>"` - Full pipeline processing
-- `npx claude-flow sparc concurrent <mode> "<tasks-file>"` - Multi-task processing
-
-### Build Commands
-- `npm run build` - Build project
-- `npm run test` - Run tests
-- `npm run lint` - Linting
-- `npm run typecheck` - Type checking
-
-## SPARC Workflow Phases
-
-1. **Specification** - Requirements analysis (`sparc run spec-pseudocode`)
-2. **Pseudocode** - Algorithm design (`sparc run spec-pseudocode`)
-3. **Architecture** - System design (`sparc run architect`)
-4. **Refinement** - TDD implementation (`sparc tdd`)
-5. **Completion** - Integration (`sparc run integration`)
-
-## Code Style & Best Practices
-
-- **Modular Design**: Files under 500 lines
-- **Environment Safety**: Never hardcode secrets
-- **Test-First**: Write tests before implementation
-- **Clean Architecture**: Separate concerns
-- **Documentation**: Keep updated
-
-## 🚀 Available Agents (54 Total)
-
-### Core Development
-`coder`, `reviewer`, `tester`, `planner`, `researcher`
-
-### Swarm Coordination
-`hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator`, `collective-intelligence-coordinator`, `swarm-memory-manager`
-
-### Consensus & Distributed
-`byzantine-coordinator`, `raft-manager`, `gossip-coordinator`, `consensus-builder`, `crdt-synchronizer`, `quorum-manager`, `security-manager`
-
-### Performance & Optimization
-`perf-analyzer`, `performance-benchmarker`, `task-orchestrator`, `memory-coordinator`, `smart-agent`
-
-### GitHub & Repository
-`github-modes`, `pr-manager`, `code-review-swarm`, `issue-tracker`, `release-manager`, `workflow-automation`, `project-board-sync`, `repo-architect`, `multi-repo-swarm`
-
-### SPARC Methodology
-`sparc-coord`, `sparc-coder`, `specification`, `pseudocode`, `architecture`, `refinement`
-
-### Specialized Development
-`backend-dev`, `mobile-dev`, `ml-developer`, `cicd-engineer`, `api-docs`, `system-architect`, `code-analyzer`, `base-template-generator`
-
-### Testing & Validation
-`tdd-london-swarm`, `production-validator`
-
-### Migration & Planning
-`migration-planner`, `swarm-init`
-
-## 🎯 Claude Code vs MCP Tools
-
-### Claude Code Handles ALL EXECUTION:
-- **Task tool**: Spawn and run agents concurrently for actual work
-- File operations (Read, Write, Edit, MultiEdit, Glob, Grep)
-- Code generation and programming
-- Bash commands and system operations
-- Implementation work
-- Project navigation and analysis
-- TodoWrite and task management
-- Git operations
-- Package management
-- Testing and debugging
-
-### MCP Tools ONLY COORDINATE:
-- Swarm initialization (topology setup)
-- Agent type definitions (coordination patterns)
-- Task orchestration (high-level planning)
-- Memory management
-- Neural features
-- Performance tracking
-- GitHub integration
-
-**KEY**: MCP coordinates the strategy, Claude Code's Task tool executes with real agents.
-
-## 🚀 Quick Setup
+## Development Commands
 
 ```bash
-# Add MCP servers (Claude Flow required, others optional)
-claude mcp add claude-flow npx claude-flow@alpha mcp start
-claude mcp add ruv-swarm npx ruv-swarm mcp start  # Optional: Enhanced coordination
-claude mcp add flow-nexus npx flow-nexus@latest mcp start  # Optional: Cloud features
+# Install dependencies (using pnpm)
+pnpm install
+
+# Run development server (http://localhost:3000)
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+
+# Type checking
+pnpm typecheck
+
+# Code quality
+pnpm check              # Check code with Biome
+pnpm check:write        # Check and auto-fix with Biome
+pnpm check:unsafe       # Check and auto-fix with unsafe fixes
+
+# Database migrations
+pnpm db:generate        # Generate migration files
+pnpm db:migrate         # Run migrations
+pnpm db:push            # Push schema changes directly to DB
+pnpm db:studio          # Open Drizzle Studio to view database
 ```
 
-## MCP Tool Categories
+## Architecture
 
-### Coordination
-`swarm_init`, `agent_spawn`, `task_orchestrate`
+### API Layer: tRPC
 
-### Monitoring
-`swarm_status`, `agent_list`, `agent_metrics`, `task_status`, `task_results`
+The application uses **tRPC** for type-safe client-server communication:
 
-### Memory & Neural
-`memory_usage`, `neural_status`, `neural_train`, `neural_patterns`
+- **Server setup**: `server/api/trpc.ts` configures tRPC with context and middleware
+- **Router definition**: `server/api/root.ts` exports the main `appRouter`
+- **Routers**: Individual routers in `server/api/routers/`
+  - `challenge.ts`: Challenge-related queries and mutations
+  - `theme.ts`: Theme management
+  - `userProgress.ts`: User progress tracking
+  - `xpTransaction.ts`: XP transaction history
+- **API endpoint**: `app/api/trpc/[trpc]/route.ts` handles all tRPC requests
+- **Client setup**: `trpc/client.tsx` provides `TRPCReactProvider` and `useTRPC` hook
+- **Server setup**: `trpc/server.tsx` provides server-side utilities (`trpc`, `getQueryClient`, `HydrateClient`)
+- **Type exports**: `types/trpc.ts` exports all tRPC types for use throughout the app
 
-### GitHub Integration
-`github_swarm`, `repo_analyze`, `pr_enhance`, `issue_triage`, `code_review`
+#### Adding a New tRPC Router
 
-### System
-`benchmark_run`, `features_detect`, `swarm_monitor`
+```typescript
+// server/api/routers/myRouter.ts
+import { z } from "zod";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/server/api/trpc";
 
-### Flow-Nexus MCP Tools (Optional Advanced Features)
-Flow-Nexus extends MCP capabilities with 70+ cloud-based orchestration tools:
+export const myRouter = createTRPCRouter({
+  // Public query
+  getPublicData: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.db.select().from(myTable).where(eq(myTable.id, input.id));
+    }),
 
-**Key MCP Tool Categories:**
-- **Swarm & Agents**: `swarm_init`, `swarm_scale`, `agent_spawn`, `task_orchestrate`
-- **Sandboxes**: `sandbox_create`, `sandbox_execute`, `sandbox_upload` (cloud execution)
-- **Templates**: `template_list`, `template_deploy` (pre-built project templates)
-- **Neural AI**: `neural_train`, `neural_patterns`, `seraphina_chat` (AI assistant)
-- **GitHub**: `github_repo_analyze`, `github_pr_manage` (repository management)
-- **Real-time**: `execution_stream_subscribe`, `realtime_subscribe` (live monitoring)
-- **Storage**: `storage_upload`, `storage_list` (cloud file management)
+  // Protected mutation (requires auth)
+  create: protectedProcedure
+    .input(z.object({ name: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.insert(myTable).values({
+        name: input.name,
+        userId: ctx.session.userId,
+      });
+    }),
+});
 
-**Authentication Required:**
-- Register: `mcp__flow-nexus__user_register` or `npx flow-nexus@latest register`
-- Login: `mcp__flow-nexus__user_login` or `npx flow-nexus@latest login`
-- Access 70+ specialized MCP tools for advanced orchestration
+// server/api/root.ts
+import { myRouter } from "./routers/myRouter";
 
-## 🚀 Agent Execution Flow with Claude Code
+export const appRouter = createTRPCRouter({
+  // ... other routers
+  myRouter,
+});
+```
 
-### The Correct Pattern:
+#### Using tRPC in Components
 
-1. **Optional**: Use MCP tools to set up coordination topology
-2. **REQUIRED**: Use Claude Code's Task tool to spawn agents that do actual work
-3. **REQUIRED**: Each agent runs hooks for coordination
-4. **REQUIRED**: Batch all operations in single messages
+```typescript
+// Client component
+"use client";
+import { useTRPC } from "@/trpc/client";
 
-### Example Full-Stack Development:
+export function MyComponent() {
+  const { data, isLoading } = useTRPC.challenge.list.useQuery({
+    difficulty: "beginner",
+  });
+
+  const createMutation = useTRPC.challenge.create.useMutation();
+
+  return <div>{/* ... */}</div>;
+}
+
+// Server component
+import { trpc } from "@/trpc/server";
+
+export async function MyServerComponent() {
+  const { challenges } = await trpc.challenge.list.query({
+    difficulty: "beginner",
+  });
+
+  return <div>{/* ... */}</div>;
+}
+```
+
+### Authentication: Better Auth
+
+Authentication is handled by **Better Auth** (not NextAuth):
+
+- **Server config**: `lib/auth.ts` configures Better Auth with Drizzle adapter
+- **Client config**: `lib/auth-client.ts` provides `authClient` and helper functions
+- **API routes**: `app/api/auth/[...all]/route.ts` handles auth endpoints
+- **Database schema**: `server/db/schema/auth.ts` contains user, session, account, verification, and apikey tables
+- **Social providers**: GitHub, Google, and Microsoft configured (requires env vars)
+
+### Database Layer
+
+- **Connection**: `server/db/index.ts` creates a Neon serverless connection
+- **Schemas**: Split into separate files in `server/db/schema/`:
+  - `auth.ts`: User authentication tables (user, session, account, verification, apikey)
+  - `challenge.ts`: Challenge system (challenge, challengeTheme, userProgress, userSubmission, xpTransaction)
+  - `index.ts`: Exports all schemas
+- **Config**: `drizzle.config.ts` points to `server/db/schema` directory
+
+### Challenge Validation System
+
+The website backend tracks user progress through an objectives-based validation system:
+
+**Database Schema**:
+
+`userSubmission` table stores submission results:
+- `validated: boolean` - Overall pass/fail status (true only if ALL objectives passed)
+- `objectives: json` - Array of enriched `Objective` results from the submission
+
+`challengeObjective` table stores objective metadata (synced from challenge repo):
+- `objectiveKey: text` - Unique key within challenge (CRD metadata.name)
+- `title: text` - Human-readable title
+- `description: text` - Objective description
+- `category: objectiveCategoryEnum` - One of: status, log, event, metrics, rbac, connectivity
+- `displayOrder: integer` - Order for display
+
+**Types** (`types/cli-api.ts`):
+```typescript
+// Raw result from CLI (sent in submission)
+interface ObjectiveResult {
+  objectiveKey: string;  // CRD metadata.name
+  passed: boolean;       // CRD status.allPassed
+  message?: string;      // CRD status message
+}
+
+// Enriched objective for frontend (stored in userSubmission.objectives)
+interface Objective {
+  id: string;            // objectiveKey
+  name: string;          // title from challengeObjective table
+  description?: string;  // description from challengeObjective table
+  passed: boolean;       // Validation result
+  category: ObjectiveCategory;  // status | log | event | metrics | rbac | connectivity
+  message?: string;      // Result message
+}
+```
+
+**tRPC Endpoints** (`server/api/routers/userProgress.ts`):
+- `submitChallenge` - Receives `{ challengeSlug, results: ObjectiveResult[] }` from CLI
+  - Fetches objective metadata from `challengeObjective` table
+  - Validates ALL registered objectives are present (rejects missing or unknown objectives)
+  - Enriches results with metadata to create `Objective[]`
+  - Stores enriched objectives in `userSubmission.objectives`
+  - Awards XP and updates user progress on successful completion
+- `getLatestValidationStatus` - Returns `{ hasSubmission, validated, objectives, timestamp }`
+  - Returns stored `Objective[]` for UI rendering
+  - Frontend polls this endpoint for real-time updates
+
+**Integration Flow**:
+1. User runs `kubeasy challenge submit <slug>` in CLI
+2. CLI reads validation CRDs from Kubernetes cluster
+3. CLI sends `{ results: ObjectiveResult[] }` to `submitChallenge`
+4. Backend enriches with metadata and stores in `userSubmission.objectives`
+5. Frontend queries `getLatestValidationStatus` to display objectives status
+
+### Project Structure
+
+```
+app/                          # Next.js App Router
+  (main)/                     # Main layout group (requires auth)
+    challenges/               # Challenge listing and detail pages
+    dashboard/                # User dashboard
+    themes/                   # Theme listing and detail pages
+    page.tsx                  # Main landing page
+    layout.tsx                # Main layout with header/footer
+  api/
+    auth/[...all]/            # Better Auth API routes
+    trpc/[trpc]/              # tRPC API handler
+  login/                      # Login page
+  layout.tsx                  # Root layout
+components/                   # React components
+  ui/                         # shadcn/ui components
+    alert.tsx                 # Alert component (destructive/default)
+    badge.tsx, button.tsx     # Basic UI components
+    card.tsx, input.tsx       # Form components
+    navigation-menu.tsx       # Navigation component
+  *-section.tsx               # Landing page sections
+  challenge-*.tsx             # Challenge-related components
+  user-*.tsx                  # User-related components
+  header.tsx, footer.tsx      # Layout components
+  login-card.tsx              # Login form with social providers
+lib/                          # Utilities
+  auth.ts                     # Better Auth server config
+  auth-client.ts              # Better Auth client config
+  utils.ts                    # Utility functions (cn, etc.)
+  constants.ts                # App constants
+schemas/                      # Zod validation schemas
+  challengeFilters.ts         # Challenge filter schemas
+server/                       # Backend code
+  api/
+    routers/                  # tRPC routers
+      challenge.ts            # Challenge operations
+      theme.ts                # Theme operations
+      userProgress.ts         # Progress tracking
+      xpTransaction.ts        # XP transactions
+    root.ts                   # Main tRPC router
+    trpc.ts                   # tRPC configuration
+  db/
+    schema/                   # Drizzle schemas
+      auth.ts                 # Auth tables
+      challenge.ts            # Challenge tables
+      index.ts                # Schema exports
+    index.ts                  # Database connection
+trpc/                         # tRPC client/server setup
+  client.tsx                  # Client provider
+  server.tsx                  # Server utilities
+  query-client.ts             # React Query config
+types/                        # TypeScript type definitions
+  trpc.ts                     # tRPC type exports
+public/                       # Static assets
+drizzle/                      # Generated migration files
+.husky/                       # Git hooks
+  pre-commit                  # Pre-commit hook (lint-staged + typecheck)
+```
+
+### Environment Variables
+
+Required environment variables (`.env`):
+```bash
+DATABASE_URL=                  # Neon PostgreSQL connection string
+BETTER_AUTH_URL=               # Production URL (e.g., https://kubeasy.dev)
+BETTER_AUTH_SECRET=            # Better Auth secret key
+GITHUB_CLIENT_ID=              # GitHub OAuth app ID
+GITHUB_CLIENT_SECRET=          # GitHub OAuth app secret
+GOOGLE_CLIENT_ID=              # Google OAuth client ID
+GOOGLE_CLIENT_SECRET=          # Google OAuth client secret
+MICROSOFT_CLIENT_ID=           # Microsoft OAuth client ID
+MICROSOFT_CLIENT_SECRET=       # Microsoft OAuth client secret
+RESEND_API_KEY=                # Resend API key for transactional emails
+```
+
+### OAuth Configuration for Preview Deployments
+
+The project uses **Better Auth's OAuth Proxy plugin** to handle authentication on Vercel preview deployments without needing to register each preview URL with OAuth providers.
+
+#### How It Works
+
+1. **Production URL Only**: Only the production URL needs to be registered with OAuth providers (GitHub, Google, Microsoft)
+2. **Automatic Proxying**: On preview deployments, the `oAuthProxy` plugin automatically proxies OAuth requests through the production URL
+3. **Secure Cookie Sharing**: Cookies are encrypted and passed via URL parameters between the proxy and the preview environment
+
+#### OAuth Provider Setup
+
+Register these callback URLs with your OAuth providers:
+
+```
+GitHub:     https://kubeasy.dev/api/auth/callback/github
+Google:     https://kubeasy.dev/api/auth/callback/google
+Microsoft:  https://kubeasy.dev/api/auth/callback/microsoft
+```
+
+#### Configuration
+
+The OAuth proxy is configured in `lib/auth.ts`:
+
+```typescript
+import { oAuthProxy } from "better-auth/plugins";
+
+export const auth = betterAuth({
+  baseURL: env.BETTER_AUTH_URL,
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://kubeasy.dev",
+    "https://*.vercel.app", // Allow all Vercel preview deployments
+  ],
+  plugins: [
+    oAuthProxy(), // Automatically infers URLs from BETTER_AUTH_URL
+  ],
+  socialProviders: {
+    github: {
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
+      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/github`,
+    },
+    // ... other providers
+  },
+});
+```
+
+**Important configuration notes:**
+- `baseURL`: Explicitly set to production URL to ensure consistent OAuth redirects
+- `trustedOrigins`: Uses wildcard pattern `*.vercel.app` to allow all preview deployments
+- This prevents `INVALID_ORIGIN` errors on preview branches
+
+The plugin automatically:
+- Detects if running on a preview deployment (different from `BETTER_AUTH_URL`)
+- Creates a proxy endpoint at `/api/auth/oauth-proxy`
+- Forwards OAuth callbacks through production
+- Returns users to the correct preview URL after authentication
+
+#### Vercel Environment Variables
+
+On Vercel, set `BETTER_AUTH_URL` to your production URL in **both** production and preview environments. The plugin will automatically detect when it's running on a preview URL and enable proxying.
+
+## Code Quality & Git Hooks
+
+### Pre-commit Hook
+
+The project uses **Husky** with **lint-staged** to ensure code quality:
+
+1. **Biome check** runs automatically on staged files
+2. **TypeScript check** validates types across the entire project
+3. Commit is blocked if there are errors
+
+Configuration in `package.json`:
+```json
+"lint-staged": {
+  "*.{js,jsx,ts,tsx,mjs,cjs}": [
+    "biome check --write --unsafe --files-ignore-unknown=true --no-errors-on-unmatched"
+  ],
+  "*.{json,css}": [
+    "biome check --write --files-ignore-unknown=true --no-errors-on-unmatched"
+  ]
+}
+```
+
+### Biome Configuration
+
+Biome is configured to:
+- Auto-format code with 2-space indentation
+- Check for code quality issues
+- Ignore Tailwind 4 CSS at-rules (`@custom-variant`, `@theme`, `@apply`)
+- Treat some issues as warnings instead of errors (array index keys in static lists)
+
+## Key Patterns
+
+### Database Operations
+
+```typescript
+// In a tRPC procedure
+import { challenge } from "@/server/db/schema/challenge";
+import { eq } from "drizzle-orm";
+
+export const myProcedure = protectedProcedure
+  .query(async ({ ctx }) => {
+    // Access database via ctx.db
+    const challenges = await ctx.db.select().from(challenge);
+
+    const specific = await ctx.db
+      .select()
+      .from(challenge)
+      .where(eq(challenge.id, "some-id"));
+
+    return { challenges, specific };
+  });
+```
+
+### Type-Safe Client Usage
+
+```typescript
+// Import typed exports
+import type { Challenge, ChallengeDetail, UserStats } from "@/types/trpc";
+
+// Use in components
+const challenge: Challenge = data.challenges[0];
+const details: ChallengeDetail = await trpc.challenge.getBySlug.query({ slug: "intro" });
+```
+
+### Authentication Check
+
+```typescript
+// Server component
+import { auth } from "@/lib/auth";
+
+export async function MyPage() {
+  const session = await auth();
+  if (!session) redirect("/login");
+
+  return <div>Welcome {session.user.name}</div>;
+}
+
+// Client component
+"use client";
+import { useSession } from "@/lib/auth-client";
+
+export function MyComponent() {
+  const { data: session } = useSession();
+  if (!session) return <LoginPrompt />;
+
+  return <div>Welcome {session.user.name}</div>;
+}
+```
+
+## Exception Catching
+
+- Use `Sentry.captureException(error)` to capture an exception and log the error in Sentry.
+- Use this in try catch blocks or areas where exceptions are expected
+
+### Tracing Examples
+
+- Spans should be created for meaningful actions within applications like button clicks, API calls, and function calls
+- Use the `Sentry.startSpan` function to create a span
+- Child spans can exist within a parent span
+
+### Custom Span instrumentation in component actions
+
+- The `name` and `op` properties should be meaningful for the activities in the call.
+- Attach attributes based on relevant information and metrics from the request
 
 ```javascript
-// Single message with all agent spawning via Claude Code's Task tool
-[Parallel Agent Execution]:
-  Task("Backend Developer", "Build REST API with Express. Use hooks for coordination.", "backend-dev")
-  Task("Frontend Developer", "Create React UI. Coordinate with backend via memory.", "coder")
-  Task("Database Architect", "Design PostgreSQL schema. Store schema in memory.", "code-analyzer")
-  Task("Test Engineer", "Write Jest tests. Check memory for API contracts.", "tester")
-  Task("DevOps Engineer", "Setup Docker and CI/CD. Document in memory.", "cicd-engineer")
-  Task("Security Auditor", "Review authentication. Report findings via hooks.", "reviewer")
-  
-  // All todos batched together
-  TodoWrite { todos: [...8-10 todos...] }
-  
-  // All file operations together
-  Write "backend/server.js"
-  Write "frontend/App.jsx"
-  Write "database/schema.sql"
+function TestComponent() {
+  const handleTestButtonClick = () => {
+    // Create a transaction/span to measure performance
+    Sentry.startSpan(
+      {
+        op: "ui.click",
+        name: "Test Button Click",
+      },
+      (span) => {
+        const value = "some config";
+        const metric = "some metric";
+
+        // Metrics can be added to the span
+        span.setAttribute("config", value);
+        span.setAttribute("metric", metric);
+
+        doSomething();
+      },
+    );
+  };
+
+  return (
+    <button type="button" onClick={handleTestButtonClick}>
+      Test Sentry
+    </button>
+  );
+}
 ```
 
-## 📋 Agent Coordination Protocol
+### Custom span instrumentation in API calls
 
-### Every Agent Spawned via Task Tool MUST:
-
-**1️⃣ BEFORE Work:**
-```bash
-npx claude-flow@alpha hooks pre-task --description "[task]"
-npx claude-flow@alpha hooks session-restore --session-id "swarm-[id]"
-```
-
-**2️⃣ DURING Work:**
-```bash
-npx claude-flow@alpha hooks post-edit --file "[file]" --memory-key "swarm/[agent]/[step]"
-npx claude-flow@alpha hooks notify --message "[what was done]"
-```
-
-**3️⃣ AFTER Work:**
-```bash
-npx claude-flow@alpha hooks post-task --task-id "[task]"
-npx claude-flow@alpha hooks session-end --export-metrics true
-```
-
-## 🎯 Concurrent Execution Examples
-
-### ✅ CORRECT WORKFLOW: MCP Coordinates, Claude Code Executes
+- The `name` and `op` properties should be meaningful for the activities in the call.
+- Attach attributes based on relevant information and metrics from the request
 
 ```javascript
-// Step 1: MCP tools set up coordination (optional, for complex tasks)
-[Single Message - Coordination Setup]:
-  mcp__claude-flow__swarm_init { topology: "mesh", maxAgents: 6 }
-  mcp__claude-flow__agent_spawn { type: "researcher" }
-  mcp__claude-flow__agent_spawn { type: "coder" }
-  mcp__claude-flow__agent_spawn { type: "tester" }
-
-// Step 2: Claude Code Task tool spawns ACTUAL agents that do the work
-[Single Message - Parallel Agent Execution]:
-  // Claude Code's Task tool spawns real agents concurrently
-  Task("Research agent", "Analyze API requirements and best practices. Check memory for prior decisions.", "researcher")
-  Task("Coder agent", "Implement REST endpoints with authentication. Coordinate via hooks.", "coder")
-  Task("Database agent", "Design and implement database schema. Store decisions in memory.", "code-analyzer")
-  Task("Tester agent", "Create comprehensive test suite with 90% coverage.", "tester")
-  Task("Reviewer agent", "Review code quality and security. Document findings.", "reviewer")
-  
-  // Batch ALL todos in ONE call
-  TodoWrite { todos: [
-    {id: "1", content: "Research API patterns", status: "in_progress", priority: "high"},
-    {id: "2", content: "Design database schema", status: "in_progress", priority: "high"},
-    {id: "3", content: "Implement authentication", status: "pending", priority: "high"},
-    {id: "4", content: "Build REST endpoints", status: "pending", priority: "high"},
-    {id: "5", content: "Write unit tests", status: "pending", priority: "medium"},
-    {id: "6", content: "Integration tests", status: "pending", priority: "medium"},
-    {id: "7", content: "API documentation", status: "pending", priority: "low"},
-    {id: "8", content: "Performance optimization", status: "pending", priority: "low"}
-  ]}
-  
-  // Parallel file operations
-  Bash "mkdir -p app/{src,tests,docs,config}"
-  Write "app/package.json"
-  Write "app/src/server.js"
-  Write "app/tests/server.test.js"
-  Write "app/docs/API.md"
+async function fetchUserData(userId) {
+  return Sentry.startSpan(
+    {
+      op: "http.client",
+      name: `GET /api/users/${userId}`,
+    },
+    async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      const data = await response.json();
+      return data;
+    },
+  );
+}
 ```
 
-### ❌ WRONG (Multiple Messages):
+### Logs
+
+- Where logs are used, ensure Sentry is imported using `import * as Sentry from "@sentry/nextjs"`
+- Enable logging in Sentry using `Sentry.init({ enableLogs: true })`
+- Reference the logger using `const { logger } = Sentry`
+- Sentry offers a consoleLoggingIntegration that can be used to log specific console error types automatically without instrumenting the individual logger calls
+
+### Configuration
+
+- In NextJS the client side Sentry initialization is in `instrumentation-client.ts`, the server initialization is in `sentry.server.config.ts` and the edge initialization is in `sentry.edge.config.ts`
+- Initialization does not need to be repeated in other files, it only needs to happen the files mentioned above. You should use `import * as Sentry from "@sentry/nextjs"` to reference Sentry functionality
+
+### Baseline
+
 ```javascript
-Message 1: mcp__claude-flow__swarm_init
-Message 2: Task("agent 1")
-Message 3: TodoWrite { todos: [single todo] }
-Message 4: Write "file.js"
-// This breaks parallel coordination!
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+
+  enableLogs: true,
+});
 ```
 
-## Performance Benefits
+### Logger Integration
 
-- **84.8% SWE-Bench solve rate**
-- **32.3% token reduction**
-- **2.8-4.4x speed improvement**
-- **27+ neural models**
+```javascript
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+  integrations: [
+    // send console.log, console.error, and console.warn calls as logs to Sentry
+    Sentry.consoleLoggingIntegration({ levels: ["log", "error", "warn"] }),
+  ],
+});
+```
 
-## Hooks Integration
+### Logger Examples
 
-### Pre-Operation
-- Auto-assign agents by file type
-- Validate commands for safety
-- Prepare resources automatically
-- Optimize topology by complexity
-- Cache searches
+`logger.fmt` is a template literal function that should be used to bring variables into the structured logs.
 
-### Post-Operation
-- Auto-format code
-- Train neural patterns
-- Update memory
-- Analyze performance
-- Track token usage
+```javascript
+logger.trace("Starting database connection", { database: "users" });
+logger.debug(logger.fmt`Cache miss for user: ${userId}`);
+logger.info("Updated profile", { profileId: 345 });
+logger.warn("Rate limit reached for endpoint", {
+  endpoint: "/api/results/",
+  isEnterprise: false,
+});
+logger.error("Failed to process payment", {
+  orderId: "order_123",
+  amount: 99.99,
+});
+logger.fatal("Database connection pool exhausted", {
+  database: "users",
+  activeConnections: 100,
+});
+```
 
-### Session Management
-- Generate summaries
-- Persist state
-- Track metrics
-- Restore context
-- Export workflows
+## Notes
 
-## Advanced Features (v2.0.0)
-
-- 🚀 Automatic Topology Selection
-- ⚡ Parallel Execution (2.8-4.4x speed)
-- 🧠 Neural Training
-- 📊 Bottleneck Analysis
-- 🤖 Smart Auto-Spawning
-- 🛡️ Self-Healing Workflows
-- 💾 Cross-Session Memory
-- 🔗 GitHub Integration
-
-## Integration Tips
-
-1. Start with basic swarm init
-2. Scale agents gradually
-3. Use memory for context
-4. Monitor progress regularly
-5. Train patterns from success
-6. Enable hooks automation
-7. Use GitHub tools first
-
-## Support
-
-- Documentation: https://github.com/ruvnet/claude-flow
-- Issues: https://github.com/ruvnet/claude-flow/issues
-- Flow-Nexus Platform: https://flow-nexus.ruv.io (registration required for cloud features)
-
----
-
-Remember: **Claude Flow coordinates, Claude Code creates!**
-
-# important-instruction-reminders
-Do what has been asked; nothing more, nothing less.
-NEVER create files unless they're absolutely necessary for achieving your goal.
-ALWAYS prefer editing an existing file to creating a new one.
-NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
-Never save working files, text/mds and tests to the root folder.
+- **Package manager**: Use `pnpm` (configured in `package.json`)
+- **Path alias**: `@/*` maps to project root
+- **Fonts**: Geist Sans and Geist Mono from `geist` package
+- **Analytics**: Vercel Analytics integrated in root layout
+- **Never run `pnpm build`** to test - it breaks `pnpm dev` (Next.js issue). Use `pnpm typecheck` instead
+- **Commit hooks**: All commits automatically check code quality. Fix errors or use `--no-verify` to bypass (not recommended)
+- **Documentation**: Use Context7 MCP server for up-to-date library documentation
