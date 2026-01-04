@@ -7,7 +7,7 @@
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
 import db from "@/server/db";
-import { challenge, challengeTheme } from "@/server/db/schema";
+import { challenge, challengeTheme, challengeType } from "@/server/db/schema";
 
 /**
  * Get all challenges
@@ -28,7 +28,8 @@ export async function getChallenges() {
       theme: challengeTheme.name,
       themeSlug: challenge.theme,
       difficulty: challenge.difficulty,
-      type: challenge.type,
+      type: challengeType.name,
+      typeSlug: challenge.type,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
@@ -37,7 +38,8 @@ export async function getChallenges() {
       updatedAt: challenge.updatedAt,
     })
     .from(challenge)
-    .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug));
+    .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+    .innerJoin(challengeType, eq(challenge.type, challengeType.slug));
 
   return {
     challenges,
@@ -63,7 +65,8 @@ export async function getChallengeBySlug(slug: string) {
       theme: challengeTheme.name,
       themeSlug: challenge.theme,
       difficulty: challenge.difficulty,
-      type: challenge.type,
+      type: challengeType.name,
+      typeSlug: challenge.type,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
@@ -73,6 +76,7 @@ export async function getChallengeBySlug(slug: string) {
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+    .innerJoin(challengeType, eq(challenge.type, challengeType.slug))
     .where(eq(challenge.slug, slug))
     .limit(1);
 
@@ -137,9 +141,7 @@ export async function getChallengeCountByTheme(themeSlug: string) {
  * Efficient count query without fetching all challenge data
  * Cached with 'public' profile
  */
-export async function getChallengeCountByType(
-  typeSlug: "build" | "fix" | "migrate",
-) {
+export async function getChallengeCountByType(typeSlug: string) {
   "use cache";
   cacheLife("hours");
   cacheTag("challenges", `type-${typeSlug}`);
@@ -153,8 +155,25 @@ export async function getChallengeCountByType(
 }
 
 /**
+ * Get all challenge types
+ * Cached with 'public' profile
+ */
+export async function getTypes() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("types");
+
+  const types = await db
+    .select()
+    .from(challengeType)
+    .orderBy(asc(challengeType.name));
+
+  return types;
+}
+
+/**
  * Get all challenge types with their counts
- * Returns static type definitions with challenge counts
+ * Returns type data from database with challenge counts
  * Cached with 'public' profile
  */
 export async function getChallengeTypes() {
@@ -162,30 +181,11 @@ export async function getChallengeTypes() {
   cacheLife("hours");
   cacheTag("challenges", "types");
 
-  // Static type definitions
-  const typeDefinitions = [
-    {
-      slug: "fix" as const,
-      name: "Fix",
-      description:
-        "Diagnose and resolve issues in broken Kubernetes deployments. Debug pods, fix configurations, and restore cluster health.",
-      logo: "Wrench",
-    },
-    {
-      slug: "build" as const,
-      name: "Build",
-      description:
-        "Create Kubernetes resources from scratch. Deploy applications, configure services, and set up infrastructure.",
-      logo: "Hammer",
-    },
-    {
-      slug: "migrate" as const,
-      name: "Migrate",
-      description:
-        "Transform and upgrade existing deployments. Convert configurations, update APIs, and modernize workloads.",
-      logo: "ArrowRightLeft",
-    },
-  ];
+  // Get all types from database
+  const types = await db
+    .select()
+    .from(challengeType)
+    .orderBy(asc(challengeType.name));
 
   // Get counts for each type
   const counts = await db
@@ -198,7 +198,7 @@ export async function getChallengeTypes() {
 
   const countMap = new Map(counts.map((c) => [c.type, c.count]));
 
-  return typeDefinitions.map((type) => ({
+  return types.map((type) => ({
     ...type,
     challengeCount: countMap.get(type.slug) ?? 0,
   }));
@@ -206,49 +206,21 @@ export async function getChallengeTypes() {
 
 /**
  * Get a single challenge type by slug
- * Returns type definition with challenge count
+ * Returns type from database
  * Cached with 'public' profile
  */
-export async function getChallengeTypeBySlug(
-  slug: "build" | "fix" | "migrate",
-) {
+export async function getTypeBySlug(slug: string) {
   "use cache";
   cacheLife("hours");
-  cacheTag("challenges", `type-${slug}`);
+  cacheTag("types", `type-${slug}`);
 
-  const typeDefinitions: Record<
-    "build" | "fix" | "migrate",
-    { name: string; description: string; logo: string }
-  > = {
-    fix: {
-      name: "Fix",
-      description:
-        "Diagnose and resolve issues in broken Kubernetes deployments. Debug pods, fix configurations, and restore cluster health.",
-      logo: "Wrench",
-    },
-    build: {
-      name: "Build",
-      description:
-        "Create Kubernetes resources from scratch. Deploy applications, configure services, and set up infrastructure.",
-      logo: "Hammer",
-    },
-    migrate: {
-      name: "Migrate",
-      description:
-        "Transform and upgrade existing deployments. Convert configurations, update APIs, and modernize workloads.",
-      logo: "ArrowRightLeft",
-    },
-  };
+  const [type] = await db
+    .select()
+    .from(challengeType)
+    .where(eq(challengeType.slug, slug))
+    .limit(1);
 
-  const typeInfo = typeDefinitions[slug];
-  if (!typeInfo) {
-    return null;
-  }
-
-  return {
-    slug,
-    ...typeInfo,
-  };
+  return type ?? null;
 }
 
 /**

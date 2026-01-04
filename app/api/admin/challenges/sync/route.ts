@@ -10,6 +10,7 @@ import {
   challenge,
   challengeObjective,
   challengeTheme,
+  challengeType,
 } from "@/server/db/schema";
 
 // User type with admin plugin fields
@@ -42,7 +43,7 @@ const challengeSyncSchema = z.object({
   description: z.string().min(1),
   theme: z.string().min(1),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  type: z.enum(["build", "fix", "migrate"]).default("fix"),
+  type: z.string().min(1).default("fix"),
   estimatedTime: z.number().int().positive(),
   initialSituation: z.string().min(1),
   objective: z.string().min(1),
@@ -207,6 +208,32 @@ export async function POST(request: Request) {
             {
               error: "Invalid themes",
               details: `The following themes do not exist: ${missingThemes.join(", ")}`,
+            },
+            { status: 400 },
+          );
+        }
+
+        // Validate that all types exist
+        const uniqueTypes = [
+          ...new Set(incomingChallenges.map((c) => c.type)),
+        ];
+        const existingTypes = await db
+          .select({ slug: challengeType.slug })
+          .from(challengeType);
+        const existingTypeSlugs = new Set(existingTypes.map((t) => t.slug));
+
+        const missingTypes = uniqueTypes.filter(
+          (type) => !existingTypeSlugs.has(type),
+        );
+
+        if (missingTypes.length > 0) {
+          logger.warn("Sync failed - missing types", {
+            missingTypes,
+          });
+          return NextResponse.json(
+            {
+              error: "Invalid types",
+              details: `The following types do not exist: ${missingTypes.join(", ")}`,
             },
             { status: 400 },
           );

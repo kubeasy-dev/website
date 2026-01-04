@@ -23,16 +23,21 @@ export const challengeTheme = pgTable("challenge_theme", {
     .notNull(),
 });
 
+export const challengeType = pgTable("challenge_type", {
+  slug: text("slug").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  logo: text("logo"),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
 export const challengeDifficultyEnum = pgEnum("challenge_difficulty", [
   "easy",
   "medium",
   "hard",
-]);
-
-export const challengeTypeEnum = pgEnum("challenge_type", [
-  "build",
-  "fix",
-  "migrate",
 ]);
 
 export const challenge = pgTable(
@@ -46,7 +51,10 @@ export const challenge = pgTable(
       .notNull()
       .references(() => challengeTheme.slug, { onDelete: "cascade" }),
     difficulty: challengeDifficultyEnum("difficulty").notNull(),
-    type: challengeTypeEnum("type").notNull().default("fix"),
+    type: text("type")
+      .notNull()
+      .default("fix")
+      .references(() => challengeType.slug, { onDelete: "cascade" }),
     estimatedTime: integer("estimated_time").notNull(),
     initialSituation: text("initial_situation").notNull(),
     objective: text("objective").notNull(),

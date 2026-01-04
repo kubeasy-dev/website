@@ -16,20 +16,15 @@ import {
 } from "@/lib/seo";
 import {
   getChallengeCountByType,
-  getChallengeTypeBySlug,
+  getTypeBySlug,
+  getTypes,
 } from "@/server/db/queries";
-
-const validTypes = ["build", "fix", "migrate"] as const;
-type ValidType = (typeof validTypes)[number];
-
-function isValidType(slug: string): slug is ValidType {
-  return validTypes.includes(slug as ValidType);
-}
 
 // Generate static params for all types at build time
 export async function generateStaticParams() {
-  return validTypes.map((slug) => ({
-    slug,
+  const types = await getTypes();
+  return types.map((type) => ({
+    slug: type.slug,
   }));
 }
 
@@ -41,11 +36,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
-  if (!isValidType(slug)) {
-    return {};
-  }
-
-  const type = await getChallengeTypeBySlug(slug);
+  const type = await getTypeBySlug(slug);
 
   if (!type) {
     return {};
@@ -102,13 +93,8 @@ export default async function TypePage({
   const { slug } = await params;
   cacheTag("types-page", `type-${slug}`);
 
-  // Validate slug is a valid type
-  if (!isValidType(slug)) {
-    notFound();
-  }
-
   // Verify type exists (direct DB access with caching)
-  const type = await getChallengeTypeBySlug(slug);
+  const type = await getTypeBySlug(slug);
 
   if (!type) {
     notFound();
