@@ -29,7 +29,7 @@ export async function getChallenges() {
       themeSlug: challenge.theme,
       difficulty: challenge.difficulty,
       type: challengeType.name,
-      typeSlug: challenge.type,
+      typeSlug: challenge.typeSlug,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
@@ -39,7 +39,7 @@ export async function getChallenges() {
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
-    .innerJoin(challengeType, eq(challenge.type, challengeType.slug));
+    .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug));
 
   return {
     challenges,
@@ -66,7 +66,7 @@ export async function getChallengeBySlug(slug: string) {
       themeSlug: challenge.theme,
       difficulty: challenge.difficulty,
       type: challengeType.name,
-      typeSlug: challenge.type,
+      typeSlug: challenge.typeSlug,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
@@ -76,7 +76,7 @@ export async function getChallengeBySlug(slug: string) {
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
-    .innerJoin(challengeType, eq(challenge.type, challengeType.slug))
+    .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug))
     .where(eq(challenge.slug, slug))
     .limit(1);
 
@@ -149,7 +149,7 @@ export async function getChallengeCountByType(typeSlug: string) {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(challenge)
-    .where(eq(challenge.type, typeSlug));
+    .where(eq(challenge.typeSlug, typeSlug));
 
   return result[0]?.count ?? 0;
 }
@@ -190,11 +190,11 @@ export async function getChallengeTypes() {
   // Get counts for each type
   const counts = await db
     .select({
-      type: challenge.type,
+      type: challenge.typeSlug,
       count: sql<number>`count(*)`,
     })
     .from(challenge)
-    .groupBy(challenge.type);
+    .groupBy(challenge.typeSlug);
 
   const countMap = new Map(counts.map((c) => [c.type, c.count]));
 

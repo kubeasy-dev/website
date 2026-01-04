@@ -267,7 +267,7 @@ export async function POST(request: Request) {
                 description: incomingChallenge.description,
                 theme: incomingChallenge.theme,
                 difficulty: incomingChallenge.difficulty,
-                type: incomingChallenge.type,
+                typeSlug: incomingChallenge.type,
                 estimatedTime: incomingChallenge.estimatedTime,
                 initialSituation: incomingChallenge.initialSituation,
                 objective: incomingChallenge.objective,
@@ -294,7 +294,7 @@ export async function POST(request: Request) {
               existing.description !== incomingChallenge.description ||
               existing.theme !== incomingChallenge.theme ||
               existing.difficulty !== incomingChallenge.difficulty ||
-              existing.type !== incomingChallenge.type ||
+              existing.typeSlug !== incomingChallenge.type ||
               existing.estimatedTime !== incomingChallenge.estimatedTime ||
               existing.initialSituation !==
                 incomingChallenge.initialSituation ||
@@ -310,7 +310,7 @@ export async function POST(request: Request) {
                   description: incomingChallenge.description,
                   theme: incomingChallenge.theme,
                   difficulty: incomingChallenge.difficulty,
-                  type: incomingChallenge.type,
+                  typeSlug: incomingChallenge.type,
                   estimatedTime: incomingChallenge.estimatedTime,
                   initialSituation: incomingChallenge.initialSituation,
                   objective: incomingChallenge.objective,

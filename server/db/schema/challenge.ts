@@ -51,7 +51,7 @@ export const challenge = pgTable(
       .notNull()
       .references(() => challengeTheme.slug, { onDelete: "cascade" }),
     difficulty: challengeDifficultyEnum("difficulty").notNull(),
-    type: text("type")
+    typeSlug: text("type")
       .notNull()
       .default("fix")
       .references(() => challengeType.slug, { onDelete: "cascade" }),
@@ -72,7 +72,7 @@ export const challenge = pgTable(
     // Index pour le filtre par thème
     index("challenge_theme_idx").on(table.theme),
     // Index pour le filtre par type
-    index("challenge_type_idx").on(table.type),
+    index("challenge_type_idx").on(table.typeSlug),
     // Index composite pour filtres combinés (thème + difficulté)
     index("challenge_theme_difficulty_idx").on(table.theme, table.difficulty),
     // Index pour la recherche par titre avec ILIKE
