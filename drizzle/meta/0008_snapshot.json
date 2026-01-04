@@ -1,5 +1,5 @@
 {
-  "id": "969be70a-929a-42aa-8b3b-af050c92d2cb",
+  "id": "db395289-e86f-4fc4-b7b6-1249f8ca5c85",
   "prevId": "3897f97d-3a35-4729-ab35-f48d74d7e8a7",
   "version": "7",
   "dialect": "postgresql",
@@ -787,7 +787,7 @@
           "tableTo": "challenge_type",
           "columnsFrom": ["type"],
           "columnsTo": ["slug"],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "no action"
         }
       },
@@ -992,6 +992,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",

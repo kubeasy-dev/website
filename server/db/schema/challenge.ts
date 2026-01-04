@@ -28,6 +28,7 @@ export const challengeType = pgTable("challenge_type", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   logo: text("logo"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
