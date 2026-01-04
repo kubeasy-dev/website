@@ -42,6 +42,7 @@ const challengeSyncSchema = z.object({
   description: z.string().min(1),
   theme: z.string().min(1),
   difficulty: z.enum(["easy", "medium", "hard"]),
+  type: z.enum(["build", "fix", "migrate"]).default("fix"),
   estimatedTime: z.number().int().positive(),
   initialSituation: z.string().min(1),
   objective: z.string().min(1),
@@ -239,6 +240,7 @@ export async function POST(request: Request) {
                 description: incomingChallenge.description,
                 theme: incomingChallenge.theme,
                 difficulty: incomingChallenge.difficulty,
+                type: incomingChallenge.type,
                 estimatedTime: incomingChallenge.estimatedTime,
                 initialSituation: incomingChallenge.initialSituation,
                 objective: incomingChallenge.objective,
@@ -265,6 +267,7 @@ export async function POST(request: Request) {
               existing.description !== incomingChallenge.description ||
               existing.theme !== incomingChallenge.theme ||
               existing.difficulty !== incomingChallenge.difficulty ||
+              existing.type !== incomingChallenge.type ||
               existing.estimatedTime !== incomingChallenge.estimatedTime ||
               existing.initialSituation !==
                 incomingChallenge.initialSituation ||
@@ -280,6 +283,7 @@ export async function POST(request: Request) {
                   description: incomingChallenge.description,
                   theme: incomingChallenge.theme,
                   difficulty: incomingChallenge.difficulty,
+                  type: incomingChallenge.type,
                   estimatedTime: incomingChallenge.estimatedTime,
                   initialSituation: incomingChallenge.initialSituation,
                   objective: incomingChallenge.objective,
@@ -326,6 +330,7 @@ export async function POST(request: Request) {
         // 🔥 CRITICAL: Invalidate cache after synchronization
         revalidateTag("challenges", "max");
         revalidateTag("themes", "max");
+        revalidateTag("types", "max");
 
         // Invalidate specific challenges that were modified or deleted
         for (const slug of [...updated, ...deleted]) {
@@ -336,6 +341,7 @@ export async function POST(request: Request) {
           invalidatedTags: [
             "challenges",
             "themes",
+            "types",
             ...updated.map((s) => `challenge-${s}`),
             ...deleted.map((s) => `challenge-${s}`),
           ],

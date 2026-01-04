@@ -22,6 +22,9 @@ export const challengeRouter = createTRPCRouter({
       if (input.difficulty) {
         filters.push(eq(challenge.difficulty, input.difficulty));
       }
+      if (input.type) {
+        filters.push(eq(challenge.type, input.type));
+      }
       if (input.theme) {
         filters.push(eq(challenge.theme, input.theme));
       }
@@ -73,6 +76,7 @@ export const challengeRouter = createTRPCRouter({
           theme: challengeTheme.name,
           themeSlug: challenge.theme,
           difficulty: challenge.difficulty,
+          type: challenge.type,
           estimatedTime: challenge.estimatedTime,
           initialSituation: challenge.initialSituation,
           objective: challenge.objective,

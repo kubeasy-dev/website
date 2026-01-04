@@ -29,6 +29,12 @@ export const challengeDifficultyEnum = pgEnum("challenge_difficulty", [
   "hard",
 ]);
 
+export const challengeTypeEnum = pgEnum("challenge_type", [
+  "build",
+  "fix",
+  "migrate",
+]);
+
 export const challenge = pgTable(
   "challenge",
   {
@@ -40,6 +46,7 @@ export const challenge = pgTable(
       .notNull()
       .references(() => challengeTheme.slug, { onDelete: "cascade" }),
     difficulty: challengeDifficultyEnum("difficulty").notNull(),
+    type: challengeTypeEnum("type").notNull().default("fix"),
     estimatedTime: integer("estimated_time").notNull(),
     initialSituation: text("initial_situation").notNull(),
     objective: text("objective").notNull(),
@@ -56,6 +63,8 @@ export const challenge = pgTable(
     index("challenge_difficulty_idx").on(table.difficulty),
     // Index pour le filtre par thème
     index("challenge_theme_idx").on(table.theme),
+    // Index pour le filtre par type
+    index("challenge_type_idx").on(table.type),
     // Index composite pour filtres combinés (thème + difficulté)
     index("challenge_theme_difficulty_idx").on(table.theme, table.difficulty),
     // Index pour la recherche par titre avec ILIKE
