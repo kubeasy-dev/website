@@ -54,7 +54,7 @@ export const challenge = pgTable(
     typeSlug: text("type")
       .notNull()
       .default("fix")
-      .references(() => challengeType.slug, { onDelete: "cascade" }),
+      .references(() => challengeType.slug, { onDelete: "restrict" }),
     estimatedTime: integer("estimated_time").notNull(),
     initialSituation: text("initial_situation").notNull(),
     objective: text("objective").notNull(),

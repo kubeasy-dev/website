@@ -174,6 +174,7 @@ export async function getTypes() {
 /**
  * Get all challenge types with their counts
  * Returns type data from database with challenge counts
+ * Uses LEFT JOIN to include types with zero challenges
  * Cached with 'public' profile
  */
 export async function getChallengeTypes() {
@@ -181,27 +182,21 @@ export async function getChallengeTypes() {
   cacheLife("hours");
   cacheTag("challenges", "types");
 
-  // Get all types from database
   const types = await db
-    .select()
+    .select({
+      slug: challengeType.slug,
+      name: challengeType.name,
+      description: challengeType.description,
+      logo: challengeType.logo,
+      updatedAt: challengeType.updatedAt,
+      challengeCount: sql<number>`count(${challenge.id})`.as("challenge_count"),
+    })
     .from(challengeType)
+    .leftJoin(challenge, eq(challengeType.slug, challenge.typeSlug))
+    .groupBy(challengeType.slug)
     .orderBy(asc(challengeType.name));
 
-  // Get counts for each type
-  const counts = await db
-    .select({
-      type: challenge.typeSlug,
-      count: sql<number>`count(*)`,
-    })
-    .from(challenge)
-    .groupBy(challenge.typeSlug);
-
-  const countMap = new Map(counts.map((c) => [c.type, c.count]));
-
-  return types.map((type) => ({
-    ...type,
-    challengeCount: countMap.get(type.slug) ?? 0,
-  }));
+  return types;
 }
 
 /**
