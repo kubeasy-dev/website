@@ -61,15 +61,8 @@
     {
       "idx": 8,
       "version": "7",
-      "when": 1767561659449,
-      "tag": "0008_orange_dragon_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1767565137603,
-      "tag": "0009_romantic_echo",
+      "when": 1767566933974,
+      "tag": "0008_mushy_kang",
       "breakpoints": true
     }
   ]

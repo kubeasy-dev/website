@@ -1,5 +1,5 @@
 {
-  "id": "f015aa37-f003-4025-886c-00d9bbcdc3dc",
+  "id": "969be70a-929a-42aa-8b3b-af050c92d2cb",
   "prevId": "3897f97d-3a35-4729-ab35-f48d74d7e8a7",
   "version": "7",
   "dialect": "postgresql",
@@ -606,8 +606,7 @@
         },
         "type": {
           "name": "type",
-          "type": "challenge_type",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "default": "'fix'"
@@ -781,6 +780,15 @@
           "columnsTo": ["slug"],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "challenge_type_challenge_type_slug_fk": {
+          "name": "challenge_type_challenge_type_slug_fk",
+          "tableFrom": "challenge",
+          "tableTo": "challenge_type",
+          "columnsFrom": ["type"],
+          "columnsTo": ["slug"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -915,6 +923,50 @@
     },
     "public.challenge_theme": {
       "name": "challenge_theme",
+      "schema": "",
+      "columns": {
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "logo": {
+          "name": "logo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.challenge_type": {
+      "name": "challenge_type",
       "schema": "",
       "columns": {
         "slug": {
@@ -1474,11 +1526,6 @@
       "name": "challenge_status",
       "schema": "public",
       "values": ["not_started", "in_progress", "completed"]
-    },
-    "public.challenge_type": {
-      "name": "challenge_type",
-      "schema": "public",
-      "values": ["build", "fix", "migrate"]
     },
     "public.objective_category": {
       "name": "objective_category",
