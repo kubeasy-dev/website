@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengeMission } from "@/components/challenge-mission";
-import { DifficultyBadge } from "@/components/dificulty-badge";
+import { DifficultyBadge } from "@/components/difficulty-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

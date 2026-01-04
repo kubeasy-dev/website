@@ -1145,6 +1145,4 @@ export const userProgressRouter = createTRPCRouter({
       };
     }),
 
-  // Note: SSE real-time updates are now handled via /api/sse/validation route
-  // This uses Redis Pub/Sub instead of tRPC subscriptions for better serverless compatibility
 });

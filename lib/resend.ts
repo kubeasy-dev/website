@@ -86,11 +86,16 @@ export async function addContactToAudience(params: {
       unsubscribed: params.unsubscribed ?? false,
     });
 
-    console.log(
-      `[Resend] Contact ${params.contactId} added to audience ${params.audienceId}`,
-    );
+    logger.info("Contact added to audience", {
+      contactId: params.contactId,
+      audienceId: params.audienceId,
+    });
   } catch (error) {
-    console.error(`[Resend] Failed to add contact to audience:`, error);
+    logger.error("Failed to add contact to audience", {
+      contactId: params.contactId,
+      audienceId: params.audienceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 }
@@ -160,9 +165,16 @@ export async function deleteResendContact(
       audienceId: audienceId,
     });
 
-    console.log(`[Resend] Contact ${contactId} deleted`);
+    logger.info("Resend contact deleted", {
+      contactId,
+      audienceId,
+    });
   } catch (error) {
-    console.error(`[Resend] Failed to delete contact:`, error);
+    logger.error("Failed to delete Resend contact", {
+      contactId,
+      audienceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 }
