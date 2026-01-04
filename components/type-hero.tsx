@@ -5,7 +5,7 @@ interface ChallengeType {
   slug: string;
   name: string;
   description: string;
-  logo: string;
+  logo: string | null;
 }
 
 interface TypeHeroProps {
