@@ -1,15 +1,6 @@
-import { Menu } from "lucide-react";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -19,8 +10,7 @@ import {
 import { siteConfig } from "@/config/site";
 import { auth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import { SignOutButton } from "./sign-out-button";
-import { UserDropdown } from "./user-dropdown";
+import { HeaderActions } from "./header-actions";
 
 interface RouteProps {
   href: string;
@@ -91,83 +81,7 @@ export async function Header() {
         </NavigationMenu>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
-          {/* Mobile Menu - only on small screens */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {routeList.map(({ href, label, external }) => (
-                <DropdownMenuItem key={href} asChild>
-                  <Link
-                    href={href}
-                    target={external ? "_blank" : undefined}
-                    rel={external ? "noopener noreferrer" : undefined}
-                    className="font-bold cursor-pointer"
-                  >
-                    {label}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-              {user && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/dashboard"
-                      className="font-bold cursor-pointer"
-                    >
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="font-bold cursor-pointer">
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <SignOutButton />
-                  </DropdownMenuItem>
-                </>
-              )}
-              {!user && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/login" className="font-bold cursor-pointer">
-                      Get Started
-                    </Link>
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* User dropdown / Auth buttons - visible on medium screens and up */}
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <UserDropdown user={user} />
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" className="font-bold" asChild>
-                  <Link href="/login">Sign In</Link>
-                </Button>
-                <Button
-                  size="sm"
-                  className="neo-border neo-shadow font-bold"
-                  asChild
-                >
-                  <Link href="/challenges">Get Started</Link>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        <HeaderActions user={user ?? null} />
       </div>
     </header>
   );
