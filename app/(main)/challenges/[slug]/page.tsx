@@ -139,6 +139,12 @@ export default async function ChallengePage({
           >
             {challenge.theme}
           </Badge>
+          <Badge
+            variant="outline"
+            className="capitalize neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold"
+          >
+            {challenge.type}
+          </Badge>
           {challenge.ofTheWeek && (
             <Badge className="neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold bg-accent text-black">
               Challenge of the Week

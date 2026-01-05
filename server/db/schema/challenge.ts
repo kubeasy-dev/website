@@ -23,6 +23,18 @@ export const challengeTheme = pgTable("challenge_theme", {
     .notNull(),
 });
 
+export const challengeType = pgTable("challenge_type", {
+  slug: text("slug").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  logo: text("logo"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
 export const challengeDifficultyEnum = pgEnum("challenge_difficulty", [
   "easy",
   "medium",
@@ -40,6 +52,10 @@ export const challenge = pgTable(
       .notNull()
       .references(() => challengeTheme.slug, { onDelete: "cascade" }),
     difficulty: challengeDifficultyEnum("difficulty").notNull(),
+    typeSlug: text("type")
+      .notNull()
+      .default("fix")
+      .references(() => challengeType.slug, { onDelete: "restrict" }),
     estimatedTime: integer("estimated_time").notNull(),
     initialSituation: text("initial_situation").notNull(),
     objective: text("objective").notNull(),
@@ -56,6 +72,8 @@ export const challenge = pgTable(
     index("challenge_difficulty_idx").on(table.difficulty),
     // Index pour le filtre par thème
     index("challenge_theme_idx").on(table.theme),
+    // Index pour le filtre par type
+    index("challenge_type_idx").on(table.typeSlug),
     // Index composite pour filtres combinés (thème + difficulté)
     index("challenge_theme_difficulty_idx").on(table.theme, table.difficulty),
     // Index pour la recherche par titre avec ILIKE

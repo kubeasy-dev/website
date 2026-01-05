@@ -118,6 +118,12 @@ export function ChallengeCard({
             >
               {challenge.theme}
             </Badge>
+            <Badge
+              variant="outline"
+              className="text-xs font-bold neo-border w-fit"
+            >
+              {challenge.type}
+            </Badge>
           </div>
           <div className="flex items-center justify-between text-sm font-bold pt-4">
             <div className="flex items-center gap-1">

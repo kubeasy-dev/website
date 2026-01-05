@@ -54,6 +54,11 @@ const routeList: RouteProps[] = [
         label: "Themes",
         description: "Explore challenges by themes.",
       },
+      {
+        href: "/types",
+        label: "Types",
+        description: "Explore challenges by types (Fix, Build, Migrate).",
+      },
     ],
   },
   {

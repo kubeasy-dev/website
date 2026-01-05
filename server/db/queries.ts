@@ -7,7 +7,7 @@
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
 import db from "@/server/db";
-import { challenge, challengeTheme } from "@/server/db/schema";
+import { challenge, challengeTheme, challengeType } from "@/server/db/schema";
 
 /**
  * Get all challenges
@@ -28,6 +28,8 @@ export async function getChallenges() {
       theme: challengeTheme.name,
       themeSlug: challenge.theme,
       difficulty: challenge.difficulty,
+      type: challengeType.name,
+      typeSlug: challenge.typeSlug,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
@@ -36,7 +38,8 @@ export async function getChallenges() {
       updatedAt: challenge.updatedAt,
     })
     .from(challenge)
-    .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug));
+    .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+    .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug));
 
   return {
     challenges,
@@ -62,6 +65,8 @@ export async function getChallengeBySlug(slug: string) {
       theme: challengeTheme.name,
       themeSlug: challenge.theme,
       difficulty: challenge.difficulty,
+      type: challengeType.name,
+      typeSlug: challenge.typeSlug,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
@@ -71,6 +76,7 @@ export async function getChallengeBySlug(slug: string) {
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+    .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug))
     .where(eq(challenge.slug, slug))
     .limit(1);
 
@@ -128,6 +134,88 @@ export async function getChallengeCountByTheme(themeSlug: string) {
     .where(eq(challenge.theme, themeSlug));
 
   return result[0]?.count ?? 0;
+}
+
+/**
+ * Get challenge count for a specific type
+ * Efficient count query without fetching all challenge data
+ * Cached with 'public' profile
+ */
+export async function getChallengeCountByType(typeSlug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("challenges", `type-${typeSlug}`);
+
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(challenge)
+    .where(eq(challenge.typeSlug, typeSlug));
+
+  return result[0]?.count ?? 0;
+}
+
+/**
+ * Get all challenge types
+ * Cached with 'public' profile
+ */
+export async function getTypes() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("types");
+
+  const types = await db
+    .select()
+    .from(challengeType)
+    .orderBy(asc(challengeType.name));
+
+  return types;
+}
+
+/**
+ * Get all challenge types with their counts
+ * Returns type data from database with challenge counts
+ * Uses LEFT JOIN to include types with zero challenges
+ * Cached with 'public' profile
+ */
+export async function getChallengeTypes() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("challenges", "types");
+
+  const types = await db
+    .select({
+      slug: challengeType.slug,
+      name: challengeType.name,
+      description: challengeType.description,
+      logo: challengeType.logo,
+      updatedAt: challengeType.updatedAt,
+      challengeCount: sql<number>`count(${challenge.id})`.as("challenge_count"),
+    })
+    .from(challengeType)
+    .leftJoin(challenge, eq(challengeType.slug, challenge.typeSlug))
+    .groupBy(challengeType.slug)
+    .orderBy(asc(challengeType.name));
+
+  return types;
+}
+
+/**
+ * Get a single challenge type by slug
+ * Returns type from database
+ * Cached with 'public' profile
+ */
+export async function getTypeBySlug(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("types", `type-${slug}`);
+
+  const [type] = await db
+    .select()
+    .from(challengeType)
+    .where(eq(challengeType.slug, slug))
+    .limit(1);
+
+  return type ?? null;
 }
 
 /**

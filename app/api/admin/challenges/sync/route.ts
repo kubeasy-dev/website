@@ -10,6 +10,7 @@ import {
   challenge,
   challengeObjective,
   challengeTheme,
+  challengeType,
 } from "@/server/db/schema";
 
 // User type with admin plugin fields
@@ -42,6 +43,7 @@ const challengeSyncSchema = z.object({
   description: z.string().min(1),
   theme: z.string().min(1),
   difficulty: z.enum(["easy", "medium", "hard"]),
+  type: z.string().min(1).default("fix"),
   estimatedTime: z.number().int().positive(),
   initialSituation: z.string().min(1),
   objective: z.string().min(1),
@@ -211,6 +213,32 @@ export async function POST(request: Request) {
           );
         }
 
+        // Validate that all types exist
+        const uniqueTypes = [
+          ...new Set(incomingChallenges.map((c) => c.type)),
+        ];
+        const existingTypes = await db
+          .select({ slug: challengeType.slug })
+          .from(challengeType);
+        const existingTypeSlugs = new Set(existingTypes.map((t) => t.slug));
+
+        const missingTypes = uniqueTypes.filter(
+          (type) => !existingTypeSlugs.has(type),
+        );
+
+        if (missingTypes.length > 0) {
+          logger.warn("Sync failed - missing types", {
+            missingTypes,
+          });
+          return NextResponse.json(
+            {
+              error: "Invalid types",
+              details: `The following types do not exist: ${missingTypes.join(", ")}`,
+            },
+            { status: 400 },
+          );
+        }
+
         // Get all existing challenges from DB
         const existingChallenges = await db.select().from(challenge);
 
@@ -239,6 +267,7 @@ export async function POST(request: Request) {
                 description: incomingChallenge.description,
                 theme: incomingChallenge.theme,
                 difficulty: incomingChallenge.difficulty,
+                typeSlug: incomingChallenge.type,
                 estimatedTime: incomingChallenge.estimatedTime,
                 initialSituation: incomingChallenge.initialSituation,
                 objective: incomingChallenge.objective,
@@ -265,6 +294,7 @@ export async function POST(request: Request) {
               existing.description !== incomingChallenge.description ||
               existing.theme !== incomingChallenge.theme ||
               existing.difficulty !== incomingChallenge.difficulty ||
+              existing.typeSlug !== incomingChallenge.type ||
               existing.estimatedTime !== incomingChallenge.estimatedTime ||
               existing.initialSituation !==
                 incomingChallenge.initialSituation ||
@@ -280,6 +310,7 @@ export async function POST(request: Request) {
                   description: incomingChallenge.description,
                   theme: incomingChallenge.theme,
                   difficulty: incomingChallenge.difficulty,
+                  typeSlug: incomingChallenge.type,
                   estimatedTime: incomingChallenge.estimatedTime,
                   initialSituation: incomingChallenge.initialSituation,
                   objective: incomingChallenge.objective,
@@ -326,6 +357,7 @@ export async function POST(request: Request) {
         // 🔥 CRITICAL: Invalidate cache after synchronization
         revalidateTag("challenges", "max");
         revalidateTag("themes", "max");
+        revalidateTag("types", "max");
 
         // Invalidate specific challenges that were modified or deleted
         for (const slug of [...updated, ...deleted]) {
@@ -336,6 +368,7 @@ export async function POST(request: Request) {
           invalidatedTags: [
             "challenges",
             "themes",
+            "types",
             ...updated.map((s) => `challenge-${s}`),
             ...deleted.map((s) => `challenge-${s}`),
           ],

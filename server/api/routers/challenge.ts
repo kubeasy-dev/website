@@ -11,6 +11,7 @@ import {
   challenge,
   challengeObjective,
   challengeTheme,
+  challengeType,
   userProgress,
 } from "@/server/db/schema";
 
@@ -21,6 +22,9 @@ export const challengeRouter = createTRPCRouter({
       const filters = [];
       if (input.difficulty) {
         filters.push(eq(challenge.difficulty, input.difficulty));
+      }
+      if (input.type) {
+        filters.push(eq(challenge.typeSlug, input.type));
       }
       if (input.theme) {
         filters.push(eq(challenge.theme, input.theme));
@@ -73,6 +77,8 @@ export const challengeRouter = createTRPCRouter({
           theme: challengeTheme.name,
           themeSlug: challenge.theme,
           difficulty: challenge.difficulty,
+          type: challengeType.name,
+          typeSlug: challenge.typeSlug,
           estimatedTime: challenge.estimatedTime,
           initialSituation: challenge.initialSituation,
           objective: challenge.objective,
@@ -86,9 +92,10 @@ export const challengeRouter = createTRPCRouter({
         })
         .from(challenge)
         .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+        .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug))
         .leftJoin(userProgress, userProgressConditions)
         .where(and(...filters))
-        .groupBy(challenge.id, challengeTheme.name);
+        .groupBy(challenge.id, challengeTheme.name, challengeType.name);
 
       return {
         challenges,
