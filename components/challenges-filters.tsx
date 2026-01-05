@@ -26,6 +26,7 @@ export function ChallengesFilters({
   onFilterChange,
 }: Readonly<ChallengesFiltersProps>) {
   const [theme, setTheme] = useState<string | undefined>(undefined);
+  const [type, setType] = useState<string | undefined>(undefined);
   const [difficulty, setDifficulty] = useState<
     (ChallengeDifficulty | "all") | undefined
   >(undefined);
@@ -33,18 +34,40 @@ export function ChallengesFilters({
 
   const trpc = useTRPC();
   const { data: themes } = useSuspenseQuery(trpc.theme.list.queryOptions());
+  const { data: types } = useSuspenseQuery(trpc.type.list.queryOptions());
 
   const handleThemeChange = (value: string) => {
     setTheme(value);
     if (value === "all") {
       onFilterChange({
         theme: undefined,
+        type,
         difficulty: difficulty === "all" ? undefined : difficulty,
         search: search === "" ? undefined : search,
       });
     } else {
       onFilterChange({
         theme: value,
+        type,
+        difficulty: difficulty === "all" ? undefined : difficulty,
+        search: search === "" ? undefined : search,
+      });
+    }
+  };
+
+  const handleTypeChange = (value: string) => {
+    setType(value);
+    if (value === "all") {
+      onFilterChange({
+        theme,
+        type: undefined,
+        difficulty: difficulty === "all" ? undefined : difficulty,
+        search: search === "" ? undefined : search,
+      });
+    } else {
+      onFilterChange({
+        theme,
+        type: value,
         difficulty: difficulty === "all" ? undefined : difficulty,
         search: search === "" ? undefined : search,
       });
@@ -56,12 +79,14 @@ export function ChallengesFilters({
     if (value === "all") {
       onFilterChange({
         theme,
+        type,
         difficulty: undefined,
         search: search === "" ? undefined : search,
       });
     } else {
       onFilterChange({
         theme,
+        type,
         difficulty: value,
         search: search === "" ? undefined : search,
       });
@@ -72,6 +97,7 @@ export function ChallengesFilters({
     setSearch(value);
     onFilterChange({
       theme,
+      type,
       difficulty: difficulty === "all" ? undefined : difficulty,
       search: value === "" ? undefined : value,
     });
@@ -79,7 +105,7 @@ export function ChallengesFilters({
 
   return (
     <div className="flex flex-col md:flex-row gap-4 flex-1">
-      <div className="relative flex-1">
+      <div className="relative flex-[2]">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
         <Input
           placeholder="Search challenges..."
@@ -89,7 +115,7 @@ export function ChallengesFilters({
         />
       </div>
       <Select value={theme} onValueChange={handleThemeChange}>
-        <SelectTrigger className="w-full md:w-[200px] neo-border-thick neo-shadow font-bold py-6 text-base">
+        <SelectTrigger className="w-full md:w-[160px] neo-border-thick neo-shadow font-bold py-6 text-base">
           <SelectValue placeholder="Theme" />
         </SelectTrigger>
         <SelectContent className="neo-border-thick neo-shadow">
@@ -103,8 +129,23 @@ export function ChallengesFilters({
           ))}
         </SelectContent>
       </Select>
+      <Select value={type} onValueChange={handleTypeChange}>
+        <SelectTrigger className="w-full md:w-[160px] neo-border-thick neo-shadow font-bold py-6 text-base">
+          <SelectValue placeholder="Type" />
+        </SelectTrigger>
+        <SelectContent className="neo-border-thick neo-shadow">
+          <SelectItem value="all" className="font-bold">
+            All Types
+          </SelectItem>
+          {types.map((t) => (
+            <SelectItem key={t.slug} value={t.slug} className="font-bold">
+              {t.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Select value={difficulty} onValueChange={handleDifficultyChange}>
-        <SelectTrigger className="w-full md:w-[200px] neo-border-thick neo-shadow font-bold py-6 text-base">
+        <SelectTrigger className="w-full md:w-[160px] neo-border-thick neo-shadow font-bold py-6 text-base">
           <SelectValue placeholder="Difficulty" />
         </SelectTrigger>
         <SelectContent className="neo-border-thick neo-shadow">

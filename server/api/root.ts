@@ -2,6 +2,7 @@ import { challengeRouter } from "@/server/api/routers/challenge";
 import { createTRPCRouter } from "@/server/api/trpc";
 import { emailPreferenceRouter } from "./routers/emailPreference";
 import { themeRouter } from "./routers/theme";
+import { typeRouter } from "./routers/type";
 import { userRouter } from "./routers/user";
 import { userProgressRouter } from "./routers/userProgress";
 import { xpTransactionRouter } from "./routers/xpTransaction";
@@ -14,6 +15,7 @@ import { xpTransactionRouter } from "./routers/xpTransaction";
 export const appRouter = createTRPCRouter({
   challenge: challengeRouter,
   theme: themeRouter,
+  type: typeRouter,
   user: userRouter,
   userProgress: userProgressRouter,
   xpTransaction: xpTransactionRouter,

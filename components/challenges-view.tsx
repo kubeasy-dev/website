@@ -13,6 +13,7 @@ export function ChallengesView() {
   const [filters, setFilters] = useState<ChallengeFilters>({
     difficulty: undefined,
     theme: undefined,
+    type: undefined,
     search: undefined,
     showCompleted: true,
   });
@@ -27,6 +28,7 @@ export function ChallengesView() {
               setFilters({
                 difficulty: newFilters.difficulty,
                 theme: newFilters.theme,
+                type: newFilters.type,
                 search: newFilters.search,
                 showCompleted: filters.showCompleted,
               })
