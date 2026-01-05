@@ -160,7 +160,7 @@ export function HowItWorksSection() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-8 pt-8 neo-border-thick border-l-0 border-r-0 border-b-0">
+              <div className="flex items-center justify-between mt-8 pt-8 neo-border-thick !border-l-0 !border-r-0 !border-b-0">
                 <button
                   type="button"
                   onClick={prevStep}
