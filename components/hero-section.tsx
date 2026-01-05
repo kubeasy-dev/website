@@ -2,7 +2,6 @@
 
 import { ArrowRight, Terminal } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { trackCtaClicked } from "@/lib/analytics";
 import { InteractiveTerminal } from "./interactive-terminal";
 
@@ -33,33 +32,23 @@ export function HeroSection() {
             </p>
 
             <div className="space-x-4">
-              <Button
-                size="lg"
-                className="text-base font-bold neo-border-thick neo-shadow-lg"
-                asChild
+              <Link
+                href="/get-started"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                onClick={() => handleCtaClick("Get Started", "/get-started")}
               >
-                <Link
-                  href="/get-started"
-                  onClick={() => handleCtaClick("Get Started", "/get-started")}
-                >
-                  Get Started
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                className="text-base font-bold bg-secondary text-foreground hover:bg-secondary/90 neo-border-thick neo-shadow-lg border-foreground"
-                asChild
+                Get Started
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+              <Link
+                href="/challenges"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                onClick={() =>
+                  handleCtaClick("Browse Challenges", "/challenges")
+                }
               >
-                <Link
-                  href="/challenges"
-                  onClick={() =>
-                    handleCtaClick("Browse Challenges", "/challenges")
-                  }
-                >
-                  Browse Challenges
-                </Link>
-              </Button>
+                Browse Challenges
+              </Link>
             </div>
           </div>
 

@@ -179,7 +179,7 @@ async function GetStartedContent() {
             </p>
             <Link
               href="/challenges"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white neo-border-thick neo-border-blue px-6 py-3 font-black neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
             >
               Browse All Challenges
               <ArrowRight className="h-5 w-5" />

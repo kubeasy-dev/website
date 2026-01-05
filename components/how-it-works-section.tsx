@@ -11,7 +11,6 @@ import {
   Sparkles,
   Terminal,
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export function HowItWorksSection() {
@@ -204,19 +203,6 @@ export function HowItWorksSection() {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="text-center mt-20">
-          <p className="text-lg font-black opacity-70 mb-4">
-            Ready to start your journey?
-          </p>
-          <Link
-            href="/get-started"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
-          >
-            Get Started
-            <Sparkles className="h-5 w-5" />
-          </Link>
         </div>
       </div>
     </section>
