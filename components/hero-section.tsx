@@ -4,6 +4,7 @@ import { ArrowRight, Terminal } from "lucide-react";
 import Link from "next/link";
 import { trackCtaClicked } from "@/lib/analytics";
 import { InteractiveTerminal } from "./interactive-terminal";
+import { TypewriterText } from "./typewriter-text";
 
 export function HeroSection() {
   const handleCtaClick = (ctaText: string, targetUrl: string) => {
@@ -20,15 +21,20 @@ export function HeroSection() {
               <span>CLI-Driven • Local Cluster • Free</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] text-balance">
-              Break it. Fix it.{" "}
+            <h1 className="text-7xl font-black leading-[1.1] text-balance">
+              <TypewriterText
+                texts={["Build it.", "Fix it.", "Migrate it."]}
+                typingSpeed={100}
+                deletingSpeed={80}
+              />
+              <br />
               <span className="text-primary">Learn Kubernetes.</span>
             </h1>
 
             <p className="text-lg md:text-xl font-medium leading-relaxed max-w-xl">
-              Solve real-world Kubernetes challenges on your own machine. Use
-              the CLI to deploy broken scenarios, debug with kubectl, and get
-              instant validation when you fix them.
+              Practice Kubernetes through real scenarios on your own machine —
+              from building clean workloads to fixing broken configs and
+              migrating deprecated APIs.
             </p>
 
             <div className="space-x-4">
