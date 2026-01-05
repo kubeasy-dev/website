@@ -171,7 +171,8 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
     (obj) => obj.status === true,
   ).length;
   const hasAnySubmission = displayObjectives.some((obj) => obj.status !== null);
-  const allPassed = totalObjectives > 0 && passedObjectives === totalObjectives;
+  const _allPassed =
+    totalObjectives > 0 && passedObjectives === totalObjectives;
 
   // Determine if challenge is completed
   const isCompleted = status === "completed";
@@ -189,12 +190,7 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
   };
 
   return (
-    <Card
-      className={cn(
-        "neo-border-thick neo-shadow-xl",
-        allPassed ? "bg-green-100" : "bg-secondary",
-      )}
-    >
+    <Card className="neo-border-thick neo-shadow-xl bg-secondary">
       <CardHeader>
         <CardTitle className="text-2xl font-black flex items-center gap-3">
           <Target className="h-6 w-6" />
