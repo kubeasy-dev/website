@@ -133,18 +133,28 @@ export default async function ChallengePage({
       <div className="space-y-6 mb-8">
         <div className="flex flex-wrap items-center gap-3">
           <DifficultyBadge difficulty={challenge.difficulty} size="lg" />
-          <Badge
-            variant="secondary"
-            className="capitalize neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold"
+          <Link
+            href={`/themes/${challenge.themeSlug}`}
+            className="hover:opacity-80 transition-opacity"
           >
-            {challenge.theme}
-          </Badge>
-          <Badge
-            variant="outline"
-            className="capitalize neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold"
+            <Badge
+              variant="secondary"
+              className="capitalize neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold cursor-pointer"
+            >
+              {challenge.theme}
+            </Badge>
+          </Link>
+          <Link
+            href={`/types/${challenge.typeSlug}`}
+            className="hover:opacity-80 transition-opacity"
           >
-            {challenge.type}
-          </Badge>
+            <Badge
+              variant="outline"
+              className="capitalize neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold cursor-pointer"
+            >
+              {challenge.type}
+            </Badge>
+          </Link>
           {challenge.ofTheWeek && (
             <Badge className="neo-border-thick neo-shadow px-4 py-1.5 text-base font-bold bg-accent text-black">
               Challenge of the Week
