@@ -16,10 +16,21 @@ export function TypewriterText({
   pauseDuration = 2000,
 }: TypewriterTextProps) {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [currentText, setCurrentText] = useState("");
+  // Initialize with first text for better LCP - content visible on first render
+  const [currentText, setCurrentText] = useState(texts[0] || "");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
+    // Start the animation after initial render with a delay
+    if (!hasStarted) {
+      const startTimer = setTimeout(() => {
+        setHasStarted(true);
+        setIsDeleting(true);
+      }, pauseDuration);
+      return () => clearTimeout(startTimer);
+    }
+
     const targetText = texts[currentTextIndex];
 
     const timer = setTimeout(
@@ -55,6 +66,7 @@ export function TypewriterText({
     typingSpeed,
     deletingSpeed,
     pauseDuration,
+    hasStarted,
   ]);
 
   return (
