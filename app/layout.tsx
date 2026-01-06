@@ -13,9 +13,9 @@ import {
 } from "@/lib/seo";
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
-import { ReactQueryDevtools } from "@/components/react-query-devtools";
 
 export const metadata: Metadata = generateMetadata();
 
@@ -65,7 +65,7 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <TRPCReactProvider>
-          <ReactQueryDevtools />
+          <ReactQueryDevtools initialIsOpen={false} />
           <Providers>
             <Suspense fallback={null}>{children}</Suspense>
           </Providers>
