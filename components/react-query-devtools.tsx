@@ -1,24 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { ReactQueryDevtools as Devtools } from "@tanstack/react-query-devtools";
 
-// Only import devtools in development to avoid any production issues
-const ReactQueryDevtoolsPanel =
-  process.env.NODE_ENV === "development"
-    ? dynamic(
-        () =>
-          import("@tanstack/react-query-devtools").then(
-            (mod) => mod.ReactQueryDevtools,
-          ),
-        { ssr: false },
-      )
-    : () => null;
-
+// Client wrapper needed because layout.tsx is a Server Component
+// Devtools automatically renders nothing in production
 export function ReactQueryDevtools() {
-  // Don't render anything in production
-  if (process.env.NODE_ENV !== "development") {
-    return null;
-  }
-
-  return <ReactQueryDevtoolsPanel initialIsOpen={false} />;
+  return <Devtools initialIsOpen={false} />;
 }
