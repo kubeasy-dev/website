@@ -5,6 +5,8 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authenticateApiRequest } from "@/lib/api-auth";
+import { challengeYamlSchema } from "@/schemas/challenge";
+import type { Objective } from "@/schemas/challengeObjectives";
 import db from "@/server/db";
 import {
   challenge,
@@ -20,45 +22,15 @@ interface UserWithRole extends User {
 
 const { logger } = Sentry;
 
-// Schema for a single objective in a challenge
-const objectiveSyncSchema = z.object({
-  objectiveKey: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().min(1), // Required - all CRDs must have kubeasy.dev/description annotation
-  category: z.enum([
-    "status",
-    "log",
-    "event",
-    "metrics",
-    "rbac",
-    "connectivity",
-  ]),
-  displayOrder: z.number().int().default(0),
-});
-
 // Schema for a single challenge in the sync request
-const challengeSyncSchema = z.object({
-  slug: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().min(1),
-  theme: z.string().min(1),
-  difficulty: z.enum(["easy", "medium", "hard"]),
-  type: z.string().min(1).default("fix"),
-  estimatedTime: z.number().int().positive(),
-  initialSituation: z.string().min(1),
-  objective: z.string().min(1),
-  ofTheWeek: z.boolean().default(false),
-  starterFriendly: z.boolean().default(false),
-  objectives: z.array(objectiveSyncSchema).default([]),
+const challengeSyncSchema = challengeYamlSchema.extend({
+  slug: z.string().min(1).describe("Unique challenge slug"),
 });
 
 // Schema for the sync request body
 const syncRequestSchema = z.object({
   challenges: z.array(challengeSyncSchema),
 });
-
-// Type for objectives from sync schema
-type ObjectiveSync = z.infer<typeof objectiveSyncSchema>;
 
 /**
  * Syncs objectives for a challenge.
@@ -67,7 +39,7 @@ type ObjectiveSync = z.infer<typeof objectiveSyncSchema>;
  */
 async function syncChallengeObjectives(
   challengeId: number,
-  objectives: ObjectiveSync[],
+  objectives: Objective[],
 ): Promise<void> {
   // Delete all existing objectives for this challenge
   await db
@@ -79,11 +51,11 @@ async function syncChallengeObjectives(
     await db.insert(challengeObjective).values(
       objectives.map((obj) => ({
         challengeId,
-        objectiveKey: obj.objectiveKey,
+        objectiveKey: obj.key,
         title: obj.title,
         description: obj.description,
-        category: obj.category,
-        displayOrder: obj.displayOrder,
+        category: obj.type,
+        displayOrder: obj.order,
       })),
     );
   }
@@ -95,38 +67,6 @@ async function syncChallengeObjectives(
  * - Creates challenges that don't exist in DB
  * - Updates challenges that exist but have different data
  * - Deletes challenges that exist in DB but not in the request body
- *
- * Authentication: Requires admin user session
- *
- * Request body:
- * {
- *   challenges: [
- *     {
- *       slug: string,
- *       title: string,
- *       description: string,
- *       theme: string,
- *       difficulty: "easy" | "medium" | "hard",
- *       estimatedTime: number,
- *       initialSituation: string,
- *       objective: string,
- *       ofTheWeek: boolean
- *     }
- *   ]
- * }
- *
- * Response:
- * {
- *   success: true,
- *   created: number,
- *   updated: number,
- *   deleted: number,
- *   details: {
- *     created: string[],
- *     updated: string[],
- *     deleted: string[]
- *   }
- * }
  */
 export async function POST(request: Request) {
   return Sentry.startSpan(
@@ -214,9 +154,7 @@ export async function POST(request: Request) {
         }
 
         // Validate that all types exist
-        const uniqueTypes = [
-          ...new Set(incomingChallenges.map((c) => c.type)),
-        ];
+        const uniqueTypes = [...new Set(incomingChallenges.map((c) => c.type))];
         const existingTypes = await db
           .select({ slug: challengeType.slug })
           .from(challengeType);
