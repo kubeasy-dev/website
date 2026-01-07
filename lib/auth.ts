@@ -161,33 +161,41 @@ export const auth = betterAuth({
             // Email preferences can be initialized later if needed
           }
 
+          // Note: PostHog user_signup tracking moved to account.create.after hook
+          // because the account record (with providerId) doesn't exist yet at this point
+        },
+      },
+    },
+    account: {
+      create: {
+        after: async (account) => {
           // Track user signup in PostHog
+          // This hook runs AFTER the account is created, so we have access to providerId
           try {
-            // Get the provider from the account table (should be created at the same time)
-            const [account] = await db
+            const provider = account.providerId as
+              | "github"
+              | "google"
+              | "microsoft";
+
+            // Get user email for tracking
+            const [user] = await db
               .select()
-              .from(schema.account)
-              .where(eq(schema.account.userId, user.id))
+              .from(schema.user)
+              .where(eq(schema.user.id, account.userId))
               .limit(1);
 
-            if (account?.providerId) {
-              const provider = account.providerId as
-                | "github"
-                | "google"
-                | "microsoft";
-              await trackUserSignupServer(user.id, provider, user.email);
+            await trackUserSignupServer(account.userId, provider, user?.email);
 
-              logger.info("User signup tracked in PostHog", {
-                userId: user.id,
-                provider: account.providerId,
-              });
-            }
+            logger.info("User signup tracked in PostHog", {
+              userId: account.userId,
+              provider: account.providerId,
+            });
           } catch (error) {
             logger.error("Failed to track user signup in PostHog", {
-              userId: user.id,
+              userId: account.userId,
               error: error instanceof Error ? error.message : String(error),
             });
-            // Don't throw the error to avoid blocking user creation
+            // Don't throw the error to avoid blocking account creation
           }
         },
       },
