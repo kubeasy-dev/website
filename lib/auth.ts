@@ -172,6 +172,25 @@ export const auth = betterAuth({
           // Track user signup in PostHog
           // This hook runs AFTER the account is created, so we have access to providerId
           try {
+            // Check if this is the user's first account (new signup vs linking additional provider)
+            const existingAccounts = await db
+              .select({ id: schema.account.id })
+              .from(schema.account)
+              .where(eq(schema.account.userId, account.userId));
+
+            // Only track signup for first account (the one just created)
+            if (existingAccounts.length > 1) {
+              logger.info(
+                "Skipping signup tracking - user linking additional provider",
+                {
+                  userId: account.userId,
+                  provider: account.providerId,
+                  accountCount: existingAccounts.length,
+                },
+              );
+              return;
+            }
+
             const provider = account.providerId as
               | "github"
               | "google"
