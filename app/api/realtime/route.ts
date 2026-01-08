@@ -13,7 +13,7 @@ import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 export const GET =
   isRealtimeConfigured && realtime
     ? handle({ realtime })
-    : () =>
+    : (_request: Request) =>
         NextResponse.json(
           { error: "Realtime not configured" },
           { status: 503 },
