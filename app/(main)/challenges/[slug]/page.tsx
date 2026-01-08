@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ErrorBoundary } from "react-error-boundary";
-import { ChallengeMission } from "@/components/challenge-mission";
+import { ChallengeRealtimeWrapper } from "@/components/challenge-realtime-wrapper";
 import { DifficultyBadge } from "@/components/difficulty-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -199,7 +199,7 @@ export default async function ChallengePage({
       {/* Challenge Mission with Real-time Validation Status */}
       <ErrorBoundary fallback={<div>Error loading challenge status.</div>}>
         <HydrateClient>
-          <ChallengeMission slug={slug} />
+          <ChallengeRealtimeWrapper slug={slug} />
         </HydrateClient>
       </ErrorBoundary>
     </div>
