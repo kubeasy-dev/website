@@ -199,7 +199,7 @@ export const auth = betterAuth({
 
             // Get user email for tracking
             const [user] = await db
-              .select()
+              .select({ email: schema.user.email })
               .from(schema.user)
               .where(eq(schema.user.id, account.userId))
               .limit(1);
