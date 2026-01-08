@@ -215,6 +215,15 @@ export const auth = betterAuth({
               userId: account.userId,
               error: error instanceof Error ? error.message : String(error),
             });
+            Sentry.captureException(error, {
+              tags: { operation: "posthog.trackUserSignup" },
+              contexts: {
+                account: {
+                  userId: account.userId,
+                  providerId: account.providerId,
+                },
+              },
+            });
             // Don't throw the error to avoid blocking account creation
           }
         },
