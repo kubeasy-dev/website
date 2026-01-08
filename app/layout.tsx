@@ -2,6 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata, Viewport } from "next";
+import dynamic from "next/dynamic";
 import type React from "react";
 import { Suspense } from "react";
 import {
@@ -13,9 +14,18 @@ import {
 } from "@/lib/seo";
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
+
+// Lazy load ReactQueryDevtools to avoid hydration mismatch
+// Only loads in development mode
+const ReactQueryDevtools = dynamic(
+  () =>
+    import("@tanstack/react-query-devtools").then(
+      (mod) => mod.ReactQueryDevtools,
+    ),
+  { ssr: false },
+);
 
 export const metadata: Metadata = generateMetadata();
 
