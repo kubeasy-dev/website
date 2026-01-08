@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
 
   // Experimental features for better performance
   experimental: {
-    optimizeCss: true,
+    inlineCss: true,
   },
 
   async rewrites() {
