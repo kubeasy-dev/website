@@ -5,6 +5,7 @@ import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
 import { trackUserSignupServer } from "@/lib/analytics-server";
+import { redis } from "@/lib/redis";
 import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
 import { emailCategory, userEmailPreference } from "@/server/db/schema/email";
@@ -41,6 +42,36 @@ export const auth = betterAuth({
     provider: "pg", // or "mysql", "sqlite"
     schema: schema,
   }),
+  // Redis as secondary storage for session caching and revocation
+  // This allows stateless session validation via cookie while maintaining
+  // the ability to revoke sessions through Redis
+  secondaryStorage: {
+    get: async (key) => {
+      const value = await redis.get<string>(key);
+      return value;
+    },
+    set: async (key, value, ttl) => {
+      if (ttl) {
+        await redis.set(key, value, { ex: ttl });
+      } else {
+        await redis.set(key, value);
+      }
+    },
+    delete: async (key) => {
+      await redis.del(key);
+    },
+  },
+  // Session configuration with cookie caching for performance
+  // - Cookie validates session without DB query
+  // - Redis refreshes cookie cache when it expires
+  // - Sessions can be revoked via Redis
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes - short-lived for quick revocation
+      strategy: "jwe", // Encrypted tokens for security
+    },
+  },
   plugins: [
     apiKey({
       rateLimit: {
