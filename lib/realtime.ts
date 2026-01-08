@@ -18,5 +18,14 @@ const schema = {
   },
 };
 
-export const realtime = new Realtime({ schema, redis });
-export type RealtimeEvents = InferRealtimeEvents<typeof realtime>;
+// Realtime requires Redis - only create if Redis is configured
+export const realtime = redis ? new Realtime({ schema, redis }) : null;
+export type RealtimeEvents =
+  typeof realtime extends Realtime<infer T>
+    ? InferRealtimeEvents<Realtime<T>>
+    : never;
+
+/**
+ * Check if realtime is available
+ */
+export const isRealtimeConfigured = realtime !== null;

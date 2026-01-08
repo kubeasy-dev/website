@@ -8,7 +8,7 @@ import {
   trackChallengeStartedServer,
   trackChallengeValidationFailedServer,
 } from "@/lib/analytics-server";
-import { realtime } from "@/lib/realtime";
+import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import {
   challenge,
@@ -711,13 +711,15 @@ export const userProgressRouter = createTRPCRouter({
           });
 
           // Publish validation events to Upstash Realtime for real-time updates
-          const channel = realtime.channel(`${userId}:${challengeSlug}`);
-          for (const result of results) {
-            await channel.emit("validation.update", {
-              objectiveKey: result.objectiveKey,
-              passed: result.passed,
-              timestamp: new Date(),
-            });
+          if (isRealtimeConfigured && realtime) {
+            const channel = realtime.channel(`${userId}:${challengeSlug}`);
+            for (const result of results) {
+              await channel.emit("validation.update", {
+                objectiveKey: result.objectiveKey,
+                passed: result.passed,
+                timestamp: new Date(),
+              });
+            }
           }
 
           // If validation failed, return with failed objectives info
@@ -1144,5 +1146,4 @@ export const userProgressRouter = createTRPCRouter({
         timestamp: latestSubmission.timestamp,
       };
     }),
-
 });
