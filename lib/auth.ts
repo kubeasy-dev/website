@@ -19,6 +19,13 @@ export const auth = betterAuth({
     "https://kubeasy.dev",
     "https://*.vercel.app", // Allow all Vercel preview deployments
   ],
+  // Use cookie strategy for OAuth state to ensure the OAuth proxy works correctly
+  // across different environments (production/preview) that may have separate databases.
+  // With "database" strategy, the state created on preview wouldn't be found on production
+  // when the OAuth provider redirects to the production callback URL.
+  account: {
+    storeStateStrategy: "cookie",
+  },
   database: drizzleAdapter(db, {
     provider: "pg", // or "mysql", "sqlite"
     schema: schema,
