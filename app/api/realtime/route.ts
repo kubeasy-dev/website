@@ -1,5 +1,6 @@
 import { handle } from "@upstash/realtime";
-import { realtime } from "@/lib/realtime";
+import { NextResponse } from "next/server";
+import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 
 /**
  * Realtime SSE endpoint for challenge validation updates
@@ -9,4 +10,11 @@ import { realtime } from "@/lib/realtime";
  *
  * Route: GET /api/realtime
  */
-export const GET = handle({ realtime });
+export const GET =
+  isRealtimeConfigured && realtime
+    ? handle({ realtime })
+    : () =>
+        NextResponse.json(
+          { error: "Realtime not configured" },
+          { status: 503 },
+        );

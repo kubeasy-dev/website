@@ -5,7 +5,7 @@ import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
 import { trackUserSignupServer } from "@/lib/analytics-server";
-import { redis } from "@/lib/redis";
+import { isRedisConfigured, redis } from "@/lib/redis";
 import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
 import { emailCategory, userEmailPreference } from "@/server/db/schema/email";
@@ -42,36 +42,80 @@ export const auth = betterAuth({
     provider: "pg", // or "mysql", "sqlite"
     schema: schema,
   }),
-  // Redis as secondary storage for session caching and revocation
+  // Redis as secondary storage for session caching and revocation (optional)
   // This allows stateless session validation via cookie while maintaining
   // the ability to revoke sessions through Redis
-  secondaryStorage: {
-    get: async (key) => {
-      const value = await redis.get<string>(key);
-      return value;
-    },
-    set: async (key, value, ttl) => {
-      if (ttl) {
-        await redis.set(key, value, { ex: ttl });
-      } else {
-        await redis.set(key, value);
-      }
-    },
-    delete: async (key) => {
-      await redis.del(key);
-    },
-  },
-  // Session configuration with cookie caching for performance
-  // - Cookie validates session without DB query
-  // - Redis refreshes cookie cache when it expires
-  // - Sessions can be revoked via Redis
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60, // 5 minutes - short-lived for quick revocation
-      strategy: "jwe", // Encrypted tokens for security
-    },
-  },
+  // Falls back to database-only sessions if Redis is not configured
+  ...(isRedisConfigured &&
+    redis && {
+      secondaryStorage: {
+        get: async (key: string): Promise<string | null> => {
+          // Safety check - should never be null due to outer condition
+          if (!redis) return null;
+          try {
+            const value = await redis.get<string>(key);
+            return value;
+          } catch (error) {
+            logger.error("Redis secondaryStorage.get failed", {
+              key,
+              operation: "get",
+              error: error instanceof Error ? error.message : String(error),
+            });
+            Sentry.captureException(error, {
+              tags: { operation: "redis.secondaryStorage.get" },
+              contexts: { redis: { key } },
+            });
+            // Return null on error - Better Auth will fall back to database
+            return null;
+          }
+        },
+        set: async (
+          key: string,
+          value: string,
+          ttl?: number,
+        ): Promise<void> => {
+          // Safety check - should never be null due to outer condition
+          if (!redis) return;
+          try {
+            if (ttl) {
+              await redis.set(key, value, { ex: ttl });
+            } else {
+              await redis.set(key, value);
+            }
+          } catch (error) {
+            logger.error("Redis secondaryStorage.set failed", {
+              key,
+              operation: "set",
+              ttl,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            Sentry.captureException(error, {
+              tags: { operation: "redis.secondaryStorage.set" },
+              contexts: { redis: { key, ttl } },
+            });
+            // Don't throw - Better Auth will continue without caching
+          }
+        },
+        delete: async (key: string): Promise<void> => {
+          // Safety check - should never be null due to outer condition
+          if (!redis) return;
+          try {
+            await redis.del(key);
+          } catch (error) {
+            logger.error("Redis secondaryStorage.delete failed", {
+              key,
+              operation: "delete",
+              error: error instanceof Error ? error.message : String(error),
+            });
+            Sentry.captureException(error, {
+              tags: { operation: "redis.secondaryStorage.delete" },
+              contexts: { redis: { key } },
+            });
+            // Don't throw - session will expire naturally
+          }
+        },
+      },
+    }),
   plugins: [
     apiKey({
       rateLimit: {
