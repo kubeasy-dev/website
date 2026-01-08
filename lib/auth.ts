@@ -24,8 +24,10 @@ export const auth = betterAuth({
   // across different environments (production/preview) that may have separate databases.
   // With "database" strategy, the state created on preview wouldn't be found on production
   // when the OAuth provider redirects to the production callback URL.
+  // storeAccountCookie stores account data in a signed cookie for stateless auth.
   account: {
     storeStateStrategy: "cookie",
+    storeAccountCookie: true,
   },
   database: drizzleAdapter(db, {
     provider: "pg", // or "mysql", "sqlite"
@@ -42,14 +44,13 @@ export const auth = betterAuth({
         : await redis.set(key, value),
     delete: async (key) => {
       await redis.del(key);
-      return null;
     },
   },
   session: {
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // 5 minutes - session data cached in cookie
-      refreshCache: false, // Disable stateless refresh
+      strategy: "jwe", // Use JWE for stateless session storage in cookie
     },
   },
   plugins: [
