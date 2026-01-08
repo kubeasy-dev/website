@@ -5,6 +5,7 @@ import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
 import { trackUserSignupServer } from "@/lib/analytics-server";
+import { redis } from "@/lib/redis";
 import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
 import { emailCategory, userEmailPreference } from "@/server/db/schema/email";
@@ -30,6 +31,31 @@ export const auth = betterAuth({
     provider: "pg", // or "mysql", "sqlite"
     schema: schema,
   }),
+  // Use Redis as secondary storage for session caching
+  // This reduces database queries by caching sessions in Redis
+  // and using short-lived cookies for validation
+  secondaryStorage: {
+    get: async (key) => {
+      const value = await redis.get<string>(key);
+      return value ?? null;
+    },
+    set: async (key, value, ttl) => {
+      if (ttl) {
+        await redis.set(key, value, { ex: ttl });
+      } else {
+        await redis.set(key, value);
+      }
+    },
+    delete: async (key) => {
+      await redis.del(key);
+    },
+  },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes - session data cached in cookie
+    },
+  },
   plugins: [
     apiKey({
       rateLimit: {
