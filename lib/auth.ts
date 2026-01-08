@@ -35,19 +35,14 @@ export const auth = betterAuth({
   // This reduces database queries by caching sessions in Redis
   // and using short-lived cookies for validation
   secondaryStorage: {
-    get: async (key) => {
-      const value = await redis.get<string>(key);
-      return value ?? null;
-    },
-    set: async (key, value, ttl) => {
-      if (ttl) {
-        await redis.set(key, value, { ex: ttl });
-      } else {
-        await redis.set(key, value);
-      }
-    },
+    get: async (key) => await redis.get(key),
+    set: async (key, value, ttl) =>
+      ttl !== undefined
+        ? await redis.set(key, value, { ex: ttl })
+        : await redis.set(key, value),
     delete: async (key) => {
       await redis.del(key);
+      return null;
     },
   },
   session: {
