@@ -8,6 +8,7 @@ import { ChallengesView } from "@/components/challenges-view";
 import { UserStats } from "@/components/user-stats";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getChallenges } from "@/server/db/queries";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Kubernetes Challenges",
@@ -25,7 +26,34 @@ export const metadata: Metadata = generateSEOMetadata({
   ],
 });
 
-export default async function ChallengesPage() {
+function ChallengesViewSkeleton() {
+  return (
+    <>
+      {/* Filters Skeleton */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col md:flex-row gap-4 flex-1">
+            <div className="relative flex-[2] h-14 bg-secondary neo-border-thick animate-pulse" />
+            <div className="w-full md:w-[160px] h-14 bg-secondary neo-border-thick animate-pulse" />
+            <div className="w-full md:w-[160px] h-14 bg-secondary neo-border-thick animate-pulse" />
+            <div className="w-full md:w-[160px] h-14 bg-secondary neo-border-thick animate-pulse" />
+          </div>
+        </div>
+      </div>
+      {/* Grid Skeleton */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }, (_, i) => `skeleton-${i}`).map((key) => (
+          <div
+            key={key}
+            className="bg-secondary neo-border-thick neo-shadow p-6 animate-pulse h-64"
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+async function ChallengesContent() {
   "use cache";
   cacheLife("hours");
   cacheTag("challenges");
@@ -84,7 +112,36 @@ export default async function ChallengesPage() {
       </div>
 
       {/* All Challenges View */}
-      <ChallengesView />
+      <ErrorBoundary
+        fallback={<div>Something went wrong loading the challenges.</div>}
+      >
+        <Suspense fallback={<ChallengesViewSkeleton />}>
+          <ChallengesView />
+        </Suspense>
+      </ErrorBoundary>
     </div>
+  );
+}
+
+export default async function ChallengesPage() {
+  // Prefetch data needed by client components to avoid client-side fetch waterfall
+  await Promise.all([
+    prefetch(trpc.theme.list.queryOptions()),
+    prefetch(trpc.type.list.queryOptions()),
+    prefetch(
+      trpc.challenge.list.queryOptions({
+        difficulty: undefined,
+        theme: undefined,
+        type: undefined,
+        search: undefined,
+        showCompleted: true,
+      }),
+    ),
+  ]);
+
+  return (
+    <HydrateClient>
+      <ChallengesContent />
+    </HydrateClient>
   );
 }
