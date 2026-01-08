@@ -1,5 +1,6 @@
 import { adminClient, apiKeyClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
+import { resetAnalytics } from "@/lib/analytics";
 
 export const authClient = createAuthClient({
   plugins: [apiKeyClient(), adminClient()],
@@ -26,6 +27,11 @@ export const signOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          // Reset PostHog to anonymous state before page reload
+          // This must happen before redirect as the page reload would prevent
+          // the PostHogIdentify useEffect from detecting the session change
+          resetAnalytics();
+
           // Force a full page reload to ensure all state is cleared
           window.location.href = "/";
         },

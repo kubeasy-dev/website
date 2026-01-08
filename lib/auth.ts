@@ -12,6 +12,24 @@ import { createResendContact } from "./resend";
 
 const { logger } = Sentry;
 
+const socialProviders = {
+  github: {
+    clientId: env.GITHUB_CLIENT_ID,
+    clientSecret: env.GITHUB_CLIENT_SECRET,
+    redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/github`,
+  },
+  google: {
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/google`,
+  },
+  microsoft: {
+    clientId: env.MICROSOFT_CLIENT_ID,
+    clientSecret: env.MICROSOFT_CLIENT_SECRET,
+    redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/microsoft`,
+  },
+};
+
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: [
@@ -43,21 +61,7 @@ export const auth = betterAuth({
     oAuthProxy(),
   ],
   socialProviders: {
-    github: {
-      clientId: env.GITHUB_CLIENT_ID,
-      clientSecret: env.GITHUB_CLIENT_SECRET,
-      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/github`,
-    },
-    google: {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/google`,
-    },
-    microsoft: {
-      clientId: env.MICROSOFT_CLIENT_ID,
-      clientSecret: env.MICROSOFT_CLIENT_SECRET,
-      redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/microsoft`,
-    },
+    ...socialProviders,
   },
   databaseHooks: {
     user: {
@@ -161,33 +165,66 @@ export const auth = betterAuth({
             // Email preferences can be initialized later if needed
           }
 
+          // Note: PostHog user_signup tracking moved to account.create.after hook
+          // because the account record (with providerId) doesn't exist yet at this point
+        },
+      },
+    },
+    account: {
+      create: {
+        after: async (account) => {
           // Track user signup in PostHog
+          // This hook runs AFTER the account is created, so we have access to providerId
           try {
-            // Get the provider from the account table (should be created at the same time)
-            const [account] = await db
-              .select()
+            // Check if this is the user's first account (new signup vs linking additional provider)
+            const existingAccounts = await db
+              .select({ id: schema.account.id })
               .from(schema.account)
-              .where(eq(schema.account.userId, user.id))
+              .where(eq(schema.account.userId, account.userId));
+
+            // Only track signup for first account (the one just created)
+            if (existingAccounts.length > 1) {
+              logger.info(
+                "Skipping signup tracking - user linking additional provider",
+                {
+                  userId: account.userId,
+                  provider: account.providerId,
+                  accountCount: existingAccounts.length,
+                },
+              );
+              return;
+            }
+
+            const provider = account.providerId as keyof typeof socialProviders;
+
+            // Get user email for tracking
+            const [user] = await db
+              .select({ email: schema.user.email })
+              .from(schema.user)
+              .where(eq(schema.user.id, account.userId))
               .limit(1);
 
-            if (account?.providerId) {
-              const provider = account.providerId as
-                | "github"
-                | "google"
-                | "microsoft";
-              await trackUserSignupServer(user.id, provider, user.email);
+            await trackUserSignupServer(account.userId, provider, user?.email);
 
-              logger.info("User signup tracked in PostHog", {
-                userId: user.id,
-                provider: account.providerId,
-              });
-            }
+            logger.info("User signup tracked in PostHog", {
+              userId: account.userId,
+              provider: account.providerId,
+            });
           } catch (error) {
             logger.error("Failed to track user signup in PostHog", {
-              userId: user.id,
+              userId: account.userId,
               error: error instanceof Error ? error.message : String(error),
             });
-            // Don't throw the error to avoid blocking user creation
+            Sentry.captureException(error, {
+              tags: { operation: "posthog.trackUserSignup" },
+              contexts: {
+                account: {
+                  userId: account.userId,
+                  providerId: account.providerId,
+                },
+              },
+            });
+            // Don't throw the error to avoid blocking account creation
           }
         },
       },
