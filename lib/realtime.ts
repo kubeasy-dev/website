@@ -1,5 +1,5 @@
 import { type InferRealtimeEvents, Realtime } from "@upstash/realtime";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { redis } from "./redis";
 
 /**
