@@ -10,6 +10,8 @@ import { env } from "@/env";
  * - UPSTASH_REDIS_REST_TOKEN
  *
  * Returns null if Redis is not configured (optional dependency)
+ * Includes a 5s timeout per request to prevent hanging connections
+ * (recommended by Upstash for serverless environments)
  */
 function createRedisClient(): Redis | null {
   const url = env.UPSTASH_REDIS_REST_URL;
@@ -19,7 +21,11 @@ function createRedisClient(): Redis | null {
     return null;
   }
 
-  return new Redis({ url, token });
+  return new Redis({
+    url,
+    token,
+    signal: () => AbortSignal.timeout(5000),
+  });
 }
 
 export const redis = createRedisClient();

@@ -18,3 +18,11 @@ export const GET =
           { error: "Realtime not configured" },
           { status: 503 },
         );
+
+/**
+ * Maximum duration for SSE connections (5 minutes)
+ * SSE connections are long-lived by design, so we need a higher timeout
+ * than the default 60s Vercel serverless function timeout.
+ * Requires Vercel Pro or Enterprise plan for durations > 60s.
+ */
+export const maxDuration = 300;

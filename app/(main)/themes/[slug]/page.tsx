@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
@@ -20,13 +21,25 @@ import {
   getThemes,
 } from "@/server/db/queries";
 
+/** Maximum duration for SSR (60 seconds) */
+export const maxDuration = 60;
+
+/** Allow dynamic params not pre-generated at build time */
+export const dynamicParams = true;
+
 // Generate static params for all themes at build time
 export async function generateStaticParams() {
-  const themes = await getThemes();
+  try {
+    const themes = await getThemes();
 
-  return themes.map((theme) => ({
-    slug: theme.slug,
-  }));
+    return themes.map((theme) => ({
+      slug: theme.slug,
+    }));
+  } catch (error) {
+    Sentry.captureException(error);
+    // Fallback: no pre-generation, pages will be rendered on-demand
+    return [];
+  }
 }
 
 // Generate dynamic metadata for each theme

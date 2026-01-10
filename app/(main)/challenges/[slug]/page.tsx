@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { ArrowLeft, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -19,13 +20,25 @@ import {
 import { getChallengeBySlug, getChallenges } from "@/server/db/queries";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
+/** Maximum duration for SSR (60 seconds) */
+export const maxDuration = 60;
+
+/** Allow dynamic params not pre-generated at build time */
+export const dynamicParams = true;
+
 // Generate static params for all challenges at build time
 export async function generateStaticParams() {
-  const { challenges } = await getChallenges();
+  try {
+    const { challenges } = await getChallenges();
 
-  return challenges.map((challenge) => ({
-    slug: challenge.slug,
-  }));
+    return challenges.map((challenge) => ({
+      slug: challenge.slug,
+    }));
+  } catch (error) {
+    Sentry.captureException(error);
+    // Fallback: no pre-generation, pages will be rendered on-demand
+    return [];
+  }
 }
 
 // Generate dynamic metadata for each challenge

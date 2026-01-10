@@ -1,8 +1,14 @@
+import * as Sentry from "@sentry/nextjs";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { NextRequest } from "next/server";
 import { env } from "@/env";
 import { appRouter } from "@/server/api/root";
 import { createTRPCContext } from "@/server/api/trpc";
+
+/**
+ * Maximum duration for tRPC API requests (60 seconds)
+ */
+export const maxDuration = 60;
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -20,14 +26,17 @@ const handler = (req: NextRequest) =>
     req,
     router: appRouter,
     createContext: () => createContext(req),
-    onError:
-      env.NODE_ENV === "development"
-        ? ({ path, error }: { path?: string; error: Error }) => {
-            console.error(
-              `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
-            );
-          }
-        : undefined,
+    onError: ({ path, error }: { path?: string; error: Error }) => {
+      if (env.NODE_ENV === "development") {
+        console.error(
+          `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
+        );
+      }
+      // Always capture errors in Sentry (both dev and prod)
+      Sentry.captureException(error, {
+        extra: { path },
+      });
+    },
   });
 
 export { handler as GET, handler as POST };
