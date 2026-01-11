@@ -43,8 +43,8 @@ importers:
         specifier: 1.2.6
         version: 1.2.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@react-email/render':
-        specifier: 2.0.1
-        version: 2.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: 2.0.2
+        version: 2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@sentry/nextjs':
         specifier: 10.32.1
         version: 10.32.1(@opentelemetry/context-async-hooks@2.2.0(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.2.0(@opentelemetry/api@1.9.0))(next@16.1.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(webpack@5.102.1(esbuild@0.25.12))
@@ -106,8 +106,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       posthog-js:
-        specifier: 1.315.0
-        version: 1.315.0
+        specifier: 1.315.1
+        version: 1.315.1
       posthog-node:
         specifier: 5.19.0
         version: 5.19.0
@@ -125,7 +125,7 @@ importers:
         version: 3.6.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react-is@18.3.1)(react@19.2.3)(redux@5.0.1)
       resend:
         specifier: 6.6.0
-        version: 6.6.0(@react-email/render@2.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
+        version: 6.6.0(@react-email/render@2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       server-only:
         specifier: 0.0.1
         version: 0.0.1
@@ -1429,8 +1429,8 @@ packages:
   '@posthog/core@1.9.0':
     resolution: {integrity: sha512-j7KSWxJTUtNyKynLt/p0hfip/3I46dWU2dk+pt7dKRoz2l5CYueHuHK4EO7Wlgno5yo1HO4sc4s30MXMTICHJw==}
 
-  '@posthog/types@1.315.0':
-    resolution: {integrity: sha512-A3HcvYC93OLNSKlpelzI5sCCMsRaq4nREgJUJq09UEKngsexa3mQU4UdeR8TMisO4BLrQPPlqUBbs+C4OlMX7g==}
+  '@posthog/types@1.315.1':
+    resolution: {integrity: sha512-m2NggfJRYby3AkAES6yHMLURvTeK+rxN+5nmkuaCbOXQPdtWacSFIG5ZwN8d3crSx+WpiFauCDdr1sc3ZFkTHg==}
 
   '@prisma/instrumentation@6.19.0':
     resolution: {integrity: sha512-QcuYy25pkXM8BJ37wVFBO7Zh34nyRV1GOb2n3lPkkbRYfl4hWl3PTcImP41P0KrzVXfa/45p6eVCos27x3exIg==}
@@ -1859,8 +1859,8 @@ packages:
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
 
-  '@react-email/render@2.0.1':
-    resolution: {integrity: sha512-eYNL4+SSrV1+58MIcT4znarX4YTMuYBr1uzhI6U8fBFvRMZPryxNOnD7jnZ/Ser3MtJEquQNbXjrAP+RVkfLbg==}
+  '@react-email/render@2.0.2':
+    resolution: {integrity: sha512-AGuNo86TP9Y2JBUwFcT+z0frPDML4WLIFlnCi7laCPYJA+43kdim0y+qRNPxRxZkJiUz1JMPnE2M5HaNYhWwIg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
@@ -4443,8 +4443,8 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
-  posthog-js@1.315.0:
-    resolution: {integrity: sha512-mdL0hCp/8xOQUB41d6JKROZxtgJvReT3gc9XuQIcfBbmzK2ZrNCxW2t+QV3Uj6JM1BNxbX5NE/cRCBdtaiCxrA==}
+  posthog-js@1.315.1:
+    resolution: {integrity: sha512-ambT1azidu4hKhSmB95KdLY6yHfj9vvz1XNn68syh8DtkQ0uSdjpRY6tjMp96EQtPqCrDKr+8QpcusT1KQEZSA==}
 
   posthog-node@5.19.0:
     resolution: {integrity: sha512-5Nx+/b1JbAy6TaCENuO+mLFfZIXyYavae+D6FABd52gzkGryRkRTsKi+WLlILI5shSCAMWs5gxzGAZ3nOC0gFA==}
@@ -6278,7 +6278,7 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
-  '@posthog/types@1.315.0': {}
+  '@posthog/types@1.315.1': {}
 
   '@prisma/instrumentation@6.19.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -6692,7 +6692,7 @@ snapshots:
 
   '@radix-ui/rect@1.1.1': {}
 
-  '@react-email/render@2.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@react-email/render@2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       html-to-text: 9.0.5
       prettier: 3.7.4
@@ -9425,10 +9425,10 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  posthog-js@1.315.0:
+  posthog-js@1.315.1:
     dependencies:
       '@posthog/core': 1.9.0
-      '@posthog/types': 1.315.0
+      '@posthog/types': 1.315.1
       core-js: 3.46.0
       fflate: 0.4.8
       preact: 10.27.2
@@ -9616,11 +9616,11 @@ snapshots:
 
   reselect@5.1.1: {}
 
-  resend@6.6.0(@react-email/render@2.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)):
+  resend@6.6.0(@react-email/render@2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)):
     dependencies:
       svix: 1.76.1
     optionalDependencies:
-      '@react-email/render': 2.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@react-email/render': 2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
   resolve-from@4.0.0: {}
 
