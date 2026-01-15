@@ -1,5 +1,5 @@
 // ⚠️ AUTO-GENERATED - DO NOT EDIT
-// Source: github.com/kubeasy-dev/kubeasy-cli/pkg/validation
+// Source: github.com/kubeasy-dev/kubeasy-cli/internal/validation
 // Run: go run hack/generate-schema/main.go > path/to/challengeObjectives.ts
 
 import { z } from "zod";
