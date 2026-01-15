@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { ObjectiveTypeSchema } from "@/schemas/challengeObjectives";
 import { user } from "./auth";
 
 export const challengeTheme = pgTable("challenge_theme", {
@@ -169,15 +170,11 @@ export const userXp = pgTable(
 );
 
 // Table to store XP transaction history
-// Objective category enum matching the validation types
-export const objectiveCategoryEnum = pgEnum("objective_category", [
-  "status",
-  "log",
-  "event",
-  "metrics",
-  "rbac",
-  "connectivity",
-]);
+// Objective category enum matching the validation types from Zod schema
+export const objectiveCategoryEnum = pgEnum(
+  "objective_category",
+  ObjectiveTypeSchema.options as [string, ...string[]],
+);
 
 // Table to store challenge objectives (parsed from validation CRDs)
 export const challengeObjective = pgTable(
