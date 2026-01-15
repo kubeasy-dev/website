@@ -23,9 +23,6 @@ import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 /** Maximum duration for SSR (60 seconds) */
 export const maxDuration = 60;
 
-/** Allow dynamic params not pre-generated at build time */
-export const dynamicParams = true;
-
 // Generate static params for all challenges at build time
 export async function generateStaticParams() {
   try {
