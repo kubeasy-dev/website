@@ -32,7 +32,7 @@
   --secondary: oklch(0.95 0.05 85); /* Light yellow accent */
   --secondary-foreground: oklch(0.15 0 0);
   --muted: oklch(0.92 0.01 90);
-  --muted-foreground: oklch(0.35 0 0); /* Improved contrast ratio for WCAG AA compliance */
+  --muted-foreground: oklch(0.45 0 0);
   --accent: oklch(0.75 0.2 150); /* Cyan accent */
   --accent-foreground: oklch(0.15 0 0);
   --destructive: oklch(0.6 0.25 25);
@@ -73,7 +73,7 @@
   --secondary: oklch(0.95 0.05 85);
   --secondary-foreground: oklch(0.15 0 0);
   --muted: oklch(0.92 0.01 90);
-  --muted-foreground: oklch(0.35 0 0); /* Improved contrast ratio for WCAG AA compliance */
+  --muted-foreground: oklch(0.45 0 0);
   --accent: oklch(0.75 0.2 150);
   --accent-foreground: oklch(0.15 0 0);
   --destructive: oklch(0.6 0.25 25);
