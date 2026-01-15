@@ -11,17 +11,30 @@ export const TargetSchema = z.object({
 })
 export type Target = z.infer<typeof TargetSchema>
 
-export const StatusConditionSchema = z.object({
-  type: z.string(),
-  status: z.string(),
+export const StatusCheckSchema = z.object({
+  field: z.string(),
+  operator: z.string(),
+  value: z.any(),
 })
-export type StatusCondition = z.infer<typeof StatusConditionSchema>
+export type StatusCheck = z.infer<typeof StatusCheckSchema>
 
 export const StatusSpecSchema = z.object({
   target: TargetSchema,
-  conditions: StatusConditionSchema.array().nullable(),
+  checks: StatusCheckSchema.array().nullable(),
 })
 export type StatusSpec = z.infer<typeof StatusSpecSchema>
+
+export const ConditionCheckSchema = z.object({
+  type: z.string(),
+  status: z.string(),
+})
+export type ConditionCheck = z.infer<typeof ConditionCheckSchema>
+
+export const ConditionSpecSchema = z.object({
+  target: TargetSchema,
+  checks: ConditionCheckSchema.array().nullable(),
+})
+export type ConditionSpec = z.infer<typeof ConditionSpecSchema>
 
 export const LogSpecSchema = z.object({
   target: TargetSchema,
@@ -37,19 +50,6 @@ export const EventSpecSchema = z.object({
   sinceSeconds: z.number().optional(),
 })
 export type EventSpec = z.infer<typeof EventSpecSchema>
-
-export const MetricCheckSchema = z.object({
-  field: z.string(),
-  operator: z.string(),
-  value: z.number(),
-})
-export type MetricCheck = z.infer<typeof MetricCheckSchema>
-
-export const MetricsSpecSchema = z.object({
-  target: TargetSchema,
-  checks: MetricCheckSchema.array().nullable(),
-})
-export type MetricsSpec = z.infer<typeof MetricsSpecSchema>
 
 export const SourcePodSchema = z.object({
   name: z.string().optional(),
@@ -72,18 +72,18 @@ export type ConnectivitySpec = z.infer<typeof ConnectivitySpecSchema>
 
 export const ObjectiveTypeSchema = z.enum([
   "status",
+  "condition",
   "log",
   "event",
-  "metrics",
   "connectivity",
 ]);
 export type ObjectiveType = z.infer<typeof ObjectiveTypeSchema>;
 
 export const ObjectiveSpecSchema = z.union([
   StatusSpecSchema,
+  ConditionSpecSchema,
   LogSpecSchema,
   EventSpecSchema,
-  MetricsSpecSchema,
   ConnectivitySpecSchema,
 ]);
 export type ObjectiveSpec = z.infer<typeof ObjectiveSpecSchema>;
