@@ -6,16 +6,16 @@ import { env } from "@/env";
  * Used for session caching and real-time events via Redis Streams
  *
  * Configuration via validated environment variables:
- * - UPSTASH_REDIS_REST_URL
- * - UPSTASH_REDIS_REST_TOKEN
+ * - KV_REST_API_URL
+ * - KV_REST_API_URL
  *
  * Returns null if Redis is not configured (optional dependency)
  * Includes a 5s timeout per request to prevent hanging connections
  * (recommended by Upstash for serverless environments)
  */
 function createRedisClient(): Redis | null {
-  const url = env.UPSTASH_REDIS_REST_URL;
-  const token = env.UPSTASH_REDIS_REST_TOKEN;
+  const url = env.KV_REST_API_URL;
+  const token = env.KV_REST_API_TOKEN;
 
   if (!url || !token) {
     return null;
