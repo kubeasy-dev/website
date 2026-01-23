@@ -1,4 +1,4 @@
-import { Target, TrendingUp, Trophy } from "lucide-react";
+import { Clock, Target, TrendingUp, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -82,6 +82,24 @@ function DashboardChartError() {
   );
 }
 
+function DashboardRecentGainsError() {
+  return (
+    <div className="bg-secondary neo-border-thick neo-shadow p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-primary neo-border-thick neo-shadow rounded-lg">
+          <Clock className="w-5 h-5 text-primary-foreground" />
+        </div>
+        <h2 className="text-2xl font-black">Recent Activity</h2>
+      </div>
+      <div className="h-[200px] flex items-center justify-center bg-destructive/10 neo-border-thick neo-border-destructive rounded-lg">
+        <p className="text-lg font-bold text-destructive">
+          Failed to load recent activity
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function DashboardSkeleton() {
   return (
     <div className="min-h-screen bg-background">
@@ -157,9 +175,11 @@ async function DashboardContent() {
             </ErrorBoundary>
 
             {/* Recent Activity */}
-            <Suspense fallback={<DashboardRecentGainsSkeleton />}>
-              <DashboardRecentGains />
-            </Suspense>
+            <ErrorBoundary fallback={<DashboardRecentGainsError />}>
+              <Suspense fallback={<DashboardRecentGainsSkeleton />}>
+                <DashboardRecentGains />
+              </Suspense>
+            </ErrorBoundary>
           </div>
 
           {/* Quick Actions */}

@@ -171,8 +171,6 @@ export function ChallengeMission({ slug }: ChallengeMissionProps) {
     (obj) => obj.status === true,
   ).length;
   const hasAnySubmission = displayObjectives.some((obj) => obj.status !== null);
-  const _allPassed =
-    totalObjectives > 0 && passedObjectives === totalObjectives;
 
   // Determine if challenge is completed
   const isCompleted = status === "completed";
