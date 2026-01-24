@@ -23,6 +23,10 @@ export const env = createEnv({
     // Upstash Redis for session caching (optional - falls back to DB if not configured)
     KV_REST_API_URL: z.url().optional(),
     KV_REST_API_TOKEN: z.string().min(1).optional(),
+    // Notion integration for blog (uses dataSources API in SDK v5+)
+    NOTION_INTEGRATION_TOKEN: z.string().min(1).optional(),
+    NOTION_BLOG_DATASOURCE_ID: z.string().min(1).optional(),
+    NOTION_PEOPLE_DATASOURCE_ID: z.string().min(1).optional(),
   },
 
   /**
@@ -52,6 +56,9 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     KV_REST_API_URL: process.env.KV_REST_API_URL,
     KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN,
+    NOTION_INTEGRATION_TOKEN: process.env.NOTION_INTEGRATION_TOKEN,
+    NOTION_BLOG_DATASOURCE_ID: process.env.NOTION_BLOG_DATASOURCE_ID,
+    NOTION_PEOPLE_DATASOURCE_ID: process.env.NOTION_PEOPLE_DATASOURCE_ID,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

@@ -6,8 +6,25 @@
 
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
+import {
+  getAllCategories as fetchAllCategories,
+  getAllCategoryNames as fetchAllCategoryNames,
+  getAllPostSlugs as fetchAllPostSlugs,
+  getAllPosts as fetchAllPosts,
+  getPostBySlug as fetchPostBySlug,
+  getPostsByCategory as fetchPostsByCategory,
+  getPostWithContent as fetchPostWithContent,
+  getRelatedPosts as fetchRelatedPosts,
+  isNotionConfigured,
+} from "@/lib/notion";
 import db from "@/server/db";
 import { challenge, challengeTheme, challengeType } from "@/server/db/schema";
+import type {
+  BlogPost,
+  BlogPostWithContent,
+  CategoryWithCount,
+  PaginatedBlogPosts,
+} from "@/types/blog";
 
 /**
  * Get all challenges
@@ -253,4 +270,170 @@ export async function getStarterChallenges(limit = 5) {
     .limit(limit);
 
   return challenges;
+}
+
+// =============================================================================
+// Blog queries (Notion-powered)
+// =============================================================================
+
+const POSTS_PER_PAGE = 9;
+
+/**
+ * Get paginated blog posts
+ * Cached with 'hours' profile for ISR
+ */
+export async function getBlogPosts(
+  page = 1,
+  perPage = POSTS_PER_PAGE,
+): Promise<PaginatedBlogPosts> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-posts");
+
+  if (!isNotionConfigured) {
+    return {
+      posts: [],
+      totalPages: 0,
+      currentPage: page,
+      totalPosts: 0,
+    };
+  }
+
+  const allPosts = await fetchAllPosts();
+  const totalPosts = allPosts.length;
+  const totalPages = Math.ceil(totalPosts / perPage);
+  const startIndex = (page - 1) * perPage;
+  const posts = allPosts.slice(startIndex, startIndex + perPage);
+
+  return {
+    posts,
+    totalPages,
+    currentPage: page,
+    totalPosts,
+  };
+}
+
+/**
+ * Get a single blog post by slug
+ * Cached with specific post tag for granular invalidation
+ */
+export async function getBlogPostBySlug(
+  slug: string,
+): Promise<BlogPost | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-posts", `blog-post-${slug}`);
+
+  if (!isNotionConfigured) return null;
+
+  return await fetchPostBySlug(slug);
+}
+
+/**
+ * Get a blog post with all content blocks
+ * Cached with specific post tag
+ */
+export async function getBlogPostWithContent(
+  slug: string,
+): Promise<BlogPostWithContent | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-posts", `blog-post-${slug}`);
+
+  if (!isNotionConfigured) return null;
+
+  return await fetchPostWithContent(slug);
+}
+
+/**
+ * Get blog posts by category
+ * Cached with category-specific tag
+ */
+export async function getBlogPostsByCategory(
+  category: string,
+  page = 1,
+  perPage = POSTS_PER_PAGE,
+): Promise<PaginatedBlogPosts> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-posts", `blog-category-${category}`);
+
+  if (!isNotionConfigured) {
+    return {
+      posts: [],
+      totalPages: 0,
+      currentPage: page,
+      totalPosts: 0,
+    };
+  }
+
+  const allPosts = await fetchPostsByCategory(category);
+  const totalPosts = allPosts.length;
+  const totalPages = Math.ceil(totalPosts / perPage);
+  const startIndex = (page - 1) * perPage;
+  const posts = allPosts.slice(startIndex, startIndex + perPage);
+
+  return {
+    posts,
+    totalPages,
+    currentPage: page,
+    totalPosts,
+  };
+}
+
+/**
+ * Get all blog categories with post counts
+ * Cached for category filtering
+ */
+export async function getBlogCategories(): Promise<CategoryWithCount[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-categories");
+
+  if (!isNotionConfigured) return [];
+
+  return await fetchAllCategories();
+}
+
+/**
+ * Get related blog posts for a given post
+ * Based on category and tags similarity
+ */
+export async function getRelatedBlogPosts(
+  post: BlogPost,
+  limit = 3,
+): Promise<BlogPost[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-posts", `blog-related-${post.slug}`);
+
+  if (!isNotionConfigured) return [];
+
+  return await fetchRelatedPosts(post, limit);
+}
+
+/**
+ * Get all blog post slugs for static generation
+ */
+export async function getAllBlogPostSlugs(): Promise<string[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-posts");
+
+  if (!isNotionConfigured) return [];
+
+  return await fetchAllPostSlugs();
+}
+
+/**
+ * Get all blog category names for static generation
+ */
+export async function getAllBlogCategoryNames(): Promise<string[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("blog-categories");
+
+  if (!isNotionConfigured) return [];
+
+  return await fetchAllCategoryNames();
 }

@@ -1,14 +1,22 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
-import { getChallenges, getThemes } from "@/server/db/queries";
+import { isNotionConfigured } from "@/lib/notion";
+import {
+  getAllBlogCategoryNames,
+  getBlogPosts,
+  getChallenges,
+  getThemes,
+} from "@/server/db/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
 
-  // Fetch all challenges and themes for dynamic routes
-  const [{ challenges }, themes] = await Promise.all([
+  // Fetch all challenges, themes, and blog posts for dynamic routes
+  const [{ challenges }, themes, blogData, blogCategories] = await Promise.all([
     getChallenges(),
     getThemes(),
+    isNotionConfigured ? getBlogPosts(1, 100) : Promise.resolve({ posts: [] }),
+    isNotionConfigured ? getAllBlogCategoryNames() : Promise.resolve([]),
   ]);
 
   // Static pages
@@ -38,10 +46,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/about`,
+      url: `${baseUrl}/blog`,
       lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
+      changeFrequency: "daily",
+      priority: 0.9,
     },
   ];
 
@@ -61,5 +69,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...challengePages, ...themePages];
+  // Blog pages
+  const blogPages: MetadataRoute.Sitemap = [];
+
+  if (isNotionConfigured && blogData.posts.length > 0) {
+    // Individual blog posts
+    for (const post of blogData.posts) {
+      blogPages.push({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: new Date(post.updatedAt),
+        changeFrequency: "weekly",
+        priority: 0.8,
+      });
+    }
+
+    // Category pages
+    for (const category of blogCategories) {
+      blogPages.push({
+        url: `${baseUrl}/blog/category/${encodeURIComponent(category)}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly",
+        priority: 0.7,
+      });
+    }
+  }
+
+  return [...staticPages, ...challengePages, ...themePages, ...blogPages];
 }

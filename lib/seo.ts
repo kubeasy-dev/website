@@ -257,6 +257,66 @@ export function generateBreadcrumbSchema(
 }
 
 /**
+ * Generate JSON-LD structured data for a blog post
+ */
+export function generateBlogPostSchema({
+  title,
+  description,
+  image,
+  url,
+  publishedAt,
+  updatedAt,
+  author,
+  category,
+  tags,
+  wordCount,
+  readingTime,
+}: {
+  title: string;
+  description: string;
+  image?: string;
+  url: string;
+  publishedAt: string;
+  updatedAt: string;
+  author: { name: string; url?: string };
+  category: string;
+  tags: string[];
+  wordCount?: number;
+  readingTime?: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: title,
+    description,
+    image: image || `${siteConfig.url}${siteConfig.ogImage}`,
+    datePublished: publishedAt,
+    dateModified: updatedAt,
+    author: {
+      "@type": "Person",
+      name: author.name,
+      url: author.url,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteConfig.name,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteConfig.url}/logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${siteConfig.url}${url}`,
+    },
+    articleSection: category,
+    keywords: tags.join(", "),
+    ...(wordCount && { wordCount }),
+    ...(readingTime && { timeRequired: `PT${readingTime}M` }),
+  };
+}
+
+/**
  * Safely stringify JSON-LD data for use in dangerouslySetInnerHTML
  * Escapes characters that could be used for XSS attacks in script tags
  * - Escapes <, >, & to prevent HTML injection

@@ -24,13 +24,13 @@ const routeList: RouteProps[] = [
     label: "Challenges",
   },
   {
+    href: "/blog",
+    label: "Blog",
+  },
+  {
     href: "https://docs.kubeasy.dev",
     label: "Documentation",
     external: true,
-  },
-  {
-    href: "/about",
-    label: "About",
   },
 ];
 
