@@ -2,9 +2,6 @@ import { siteConfig } from "@/config/site";
 import { isNotionConfigured } from "@/lib/notion";
 import { getBlogPosts } from "@/server/db/queries";
 
-export const dynamic = "force-static";
-export const revalidate = 3600; // Revalidate every hour
-
 export async function GET() {
   if (!isNotionConfigured) {
     return new Response("Blog not configured", { status: 404 });
