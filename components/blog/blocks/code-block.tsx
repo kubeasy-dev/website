@@ -1,11 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { type BundledTheme, codeToHtml } from "shiki";
 import { cn } from "@/lib/utils";
 import type { NotionBlock } from "@/types/blog";
 import { CopyButton } from "./copy-button";
-import { RichText } from "./text";
 
 // Map Notion language names to Shiki language identifiers
-// Using string type for fallback languages like 'text' that Shiki supports but aren't in BundledLanguage
 const languageMap: Record<string, string> = {
   javascript: "javascript",
   typescript: "typescript",
@@ -72,21 +73,28 @@ interface CodeBlockProps {
   block: NotionBlock;
 }
 
-export async function CodeBlock({ block }: CodeBlockProps) {
-  if (!block.code) return null;
+export function CodeBlock({ block }: CodeBlockProps) {
+  const [html, setHtml] = useState<string | null>(null);
 
-  const { rich_text, language, caption } = block.code;
-  const code = rich_text.map((t) => t.plain_text).join("");
+  const codeData = block.code;
+  const code = codeData?.rich_text.map((t) => t.plain_text).join("") ?? "";
+  const language = codeData?.language ?? "text";
   const lang = languageMap[language.toLowerCase()] || "text";
+  const caption = codeData?.caption;
 
-  // Generate highlighted HTML using Shiki
-  const html = await codeToHtml(code, {
-    lang,
-    themes: {
-      light: "github-light" as BundledTheme,
-      dark: "github-dark" as BundledTheme,
-    },
-  });
+  useEffect(() => {
+    if (!code) return;
+
+    codeToHtml(code, {
+      lang,
+      themes: {
+        light: "github-light" as BundledTheme,
+        dark: "github-dark" as BundledTheme,
+      },
+    }).then(setHtml);
+  }, [code, lang]);
+
+  if (!codeData) return null;
 
   return (
     <div className="my-8 group">
@@ -106,15 +114,24 @@ export async function CodeBlock({ block }: CodeBlockProps) {
             "[&>pre]:!bg-transparent [&>pre]:!m-0 [&>pre]:!p-0",
             "[&_code]:font-mono",
           )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki output is trusted
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
+        >
+          {html ? (
+            <div
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki output is trusted
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          ) : (
+            <pre className="font-mono">
+              <code>{code}</code>
+            </pre>
+          )}
+        </div>
       </div>
 
       {/* Caption */}
       {caption && caption.length > 0 && (
         <p className="mt-3 text-sm font-medium text-muted-foreground text-center">
-          <RichText richText={caption} />
+          {caption.map((t) => t.plain_text).join("")}
         </p>
       )}
     </div>
