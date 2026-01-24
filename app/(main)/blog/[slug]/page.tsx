@@ -25,8 +25,10 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  if (!isNotionConfigured) return [];
+  if (!isNotionConfigured) return [{ slug: "_placeholder" }];
   const slugs = await getAllBlogPostSlugs();
+  // Must return at least one param for cacheComponents
+  if (slugs.length === 0) return [{ slug: "_placeholder" }];
   return slugs.map((slug) => ({ slug }));
 }
 

@@ -18,8 +18,10 @@ interface CategoryPageProps {
 }
 
 export async function generateStaticParams() {
-  if (!isNotionConfigured) return [];
+  if (!isNotionConfigured) return [{ category: "_placeholder" }];
   const categories = await getAllBlogCategoryNames();
+  // Must return at least one param for cacheComponents
+  if (categories.length === 0) return [{ category: "_placeholder" }];
   return categories.map((category) => ({
     category: encodeURIComponent(category),
   }));
