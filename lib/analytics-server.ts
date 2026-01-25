@@ -232,3 +232,77 @@ export async function shutdownPostHog() {
     console.error("[PostHog Server] Failed to shutdown:", error);
   }
 }
+
+/**
+ * Track demo session created (server-side)
+ * @param token - The demo session token
+ * @param utmSource - UTM source parameter
+ */
+export async function trackDemoCreatedServer(
+  token: string,
+  utmSource?: string,
+) {
+  await safePostHogOperation("trackDemoCreatedServer", async () => {
+    posthogClient?.capture({
+      distinctId: `demo_${token}`,
+      event: "demo_created",
+      properties: {
+        token,
+        utmSource,
+        source: "server",
+      },
+    });
+    await posthogClient?.flush();
+  });
+}
+
+/**
+ * Track demo completed (server-side)
+ * @param token - The demo session token
+ */
+export async function trackDemoCompletedServer(token: string) {
+  await safePostHogOperation("trackDemoCompletedServer", async () => {
+    posthogClient?.capture({
+      distinctId: `demo_${token}`,
+      event: "demo_completed",
+      properties: {
+        token,
+        source: "server",
+      },
+    });
+    await posthogClient?.flush();
+  });
+}
+
+/**
+ * Track demo conversion (server-side)
+ * When a demo user signs up for an account
+ * @param token - The demo session token
+ * @param userId - The new user ID
+ * @param wasCompleted - Whether the demo was completed before conversion
+ */
+export async function trackDemoConvertedServer(
+  token: string,
+  userId: string,
+  wasCompleted: boolean,
+) {
+  await safePostHogOperation("trackDemoConvertedServer", async () => {
+    // First, alias the demo user to the real user
+    posthogClient?.alias({
+      distinctId: userId,
+      alias: `demo_${token}`,
+    });
+
+    // Then capture the conversion event
+    posthogClient?.capture({
+      distinctId: userId,
+      event: "demo_converted",
+      properties: {
+        token,
+        wasCompleted,
+        source: "server",
+      },
+    });
+    await posthogClient?.flush();
+  });
+}
