@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesFilters } from "@/components/challenges-filters";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import type { ChallengeFilters } from "@/schemas/challengeFilters";
 import { ChallengesGrid } from "./challenges-grid";
 
 export function ChallengesView() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState<ChallengeFilters>({
     difficulty: undefined,
     theme: undefined,
@@ -17,6 +18,10 @@ export function ChallengesView() {
     search: undefined,
     showCompleted: true,
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <>
@@ -34,7 +39,7 @@ export function ChallengesView() {
               })
             }
           />
-          {session && (
+          {mounted && session && (
             <Button
               variant={filters.showCompleted ? "outline" : "default"}
               onClick={() =>
@@ -43,11 +48,7 @@ export function ChallengesView() {
                   showCompleted: !filters.showCompleted,
                 })
               }
-              disabled={!session || isPending}
-              className="neo-border-thick font-black neo-shadow hover:neo-shadow-lg transition-shadow px-6 py-6 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-              title={
-                !session ? "Sign in to filter completed challenges" : undefined
-              }
+              className="neo-border-thick font-black neo-shadow hover:neo-shadow-lg transition-shadow px-6 py-6 text-base"
             >
               {filters.showCompleted ? "Hide Completed" : "Show Completed"}
             </Button>
