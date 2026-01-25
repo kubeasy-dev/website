@@ -1,5 +1,7 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useMutation } from "@tanstack/react-query";
 import { LogIn, Rocket, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DemoHero } from "./demo-hero";
@@ -11,48 +13,47 @@ interface DemoSession {
   createdAt: number;
 }
 
+async function createDemoSession(): Promise<DemoSession> {
+  const response = await fetch("/api/demo/session", {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to create demo session");
+  }
+
+  return response.json();
+}
+
 export function DemoContent() {
-  const [session, setSession] = useState<DemoSession | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  const {
+    data: session,
+    error,
+    isPending,
+    mutate,
+  } = useMutation({
+    mutationFn: createDemoSession,
+    onError: (err) => {
+      Sentry.captureException(err, {
+        tags: { operation: "demo.session.create.client" },
+      });
+    },
+  });
+
+  // Create session on mount
   useEffect(() => {
-    async function createSession() {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const utmSource = params.get("utm_source") ?? undefined;
-        const utmMedium = params.get("utm_medium") ?? undefined;
-        const utmCampaign = params.get("utm_campaign") ?? undefined;
+    mutate();
+  }, [mutate]);
 
-        const response = await fetch("/api/demo/session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ utmSource, utmMedium, utmCampaign }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to create demo session");
-        }
-
-        const data = await response.json();
-        setSession(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to create demo");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    createSession();
-  }, []);
-
-  if (isLoading) {
+  if (isPending) {
     return <DemoLoadingState />;
   }
 
   if (error || !session) {
-    return <DemoErrorState error={error} />;
+    return <DemoErrorState error={error?.message ?? null} />;
   }
 
   return (

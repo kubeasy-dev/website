@@ -7,34 +7,19 @@ const DEMO_TTL = 24 * 60 * 60; // 24 hours in seconds
 const DEMO_KEY_PREFIX = "demo:session:";
 
 /**
- * UTM parameters for tracking demo session sources
- */
-export interface UTMParams {
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-}
-
-/**
  * Demo session stored in Redis
  */
 export interface DemoSession {
   token: string;
   createdAt: number;
   completedAt?: number;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
 }
 
 /**
  * Creates a new demo session in Redis
- * @param utm - Optional UTM parameters for tracking
  * @returns The created demo session or null if Redis is not configured
  */
-export async function createDemoSession(
-  utm?: UTMParams,
-): Promise<DemoSession | null> {
+export async function createDemoSession(): Promise<DemoSession | null> {
   if (!isRedisConfigured || !redis) {
     console.warn("[Demo] Redis not configured, cannot create demo session");
     return null;
@@ -44,9 +29,6 @@ export async function createDemoSession(
   const session: DemoSession = {
     token,
     createdAt: Date.now(),
-    ...(utm?.utmSource && { utmSource: utm.utmSource }),
-    ...(utm?.utmMedium && { utmMedium: utm.utmMedium }),
-    ...(utm?.utmCampaign && { utmCampaign: utm.utmCampaign }),
   };
 
   try {

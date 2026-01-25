@@ -5,7 +5,6 @@ import {
   createDemoSession,
   getDemoSession,
   isValidDemoToken,
-  type UTMParams,
 } from "@/lib/demo-session";
 import { isRedisConfigured } from "@/lib/redis";
 import db from "@/server/db";
@@ -17,21 +16,13 @@ const { logger } = Sentry;
  * POST /api/demo/session
  * Creates a new demo session
  *
- * Request body (optional):
- * {
- *   utmSource?: string;
- *   utmMedium?: string;
- *   utmCampaign?: string;
- * }
- *
  * Response:
  * {
  *   token: string;
  *   createdAt: number;
  * }
  */
-export async function POST(request: Request) {
-  // Check if Redis is configured
+export async function POST() {
   if (!isRedisConfigured) {
     logger.warn("Demo session creation failed: Redis not configured");
     return NextResponse.json(
@@ -41,21 +32,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Parse optional UTM parameters from body
-    let utm: UTMParams = {};
-    try {
-      const body = await request.json();
-      utm = {
-        utmSource: body.utmSource,
-        utmMedium: body.utmMedium,
-        utmCampaign: body.utmCampaign,
-      };
-    } catch {
-      // No body or invalid JSON, proceed without UTM params
-    }
-
-    // Create demo session
-    const session = await createDemoSession(utm);
+    const session = await createDemoSession();
 
     if (!session) {
       logger.error("Failed to create demo session");
@@ -65,13 +42,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Also persist to PostgreSQL for long-term tracking
+    // Persist to PostgreSQL for conversion tracking
     try {
       await db.insert(demoConversion).values({
         id: session.token,
-        utmSource: utm.utmSource,
-        utmMedium: utm.utmMedium,
-        utmCampaign: utm.utmCampaign,
       });
     } catch (dbError) {
       // Log but don't fail - Redis session is the primary source
@@ -79,15 +53,16 @@ export async function POST(request: Request) {
         token: session.token,
         error: dbError instanceof Error ? dbError.message : String(dbError),
       });
+      Sentry.captureException(dbError, {
+        tags: { operation: "demo.session.persist" },
+        extra: { token: session.token },
+      });
     }
 
-    logger.info("Demo session created", {
-      token: session.token,
-      hasUtm: !!(utm.utmSource || utm.utmMedium || utm.utmCampaign),
-    });
+    logger.info("Demo session created", { token: session.token });
 
-    // Track in PostHog
-    await trackDemoCreatedServer(session.token, utm.utmSource);
+    // Track in PostHog (UTM params captured automatically client-side)
+    await trackDemoCreatedServer(session.token);
 
     return NextResponse.json({
       token: session.token,

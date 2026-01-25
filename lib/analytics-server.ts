@@ -236,19 +236,14 @@ export async function shutdownPostHog() {
 /**
  * Track demo session created (server-side)
  * @param token - The demo session token
- * @param utmSource - UTM source parameter
  */
-export async function trackDemoCreatedServer(
-  token: string,
-  utmSource?: string,
-) {
+export async function trackDemoCreatedServer(token: string) {
   await safePostHogOperation("trackDemoCreatedServer", async () => {
     posthogClient?.capture({
       distinctId: `demo_${token}`,
       event: "demo_created",
       properties: {
         token,
-        utmSource,
         source: "server",
       },
     });

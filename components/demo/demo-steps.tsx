@@ -161,14 +161,12 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
 
     if (step.autoAdvance) {
       // Step 1: auto-advance on copy
-      toast.success("Command copied! Run it in your terminal.");
       setTimeout(() => {
         setCopiedStep(null);
         advanceToNextStep();
       }, 800);
     } else {
       // Other steps: show waiting state
-      toast.success("Command copied! Waiting for completion...");
       setWaitingForEvent(stepIndex);
       setTimeout(() => setCopiedStep(null), 1500);
     }
