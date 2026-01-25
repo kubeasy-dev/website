@@ -1,5 +1,6 @@
 export { BlockRenderer } from "./block-renderer";
 export { Callout } from "./callout";
+export { ChallengeBookmark } from "./challenge-bookmark";
 export { CodeBlock } from "./code-block";
 export { CopyButton } from "./copy-button";
 export { Heading } from "./heading";

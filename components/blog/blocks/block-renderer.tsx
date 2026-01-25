@@ -1,5 +1,6 @@
-import type { NotionBlock } from "@/types/blog";
+import type { NotionBlock, RichTextItem } from "@/types/blog";
 import { Callout } from "./callout";
+import { ChallengeBookmark } from "./challenge-bookmark";
 import { CodeBlock } from "./code-block";
 import { Heading } from "./heading";
 import { ImageBlock } from "./image";
@@ -75,16 +76,26 @@ interface BlockProps {
 
 function Block({ block }: BlockProps) {
   switch (block.type) {
-    case "paragraph":
+    case "paragraph": {
       if (!block.paragraph) return null;
       if (block.paragraph.rich_text.length === 0) {
         return <div className="h-4" />;
       }
+
+      // Check if paragraph contains only a challenge link
+      const challengeSlug = extractChallengeLinkFromParagraph(
+        block.paragraph.rich_text,
+      );
+      if (challengeSlug) {
+        return <ChallengeBookmark slug={challengeSlug} />;
+      }
+
       return (
         <p className="my-4 leading-relaxed">
           <RichText richText={block.paragraph.rich_text} />
         </p>
       );
+    }
 
     case "heading_1":
       return <Heading block={block} level={1} />;
@@ -209,6 +220,16 @@ function BookmarkBlock({ block }: BlockProps) {
 
   const { url, caption } = block.bookmark;
 
+  // Check if it's a challenge link
+  const challengeMatch = url.match(
+    /(?:https?:\/\/(?:www\.)?kubeasy\.dev)?\/challenges\/([a-z0-9-]+)/,
+  );
+
+  if (challengeMatch) {
+    const slug = challengeMatch[1];
+    return <ChallengeBookmark slug={slug} caption={caption} />;
+  }
+
   return (
     <div className="my-6">
       <a
@@ -327,4 +348,42 @@ function createListGroup(
     case "to_do":
       return { type: "to_do_list", key, items };
   }
+}
+
+// Helper to detect if a paragraph contains only a challenge link
+// This allows using a simple link in Notion that gets rendered as a ChallengeBookmark
+function extractChallengeLinkFromParagraph(
+  richText: RichTextItem[],
+): string | null {
+  // Must have exactly one text item with a link
+  if (richText.length !== 1) return null;
+
+  const item = richText[0];
+  const link = item.href || item.text?.link?.url;
+
+  if (!link) return null;
+
+  // Check if it's a challenge link
+  const challengeMatch = link.match(
+    /(?:https?:\/\/(?:www\.)?kubeasy\.dev)?\/challenges\/([a-z0-9-]+)/,
+  );
+
+  if (!challengeMatch) return null;
+
+  // Only transform if the text looks like a CTA (contains "challenge", "start", "try", etc.)
+  const text = item.plain_text.toLowerCase();
+  const ctaKeywords = [
+    "challenge",
+    "start",
+    "try",
+    "practice",
+    "→",
+    "➡",
+    "hands-on",
+  ];
+  const isCta = ctaKeywords.some((keyword) => text.includes(keyword));
+
+  if (!isCta) return null;
+
+  return challengeMatch[1];
 }
