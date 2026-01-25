@@ -284,6 +284,7 @@ const POSTS_PER_PAGE = 9;
  */
 export async function getBlogPosts(
   page = 1,
+  category: string | null = null,
   perPage = POSTS_PER_PAGE,
 ): Promise<PaginatedBlogPosts> {
   "use cache";
@@ -299,17 +300,40 @@ export async function getBlogPosts(
     };
   }
 
-  const allPosts = await fetchAllPosts();
-  const totalPosts = allPosts.length;
-  const totalPages = Math.ceil(totalPosts / perPage);
+  const includeDrafts = process.env.NODE_ENV === "development";
+  let allPosts = await fetchAllPosts(includeDrafts);
+
+  // Filter by category if specified
+  if (category) {
+    allPosts = allPosts.filter((p) => p.category.name === category);
+  }
+
+  // Separate pinned posts from regular posts
+  const pinnedPosts = allPosts.filter((p) => p.isPinned);
+  const regularPosts = allPosts.filter((p) => !p.isPinned);
+
+  // Pagination is based on regular posts only
+  // Page 1: pinned posts + first N regular posts
+  // Page 2+: just regular posts
+  const totalRegularPosts = regularPosts.length;
+  const totalPages = Math.ceil(totalRegularPosts / perPage);
   const startIndex = (page - 1) * perPage;
-  const posts = allPosts.slice(startIndex, startIndex + perPage);
+  const paginatedRegularPosts = regularPosts.slice(
+    startIndex,
+    startIndex + perPage,
+  );
+
+  // On page 1, include pinned posts; on other pages, just regular posts
+  const posts =
+    page === 1
+      ? [...pinnedPosts, ...paginatedRegularPosts]
+      : paginatedRegularPosts;
 
   return {
     posts,
     totalPages,
     currentPage: page,
-    totalPosts,
+    totalPosts: allPosts.length,
   };
 }
 
@@ -392,7 +416,8 @@ export async function getBlogCategories(): Promise<CategoryWithCount[]> {
 
   if (!isNotionConfigured) return [];
 
-  return await fetchAllCategories();
+  const includeDrafts = process.env.NODE_ENV === "development";
+  return await fetchAllCategories(includeDrafts);
 }
 
 /**
@@ -409,7 +434,8 @@ export async function getRelatedBlogPosts(
 
   if (!isNotionConfigured) return [];
 
-  return await fetchRelatedPosts(post, limit);
+  const includeDrafts = process.env.NODE_ENV === "development";
+  return await fetchRelatedPosts(post, limit, includeDrafts);
 }
 
 /**
@@ -422,7 +448,8 @@ export async function getAllBlogPostSlugs(): Promise<string[]> {
 
   if (!isNotionConfigured) return [];
 
-  return await fetchAllPostSlugs();
+  const includeDrafts = process.env.NODE_ENV === "development";
+  return await fetchAllPostSlugs(includeDrafts);
 }
 
 /**

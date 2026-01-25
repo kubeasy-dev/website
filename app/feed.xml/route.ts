@@ -7,7 +7,7 @@ export async function GET() {
     return new Response("Blog not configured", { status: 404 });
   }
 
-  const { posts } = await getBlogPosts(1, 50); // Get latest 50 posts
+  const { posts } = await getBlogPosts(1, null, 50); // Get latest 50 posts
 
   const feedItems = posts
     .map((post) => {

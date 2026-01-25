@@ -7,12 +7,14 @@ interface BlogPaginationProps {
   currentPage: number;
   totalPages: number;
   basePath?: string;
+  category?: string | null;
 }
 
 export function BlogPagination({
   currentPage,
   totalPages,
   basePath = "/blog",
+  category = null,
 }: BlogPaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -20,8 +22,11 @@ export function BlogPagination({
   const pageNumbers = generatePageNumbers(currentPage, totalPages);
 
   const getPageUrl = (page: number) => {
-    if (page === 1) return basePath;
-    return `${basePath}?page=${page}`;
+    const params = new URLSearchParams();
+    if (page > 1) params.set("page", String(page));
+    if (category) params.set("category", category);
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
   };
 
   return (

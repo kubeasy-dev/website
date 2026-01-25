@@ -6,10 +6,24 @@ import type { BlogPost, CategoryWithCount } from "@/types/blog";
 interface BlogListClientProps {
   posts: BlogPost[];
   categories: CategoryWithCount[];
+  selectedCategory: string | null;
+  totalPosts: number;
 }
 
-export function BlogListClient({ posts, categories }: BlogListClientProps) {
+export function BlogListClient({
+  posts,
+  categories,
+  selectedCategory,
+  totalPosts,
+}: BlogListClientProps) {
   return (
-    <BlogList posts={posts} categories={categories} showSearch showFilters />
+    <BlogList
+      posts={posts}
+      categories={categories}
+      selectedCategory={selectedCategory}
+      totalPosts={totalPosts}
+      showSearch
+      showFilters
+    />
   );
 }

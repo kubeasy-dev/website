@@ -615,8 +615,11 @@ export async function getPostsByCategory(
 
 /**
  * Get all categories with post counts
+ * @param includeDrafts - Include drafts in counts (only in development)
  */
-export async function getAllCategories(): Promise<CategoryWithCount[]> {
+export async function getAllCategories(
+  includeDrafts = false,
+): Promise<CategoryWithCount[]> {
   if (!isNotionConfigured || !BLOG_DATABASE_ID) return [];
 
   try {
@@ -634,7 +637,7 @@ export async function getAllCategories(): Promise<CategoryWithCount[]> {
     const categoryOptions = categoryProp.select.options;
 
     // Get all posts to count per category
-    const posts = await getAllPosts();
+    const posts = await getAllPosts(includeDrafts);
     const categoryCountMap = new Map<string, number>();
 
     for (const post of posts) {
@@ -660,12 +663,14 @@ export async function getAllCategories(): Promise<CategoryWithCount[]> {
 
 /**
  * Get related posts based on category and tags
+ * @param includeDrafts - Include drafts (only in development)
  */
 export async function getRelatedPosts(
   post: BlogPost,
   limit = 3,
+  includeDrafts = false,
 ): Promise<BlogPost[]> {
-  const allPosts = await getAllPosts();
+  const allPosts = await getAllPosts(includeDrafts);
 
   // Filter out the current post and score by similarity
   const scored = allPosts
@@ -688,9 +693,12 @@ export async function getRelatedPosts(
 
 /**
  * Get all post slugs for static generation
+ * @param includeDrafts - Include drafts (only in development)
  */
-export async function getAllPostSlugs(): Promise<string[]> {
-  const posts = await getAllPosts();
+export async function getAllPostSlugs(
+  includeDrafts = false,
+): Promise<string[]> {
+  const posts = await getAllPosts(includeDrafts);
   return posts.map((p) => p.slug);
 }
 

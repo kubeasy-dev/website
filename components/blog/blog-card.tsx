@@ -34,11 +34,6 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                 <span className="text-6xl font-black text-primary/30">K</span>
               </div>
             )}
-            {post.isPinned && (
-              <span className="absolute left-3 top-3 px-3 py-1 bg-primary text-primary-foreground font-black text-xs uppercase neo-border">
-                Pinned
-              </span>
-            )}
           </div>
 
           {/* Content */}

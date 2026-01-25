@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,8 @@ import { BlogSearch } from "./blog-search";
 interface BlogListProps {
   posts: BlogPost[];
   categories: CategoryWithCount[];
+  selectedCategory?: string | null;
+  totalPosts?: number;
   showSearch?: boolean;
   showFilters?: boolean;
 }
@@ -17,28 +20,35 @@ interface BlogListProps {
 export function BlogList({
   posts,
   categories,
+  selectedCategory = null,
+  totalPosts,
   showSearch = true,
   showFilters = true,
 }: BlogListProps) {
+  const router = useRouter();
   const [searchResults, setSearchResults] = useState<BlogPost[] | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Filter posts by category
+  // Filter posts by search (category is now URL-based)
   const filteredPosts = useMemo(() => {
-    let result = searchResults ?? posts;
-    if (selectedCategory) {
-      result = result.filter((p) => p.category.name === selectedCategory);
-    }
-    return result;
-  }, [posts, searchResults, selectedCategory]);
+    return searchResults ?? posts;
+  }, [posts, searchResults]);
 
   const handleSearchResults = useCallback((results: BlogPost[] | null) => {
     setSearchResults(results);
   }, []);
 
-  const handleCategoryClick = useCallback((category: string) => {
-    setSelectedCategory((prev) => (prev === category ? null : category));
-  }, []);
+  const handleCategoryClick = useCallback(
+    (category: string | null) => {
+      if (category === null) {
+        router.push("/blog");
+      } else if (category === selectedCategory) {
+        router.push("/blog");
+      } else {
+        router.push(`/blog?category=${encodeURIComponent(category)}`);
+      }
+    },
+    [router, selectedCategory],
+  );
 
   // Separate pinned posts for featured display
   const pinnedPosts = filteredPosts.filter((p) => p.isPinned);
@@ -57,9 +67,9 @@ export function BlogList({
             <Badge
               variant={selectedCategory === null ? "default" : "outline"}
               className="cursor-pointer neo-border hover:bg-muted transition-colors"
-              onClick={() => setSelectedCategory(null)}
+              onClick={() => handleCategoryClick(null)}
             >
-              All ({posts.length})
+              All ({totalPosts ?? posts.length})
             </Badge>
             {categories.map((cat) => (
               <Badge

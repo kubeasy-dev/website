@@ -24,7 +24,7 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 interface BlogPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; category?: string }>;
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
@@ -42,11 +42,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
     );
   }
 
-  const { page } = await searchParams;
+  const { page, category } = await searchParams;
   const currentPage = Math.max(1, Number(page) || 1);
+  const selectedCategory = category || null;
 
   const [{ posts, totalPages, totalPosts }, categories] = await Promise.all([
-    getBlogPosts(currentPage),
+    getBlogPosts(currentPage, selectedCategory),
     getBlogCategories(),
   ]);
 
@@ -80,13 +81,22 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           </div>
         }
       >
-        <BlogListClient posts={posts} categories={categories} />
+        <BlogListClient
+          posts={posts}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          totalPosts={totalPosts}
+        />
       </Suspense>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-12">
-          <BlogPagination currentPage={currentPage} totalPages={totalPages} />
+          <BlogPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            category={selectedCategory}
+          />
         </div>
       )}
     </div>

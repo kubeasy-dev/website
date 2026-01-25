@@ -15,7 +15,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [{ challenges }, themes, blogData, blogCategories] = await Promise.all([
     getChallenges(),
     getThemes(),
-    isNotionConfigured ? getBlogPosts(1, 100) : Promise.resolve({ posts: [] }),
+    isNotionConfigured
+      ? getBlogPosts(1, null, 100)
+      : Promise.resolve({ posts: [] }),
     isNotionConfigured ? getAllBlogCategoryNames() : Promise.resolve([]),
   ]);
 
