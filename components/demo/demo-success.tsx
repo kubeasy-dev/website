@@ -70,18 +70,6 @@ export function DemoSuccess() {
       {/* Success Card */}
       <div className="relative">
         <div className="relative overflow-hidden neo-border-thick neo-shadow-xl bg-gradient-to-br from-green-50 via-white to-accent/10">
-          {/* Corner decorations */}
-          <div className="absolute top-0 left-0 w-16 h-16">
-            <div className="absolute top-0 left-0 w-full h-full bg-green-500" />
-            <Star className="absolute top-2 left-2 w-6 h-6 text-white" />
-          </div>
-          <div className="absolute top-0 right-0 w-16 h-16">
-            <div className="absolute top-0 right-0 w-full h-full bg-accent" />
-            <Trophy className="absolute top-2 right-2 w-6 h-6 text-foreground" />
-          </div>
-          <div className="absolute bottom-0 left-0 w-12 h-12 bg-primary" />
-          <div className="absolute bottom-0 right-0 w-12 h-12 bg-secondary" />
-
           <div className="relative p-10 lg:p-16">
             {/* Achievement Badge */}
             <div className="flex justify-center mb-8">

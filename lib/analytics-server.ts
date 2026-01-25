@@ -273,36 +273,3 @@ export async function trackDemoCompletedServer(token: string) {
     await posthogClient?.flush();
   });
 }
-
-/**
- * Track demo conversion (server-side)
- * When a demo user signs up for an account
- * @param token - The demo session token
- * @param userId - The new user ID
- * @param wasCompleted - Whether the demo was completed before conversion
- */
-export async function trackDemoConvertedServer(
-  token: string,
-  userId: string,
-  wasCompleted: boolean,
-) {
-  await safePostHogOperation("trackDemoConvertedServer", async () => {
-    // First, alias the demo user to the real user
-    posthogClient?.alias({
-      distinctId: userId,
-      alias: `demo_${token}`,
-    });
-
-    // Then capture the conversion event
-    posthogClient?.capture({
-      distinctId: userId,
-      event: "demo_converted",
-      properties: {
-        token,
-        wasCompleted,
-        source: "server",
-      },
-    });
-    await posthogClient?.flush();
-  });
-}

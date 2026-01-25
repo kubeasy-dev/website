@@ -5,7 +5,7 @@ import { type NextRequest, NextResponse } from "next/server";
  * Protected routes that require authentication.
  * Users without a session cookie will be redirected to login with a `next` param.
  */
-const protectedRoutes = ["/dashboard", "/get-started", "/profile"];
+const protectedRoutes = ["/dashboard", "/profile"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

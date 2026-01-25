@@ -46,7 +46,7 @@ export function HeaderActions({ user }: { user: User | null }) {
               className="neo-border neo-shadow font-bold"
               asChild
             >
-              <Link href="/challenges">Get Started</Link>
+              <Link href="/get-started">Try Demo</Link>
             </Button>
           </>
         )}

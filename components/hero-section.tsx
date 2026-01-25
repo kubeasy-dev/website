@@ -37,13 +37,13 @@ export function HeroSection() {
               migrating deprecated APIs.
             </p>
 
-            <div className="space-x-4">
+            <div className="flex flex-wrap gap-4">
               <Link
                 href="/get-started"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
-                onClick={() => handleCtaClick("Get Started", "/get-started")}
+                onClick={() => handleCtaClick("Try Free Demo", "/get-started")}
               >
-                Get Started
+                Try Free Demo
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link

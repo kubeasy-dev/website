@@ -80,8 +80,13 @@ export function MobileMenu({ user }: { user: User | null }) {
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/login" className="font-bold cursor-pointer">
-                Get Started
+              <Link href="/get-started" className="font-bold cursor-pointer">
+                Try Demo
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/login" className="cursor-pointer">
+                Sign In
               </Link>
             </DropdownMenuItem>
           </>
