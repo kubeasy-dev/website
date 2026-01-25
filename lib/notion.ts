@@ -1,4 +1,4 @@
-import { Client, isFullPage } from "@notionhq/client";
+import { Client, isFullDataSource, isFullPage } from "@notionhq/client";
 import type {
   BlockObjectResponse,
   PageObjectResponse,
@@ -481,8 +481,8 @@ export async function getAllPosts(includeDrafts = false): Promise<BlogPost[]> {
   const showDrafts = includeDrafts && process.env.NODE_ENV === "development";
 
   try {
-    const response = await getNotionClient().databases.query({
-      database_id: BLOG_DATABASE_ID,
+    const response = await getNotionClient().dataSources.query({
+      data_source_id: BLOG_DATABASE_ID,
       filter: showDrafts
         ? undefined
         : {
@@ -522,8 +522,8 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
   if (!isNotionConfigured || !BLOG_DATABASE_ID) return null;
 
   try {
-    const response = await getNotionClient().databases.query({
-      database_id: BLOG_DATABASE_ID,
+    const response = await getNotionClient().dataSources.query({
+      data_source_id: BLOG_DATABASE_ID,
       filter: {
         property: "slug",
         rich_text: { equals: slug },
@@ -577,8 +577,8 @@ export async function getPostsByCategory(
   if (!isNotionConfigured || !BLOG_DATABASE_ID) return [];
 
   try {
-    const response = await getNotionClient().databases.query({
-      database_id: BLOG_DATABASE_ID,
+    const response = await getNotionClient().dataSources.query({
+      data_source_id: BLOG_DATABASE_ID,
       filter: {
         and: [
           { property: "status", select: { equals: "Posted" } },
@@ -620,15 +620,15 @@ export async function getAllCategories(): Promise<CategoryWithCount[]> {
   if (!isNotionConfigured || !BLOG_DATABASE_ID) return [];
 
   try {
-    // Get database schema to extract category options
-    const database = await getNotionClient().databases.retrieve({
-      database_id: BLOG_DATABASE_ID,
+    // Get data source schema to extract category options
+    const dataSource = await getNotionClient().dataSources.retrieve({
+      data_source_id: BLOG_DATABASE_ID,
     });
 
-    // Type guard for full database response
-    if (!("properties" in database)) return [];
+    // Type guard for full data source response
+    if (!isFullDataSource(dataSource)) return [];
 
-    const categoryProp = database.properties.category;
+    const categoryProp = dataSource.properties.category;
     if (!categoryProp || categoryProp.type !== "select") return [];
 
     const categoryOptions = categoryProp.select.options;
@@ -642,7 +642,7 @@ export async function getAllCategories(): Promise<CategoryWithCount[]> {
       categoryCountMap.set(post.category.name, count + 1);
     }
 
-    return categoryOptions.map((opt) => ({
+    return categoryOptions.map((opt: { name: string; color: string }) => ({
       name: opt.name,
       color: opt.color,
       count: categoryCountMap.get(opt.name) ?? 0,
