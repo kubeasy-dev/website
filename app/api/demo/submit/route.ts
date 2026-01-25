@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/nextjs";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { trackDemoCompletedServer } from "@/lib/analytics-server";
 import {
@@ -9,8 +8,6 @@ import {
 } from "@/lib/demo-session";
 import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 import { isRedisConfigured } from "@/lib/redis";
-import db from "@/server/db";
-import { demoConversion } from "@/server/db/schema";
 import type { ObjectiveResult } from "@/types/cli-api";
 
 const { logger } = Sentry;
@@ -138,24 +135,7 @@ export async function POST(request: Request) {
     // Mark demo as completed if validation passed
     if (validated) {
       await markDemoCompleted(token);
-
-      // Update PostgreSQL record
-      try {
-        await db
-          .update(demoConversion)
-          .set({ completedAt: new Date() })
-          .where(eq(demoConversion.id, token));
-      } catch (dbError) {
-        // Log but don't fail - Redis is primary source
-        logger.error("Failed to update demo completion in PostgreSQL", {
-          token,
-          error: dbError instanceof Error ? dbError.message : String(dbError),
-        });
-      }
-
       logger.info("Demo completed successfully", { token });
-
-      // Track in PostHog
       await trackDemoCompletedServer(token);
     }
 

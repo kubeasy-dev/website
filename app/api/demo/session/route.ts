@@ -7,20 +7,12 @@ import {
   isValidDemoToken,
 } from "@/lib/demo-session";
 import { isRedisConfigured } from "@/lib/redis";
-import db from "@/server/db";
-import { demoConversion } from "@/server/db/schema";
 
 const { logger } = Sentry;
 
 /**
  * POST /api/demo/session
- * Creates a new demo session
- *
- * Response:
- * {
- *   token: string;
- *   createdAt: number;
- * }
+ * Creates a new demo session (stored in Redis, tracked in PostHog)
  */
 export async function POST() {
   if (!isRedisConfigured) {
@@ -42,26 +34,7 @@ export async function POST() {
       );
     }
 
-    // Persist to PostgreSQL for conversion tracking
-    try {
-      await db.insert(demoConversion).values({
-        id: session.token,
-      });
-    } catch (dbError) {
-      // Log but don't fail - Redis session is the primary source
-      logger.error("Failed to persist demo session to PostgreSQL", {
-        token: session.token,
-        error: dbError instanceof Error ? dbError.message : String(dbError),
-      });
-      Sentry.captureException(dbError, {
-        tags: { operation: "demo.session.persist" },
-        extra: { token: session.token },
-      });
-    }
-
     logger.info("Demo session created", { token: session.token });
-
-    // Track in PostHog (UTM params captured automatically client-side)
     await trackDemoCreatedServer(session.token);
 
     return NextResponse.json({
