@@ -2,7 +2,9 @@ import { nanoid } from "nanoid";
 import { isRedisConfigured, redis } from "./redis";
 
 const DEMO_TTL = 24 * 60 * 60; // 24 hours in seconds
-const DEMO_KEY_PREFIX = "demo:";
+// Use "demo:session:" prefix to avoid conflicts with Upstash Realtime channels
+// (Realtime uses "demo:{token}" as a stream key, sessions use "demo:session:{token}" as a string)
+const DEMO_KEY_PREFIX = "demo:session:";
 
 /**
  * UTM parameters for tracking demo session sources
