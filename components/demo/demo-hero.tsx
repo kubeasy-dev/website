@@ -1,5 +1,3 @@
-"use client";
-
 import { Gamepad2 } from "lucide-react";
 
 export function DemoHero() {

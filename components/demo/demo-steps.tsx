@@ -52,11 +52,12 @@ const STEP_COLORS = {
 
 type StepColor = keyof typeof STEP_COLORS;
 
+const TOTAL_STEPS = 4;
+
 export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [copiedStep, setCopiedStep] = useState<number | null>(null);
-  const [_copiedToken, setCopiedToken] = useState(false);
   const [waitingForEvent, setWaitingForEvent] = useState<number | null>(null);
   const [validationResult, setValidationResult] = useState<{
     passed: boolean;
@@ -145,11 +146,11 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
   });
 
   const advanceToNextStep = useCallback(() => {
-    setCompletedSteps((prev) => new Set([...prev, currentStep]));
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-    }
-  }, [currentStep, steps.length]);
+    setCurrentStep((curr) => {
+      setCompletedSteps((prev) => new Set([...prev, curr]));
+      return curr < TOTAL_STEPS - 1 ? curr + 1 : curr;
+    });
+  }, []);
 
   const handleCopyCommand = (command: string, stepIndex: number) => {
     navigator.clipboard.writeText(command);
@@ -171,13 +172,6 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
       setWaitingForEvent(stepIndex);
       setTimeout(() => setCopiedStep(null), 1500);
     }
-  };
-
-  const _handleCopyToken = () => {
-    navigator.clipboard.writeText(token);
-    setCopiedToken(true);
-    toast.success("Token copied to clipboard");
-    setTimeout(() => setCopiedToken(false), 2000);
   };
 
   const goToStep = (index: number) => {
