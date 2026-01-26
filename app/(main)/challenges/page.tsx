@@ -1,9 +1,9 @@
-import { ArrowRight, Terminal, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
-import Link from "next/link";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { ChallengesQuickStartCTA } from "@/components/challenges-quick-start-cta";
 import { ChallengesView } from "@/components/challenges-view";
 import { UserStats } from "@/components/user-stats";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
@@ -65,23 +65,8 @@ export default async function ChallengesPage() {
         </Suspense>
       </ErrorBoundary>
 
-      {/* Quick Start CTA */}
-      <div className="mb-8 p-4 bg-secondary neo-border-thick neo-shadow flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold">
-            New to Kubeasy? Follow our setup guide to start your first
-            challenge.
-          </span>
-        </div>
-        <Link
-          href="/get-started"
-          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 font-bold neo-border hover:translate-x-0.5 hover:translate-y-0.5 transition-transform whitespace-nowrap"
-        >
-          Get Started
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
+      {/* Quick Start CTA - Only shown to unauthenticated users */}
+      <ChallengesQuickStartCTA />
 
       {/* All Challenges View */}
       <ChallengesView />
