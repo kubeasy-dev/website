@@ -11,9 +11,19 @@ export const signInWithSocialProvider = async (
   callbackUrl = "/dashboard",
 ) => {
   try {
+    // Retrieve demo token from localStorage if it exists (for conversion tracking)
+    const demoToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("kubeasy_demo_token")
+        : null;
+
     const data = await authClient.signIn.social({
       provider,
       callbackURL: callbackUrl,
+      // Pass demo token via additionalData (preserved through OAuth redirect)
+      ...(demoToken && {
+        additionalData: { demoToken },
+      }),
     });
     return data;
   } catch (error) {

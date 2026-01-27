@@ -34,6 +34,10 @@ export function PostHogIdentify() {
         name: session?.user?.name ?? undefined,
       });
       hasIdentifiedRef.current = true;
+
+      // Clean up demo token from localStorage after identification
+      // The alias has already been created server-side during OAuth callback
+      localStorage.removeItem("kubeasy_demo_token");
     }
 
     // User logged out (session disappeared)

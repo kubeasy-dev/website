@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { trackDemoStepServer } from "@/lib/analytics-server";
 import { getDemoSession, isValidDemoToken } from "@/lib/demo-session";
 import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 import { isRedisConfigured } from "@/lib/redis";
@@ -54,6 +55,9 @@ export async function POST(request: Request) {
     }
 
     logger.info("Demo pod created", { token });
+
+    // Track demo step in PostHog
+    await trackDemoStepServer(token, "pod_created");
 
     // Broadcast demo.pod_created event via Upstash Realtime
     if (isRealtimeConfigured && realtime) {

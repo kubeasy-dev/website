@@ -48,6 +48,13 @@ export function DemoContent() {
     mutate();
   }, [mutate]);
 
+  // Store demo token in localStorage for conversion tracking
+  useEffect(() => {
+    if (session?.token) {
+      localStorage.setItem("kubeasy_demo_token", session.token);
+    }
+  }, [session?.token]);
+
   if (isPending) {
     return <DemoLoadingState />;
   }

@@ -1,10 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware, getOAuthState } from "better-auth/api";
 import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
-import { trackUserSignupServer } from "@/lib/analytics-server";
+import { aliasUserServer, trackUserSignupServer } from "@/lib/analytics-server";
 import { isRedisConfigured, redis } from "@/lib/redis";
 import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
@@ -137,6 +138,40 @@ export const auth = betterAuth({
   ],
   socialProviders: {
     ...socialProviders,
+  },
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      // Only process OAuth callbacks
+      if (ctx.path === "/callback/:id") {
+        try {
+          // Get additionalData passed from signIn.social()
+          const additionalData = await getOAuthState();
+
+          // Only process if there's a demo token and a new session was created
+          const demoToken = additionalData?.demoToken as string | undefined;
+          if (demoToken && ctx.context.newSession) {
+            const userId = ctx.context.newSession.user.id;
+            const demoDistinctId = `demo_${demoToken}`;
+
+            // Create PostHog alias to merge demo events with user profile
+            await aliasUserServer(userId, demoDistinctId);
+
+            logger.info("Demo session aliased to user", {
+              userId,
+              demoToken,
+            });
+          }
+        } catch (error) {
+          // Log but don't throw - alias creation shouldn't block authentication
+          logger.error("Failed to create demo alias", {
+            error: error instanceof Error ? error.message : String(error),
+          });
+          Sentry.captureException(error, {
+            tags: { operation: "auth.createDemoAlias" },
+          });
+        }
+      }
+    }),
   },
   databaseHooks: {
     user: {
