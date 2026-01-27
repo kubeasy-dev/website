@@ -1,13 +1,12 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
-import { trackDemoCompletedServer } from "@/lib/analytics-server";
+import { isRealtimeConfigured, realtime } from "@/lib/realtime";
+import { isRedisConfigured } from "@/lib/redis";
 import {
   getDemoSession,
   isValidDemoToken,
   markDemoCompleted,
-} from "@/lib/demo-session";
-import { isRealtimeConfigured, realtime } from "@/lib/realtime";
-import { isRedisConfigured } from "@/lib/redis";
+} from "@/server/demo-session";
 import type { ObjectiveResult } from "@/types/cli-api";
 
 const { logger } = Sentry;
@@ -136,7 +135,6 @@ export async function POST(request: Request) {
     if (validated) {
       await markDemoCompleted(token);
       logger.info("Demo completed successfully", { token });
-      await trackDemoCompletedServer(token);
     }
 
     return NextResponse.json({

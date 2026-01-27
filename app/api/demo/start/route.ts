@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
-import { getDemoSession, isValidDemoToken } from "@/lib/demo-session";
 import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 import { isRedisConfigured } from "@/lib/redis";
+import { getDemoSession, isValidDemoToken } from "@/server/demo-session";
 
 const { logger } = Sentry;
 

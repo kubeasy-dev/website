@@ -1,12 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
-import { trackDemoCreatedServer } from "@/lib/analytics-server";
+import { isRedisConfigured } from "@/lib/redis";
 import {
   createDemoSession,
   getDemoSession,
   isValidDemoToken,
-} from "@/lib/demo-session";
-import { isRedisConfigured } from "@/lib/redis";
+} from "@/server/demo-session";
 
 const { logger } = Sentry;
 
@@ -35,11 +34,9 @@ export async function POST() {
     }
 
     logger.info("Demo session created", { token: session.token });
-    await trackDemoCreatedServer(session.token);
 
     return NextResponse.json({
       token: session.token,
-      createdAt: session.createdAt,
     });
   } catch (error) {
     logger.error("Demo session creation error", {
@@ -62,7 +59,6 @@ export async function POST() {
  * Response:
  * {
  *   valid: boolean;
- *   createdAt?: number;
  *   completedAt?: number;
  * }
  */
@@ -99,7 +95,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       valid: true,
-      createdAt: session.createdAt,
       completedAt: session.completedAt,
     });
   } catch (error) {

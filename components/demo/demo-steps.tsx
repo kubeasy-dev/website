@@ -11,10 +11,9 @@ import {
   Terminal,
   Zap,
 } from "lucide-react";
-import { useCallback, useState } from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useState } from "react";
 import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
-import { trackCommandCopied } from "@/lib/analytics";
+import { trackDemoStepCompleted } from "@/lib/analytics";
 import { useRealtime } from "@/lib/realtime-client";
 import { cn } from "@/lib/utils";
 
@@ -64,57 +63,61 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
     objectiveKey: string;
   } | null>(null);
 
-  const steps = [
-    {
-      number: 1,
-      title: "Install the CLI",
-      description: "Install the Kubeasy CLI globally using npm.",
-      command: "npm install -g @kubeasy-dev/kubeasy-cli",
-      icon: Terminal,
-      color: "primary" as StepColor,
-      autoAdvance: true, // Auto-advance on copy
-      links: [
-        {
-          text: "Install npm",
-          url: "https://docs.npmjs.com/downloading-and-installing-node-js-and-npm",
-        },
-      ],
-    },
-    {
-      number: 2,
-      title: "Start the Demo",
-      description: "Sets up a local Kind cluster and creates a demo namespace.",
-      command: `kubeasy demo start --token=${token}`,
-      icon: Rocket,
-      color: "accent" as StepColor,
-      eventType: "demo.started", // Wait for CLI event
-    },
-    {
-      number: 3,
-      title: "Create the nginx Pod",
-      description: "Run a simple nginx pod in the demo namespace.",
-      command: "kubectl run nginx --image=nginx -n demo",
-      icon: Zap,
-      color: "green" as StepColor,
-      eventType: "demo.pod_created", // Wait for CLI event (or submit)
-    },
-    {
-      number: 4,
-      title: "Submit Your Solution",
-      description:
-        "Validate that the pod is running and see your results update live.",
-      command: "kubeasy demo submit",
-      icon: ArrowRight,
-      color: "amber" as StepColor,
-      eventType: "validation.update", // Wait for validation
-    },
-  ];
+  const steps = useMemo(
+    () => [
+      {
+        number: 1,
+        title: "Install the CLI",
+        description: "Install the Kubeasy CLI globally using npm.",
+        command: "npm install -g @kubeasy-dev/kubeasy-cli",
+        icon: Terminal,
+        color: "primary" as StepColor,
+        autoAdvance: true, // Auto-advance on copy
+        links: [
+          {
+            text: "Install npm",
+            url: "https://docs.npmjs.com/downloading-and-installing-node-js-and-npm",
+          },
+        ],
+      },
+      {
+        number: 2,
+        title: "Start the Demo",
+        description:
+          "Sets up a local Kind cluster and creates a demo namespace.",
+        command: `kubeasy demo start --token=${token}`,
+        icon: Rocket,
+        color: "accent" as StepColor,
+        eventType: "demo.started", // Wait for CLI event
+      },
+      {
+        number: 3,
+        title: "Create the nginx Pod",
+        description: "Run a simple nginx pod in the demo namespace.",
+        command: "kubectl run nginx --image=nginx -n demo",
+        icon: Zap,
+        color: "green" as StepColor,
+        autoAdvance: true, // Auto-advance on copy
+      },
+      {
+        number: 4,
+        title: "Submit Your Solution",
+        description:
+          "Validate that the pod is running and see your results update live.",
+        command: "kubeasy demo submit",
+        icon: ArrowRight,
+        color: "amber" as StepColor,
+        eventType: "validation.update", // Wait for validation
+      },
+    ],
+    [token],
+  );
 
   // Listen for realtime events from the CLI
   useRealtime({
     enabled: !!token,
     channels: [`demo:${token}`],
-    events: ["demo.started", "demo.pod_created", "validation.update"],
+    events: ["demo.started", "validation.update"],
     onData(event) {
       const eventType = event.event;
 
@@ -123,39 +126,34 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
         setCompletedSteps((prev) => new Set([...prev, 0, 1]));
         setCurrentStep(2);
         setWaitingForEvent(null);
-        toast.success("Demo started! Now create the nginx pod.");
-      } else if (eventType === "demo.pod_created") {
-        // Pod was created - complete step 3, move to step 4
-        setCompletedSteps((prev) => new Set([...prev, 0, 1, 2]));
-        setCurrentStep(3);
-        setWaitingForEvent(null);
-        toast.success("Pod created! Now submit your solution.");
+        trackDemoStepCompleted(2);
       } else if (eventType === "validation.update") {
         // Validation received - complete step 4
         const data = event.data as { objectiveKey: string; passed: boolean };
         setValidationResult(data);
         setCompletedSteps((prev) => new Set([...prev, 0, 1, 2, 3]));
         setWaitingForEvent(null);
-
+        trackDemoStepCompleted(4);
         if (data.passed) {
-          // Success! Call onComplete after a short delay for animation
-          setTimeout(() => onComplete(), 1500);
+          setTimeout(() => onComplete(), 500);
         }
       }
     },
   });
 
   const advanceToNextStep = useCallback(() => {
+    const stepNumber = steps[currentStep].number;
     setCurrentStep((curr) => {
       setCompletedSteps((prev) => new Set([...prev, curr]));
       return curr < TOTAL_STEPS - 1 ? curr + 1 : curr;
     });
-  }, []);
+    // Track outside of state updater to avoid double-firing in Strict Mode
+    trackDemoStepCompleted(stepNumber);
+  }, [currentStep, steps]);
 
   const handleCopyCommand = (command: string, stepIndex: number) => {
     navigator.clipboard.writeText(command);
     setCopiedStep(stepIndex);
-    trackCommandCopied(command, "demo_try_page", stepIndex + 1);
 
     const step = steps[stepIndex];
 
@@ -168,7 +166,7 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
     } else {
       // Other steps: show waiting state
       setWaitingForEvent(stepIndex);
-      setTimeout(() => setCopiedStep(null), 1500);
+      setTimeout(() => setCopiedStep(null), 500);
     }
   };
 
@@ -405,15 +403,8 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
                     </div>
                     {/* Waiting hint */}
                     {waitingForEvent === index && (
-                      <div className="mt-3 flex items-center justify-between text-xs text-white/70">
-                        <span>Run the command in your terminal...</span>
-                        <button
-                          type="button"
-                          onClick={advanceToNextStep}
-                          className="underline hover:text-white"
-                        >
-                          Skip
-                        </button>
+                      <div className="mt-3 text-xs text-white/70">
+                        Run the command in your terminal...
                       </div>
                     )}
                   </div>

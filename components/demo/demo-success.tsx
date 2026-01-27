@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  CheckCircle2,
-  Crown,
-  PartyPopper,
-  Rocket,
-  Sparkles,
-  Star,
-  Trophy,
-} from "lucide-react";
+import { CheckCircle2, PartyPopper, Rocket, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -105,39 +97,6 @@ export function DemoSuccess() {
               </p>
             </div>
 
-            {/* Achievement Stats */}
-            <div className="flex flex-wrap justify-center gap-4 mb-10">
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white neo-border-thick">
-                <Crown className="w-6 h-6 text-amber-500" />
-                <div className="text-left">
-                  <div className="text-xs font-bold text-muted-foreground uppercase">
-                    Achievement
-                  </div>
-                  <div className="font-black">First Pod</div>
-                </div>
-              </div>
-
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white neo-border-thick">
-                <Star className="w-6 h-6 text-primary" />
-                <div className="text-left">
-                  <div className="text-xs font-bold text-muted-foreground uppercase">
-                    XP Earned
-                  </div>
-                  <div className="font-black">+50 XP</div>
-                </div>
-              </div>
-
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white neo-border-thick">
-                <Trophy className="w-6 h-6 text-green-500" />
-                <div className="text-left">
-                  <div className="text-xs font-bold text-muted-foreground uppercase">
-                    Level
-                  </div>
-                  <div className="font-black">Beginner</div>
-                </div>
-              </div>
-            </div>
-
             {/* What's Next */}
             <div className="bg-foreground text-background neo-border-thick p-8 mb-10">
               <h3 className="text-xl font-black mb-4 flex items-center gap-2">
@@ -188,7 +147,7 @@ export function DemoSuccess() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  href="/login"
+                  href="/login?next=/challenges"
                   className="inline-flex items-center gap-3 px-10 py-5 bg-primary text-primary-foreground rounded-xl font-black text-xl neo-border-thick neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
                 >
                   <Sparkles className="w-6 h-6" />

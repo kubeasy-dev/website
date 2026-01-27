@@ -8,7 +8,6 @@ import { redis } from "./redis";
  * Events:
  * - validation.update: Emitted when a challenge objective is validated
  * - demo.started: Emitted when CLI starts the demo (kubeasy demo start)
- * - demo.pod_created: Emitted when the pod is detected (future use)
  */
 const schema = {
   validation: {
@@ -20,9 +19,6 @@ const schema = {
   },
   demo: {
     started: z.object({
-      timestamp: z.date(),
-    }),
-    pod_created: z.object({
       timestamp: z.date(),
     }),
   },

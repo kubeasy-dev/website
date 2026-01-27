@@ -1,8 +1,12 @@
+import * as Sentry from "@sentry/nextjs";
 import type { Metadata } from "next";
 import { DemoContent } from "@/components/demo/demo-content";
+import { DemoErrorState } from "@/components/demo/demo-error-state";
 import { isRedisConfigured } from "@/lib/redis";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
-import { HydrateClient } from "@/trpc/server";
+import { createDemoSession } from "@/server/demo-session";
+
+const { logger } = Sentry;
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Get Started with Kubeasy",
@@ -19,28 +23,35 @@ export const metadata: Metadata = generateSEOMetadata({
   ],
 });
 
-export default function GetStartedPage() {
+export default async function GetStartedPage() {
   if (!isRedisConfigured) {
     return (
-      <div className="container mx-auto px-4 max-w-4xl text-center py-20">
-        <h1 className="text-3xl font-black mb-4">Demo Mode Unavailable</h1>
-        <p className="text-muted-foreground font-bold mb-8">
-          Demo mode is temporarily unavailable. Please sign in to access the
-          full experience.
-        </p>
-        <a
-          href="/login"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
-        >
-          Sign In
-        </a>
-      </div>
+      <DemoErrorState error="Demo mode is temporarily unavailable. Please sign in to access the full experience." />
     );
   }
 
-  return (
-    <HydrateClient>
-      <DemoContent />
-    </HydrateClient>
-  );
+  try {
+    const session = await createDemoSession();
+
+    if (!session) {
+      logger.error("Failed to create demo session");
+      return (
+        <DemoErrorState error="Failed to create demo session. Please try again later." />
+      );
+    }
+
+    logger.info("Demo session created", { token: session.token });
+
+    return <DemoContent token={session.token} />;
+  } catch (error) {
+    logger.error("Demo session creation error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    Sentry.captureException(error, {
+      tags: { operation: "demo.session.create" },
+    });
+    return (
+      <DemoErrorState error="An error occurred while creating the demo session." />
+    );
+  }
 }

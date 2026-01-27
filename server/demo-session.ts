@@ -1,5 +1,7 @@
+import "server-only";
+
 import { nanoid } from "nanoid";
-import { isRedisConfigured, redis } from "./redis";
+import { isRedisConfigured, redis } from "@/lib/redis";
 
 const DEMO_TTL = 24 * 60 * 60; // 24 hours in seconds
 // Use "demo:session:" prefix to avoid conflicts with Upstash Realtime channels
@@ -11,7 +13,6 @@ const DEMO_KEY_PREFIX = "demo:session:";
  */
 export interface DemoSession {
   token: string;
-  createdAt: number;
   completedAt?: number;
 }
 
@@ -28,7 +29,6 @@ export async function createDemoSession(): Promise<DemoSession | null> {
   const token = nanoid(16);
   const session: DemoSession = {
     token,
-    createdAt: Date.now(),
   };
 
   try {
@@ -94,22 +94,6 @@ export async function markDemoCompleted(token: string): Promise<void> {
 }
 
 /**
- * Deletes a demo session from Redis
- * @param token - The demo session token
- */
-export async function deleteDemoSession(token: string): Promise<void> {
-  if (!isRedisConfigured || !redis) {
-    return;
-  }
-
-  try {
-    await redis.del(`${DEMO_KEY_PREFIX}${token}`);
-  } catch (error) {
-    console.error("[Demo] Failed to delete demo session:", error);
-  }
-}
-
-/**
  * Validates a demo token format (basic check)
  * @param token - The token to validate
  * @returns true if the token format is valid
@@ -117,13 +101,4 @@ export async function deleteDemoSession(token: string): Promise<void> {
 export function isValidDemoToken(token: string): boolean {
   // nanoid(16) generates 16 character alphanumeric strings
   return /^[A-Za-z0-9_-]{16}$/.test(token);
-}
-
-/**
- * Result of a demo conversion link operation
- */
-export interface DemoConversionResult {
-  success: boolean;
-  wasCompleted: boolean;
-  message: string;
 }
