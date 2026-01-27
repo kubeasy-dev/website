@@ -41,9 +41,9 @@ export function HeroSection() {
               <Link
                 href="/get-started"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
-                onClick={() => handleCtaClick("Try Free Demo", "/get-started")}
+                onClick={() => handleCtaClick("Get Started", "/get-started")}
               >
-                Try Free Demo
+                Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link

@@ -1,8 +1,11 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
+import { trackCtaClicked } from "@/lib/analytics";
 
 export function CTASection() {
   return (
@@ -23,8 +26,17 @@ export function CTASection() {
                 className="text-base font-bold bg-white text-primary hover:bg-white/90 neo-border-thick neo-shadow-lg"
                 asChild
               >
-                <Link href="/get-started">
-                  Try Free Demo
+                <Link
+                  href="/get-started"
+                  onClick={() =>
+                    trackCtaClicked(
+                      "Get Started",
+                      "cta_section",
+                      "/get-started",
+                    )
+                  }
+                >
+                  Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   Bug,
   CheckCircle2,
   ChevronLeft,
@@ -11,7 +12,9 @@ import {
   Sparkles,
   Terminal,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { trackCtaClicked } from "@/lib/analytics";
 
 export function HowItWorksSection() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -202,6 +205,23 @@ export function HowItWorksSection() {
                 Auto-playing
               </div>
             )}
+          </div>
+
+          <div className="text-center mt-16">
+            <Link
+              href="/get-started"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              onClick={() =>
+                trackCtaClicked(
+                  "Start Your First Challenge",
+                  "how_it_works",
+                  "/get-started",
+                )
+              }
+            >
+              Start Your First Challenge
+              <ArrowRight className="h-5 w-5" />
+            </Link>
           </div>
         </div>
       </div>

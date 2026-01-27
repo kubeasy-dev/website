@@ -1,4 +1,16 @@
-import { Boxes, Code, Terminal, Trophy, Users, Zap } from "lucide-react";
+"use client";
+
+import {
+  ArrowRight,
+  Boxes,
+  Code,
+  Terminal,
+  Trophy,
+  Users,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
+import { trackCtaClicked } from "@/lib/analytics";
 
 export function FeaturesSection() {
   const features = [
@@ -81,6 +93,23 @@ export function FeaturesSection() {
               </div>
             );
           })}
+        </div>
+
+        <div className="text-center mt-12">
+          <Link
+            href="/challenges"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md font-black text-lg neo-border neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+            onClick={() =>
+              trackCtaClicked(
+                "Browse All Challenges",
+                "features",
+                "/challenges",
+              )
+            }
+          >
+            Browse All Challenges
+            <ArrowRight className="h-5 w-5" />
+          </Link>
         </div>
       </div>
     </section>
