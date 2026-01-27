@@ -252,6 +252,28 @@ export async function trackDemoCreatedServer(token: string) {
 }
 
 /**
+ * Track demo step progress (server-side)
+ * @param token - The demo session token
+ * @param step - The step that was completed ('started' | 'pod_created')
+ */
+export async function trackDemoStepServer(
+  token: string,
+  step: "started" | "pod_created",
+) {
+  await safePostHogOperation(`trackDemoStep_${step}`, async () => {
+    posthogClient?.capture({
+      distinctId: `demo_${token}`,
+      event: `demo_${step}`,
+      properties: {
+        token,
+        source: "server",
+      },
+    });
+    await posthogClient?.flush();
+  });
+}
+
+/**
  * Track demo completed (server-side)
  * @param token - The demo session token
  */
@@ -264,6 +286,22 @@ export async function trackDemoCompletedServer(token: string) {
         token,
         source: "server",
       },
+    });
+    await posthogClient?.flush();
+  });
+}
+
+/**
+ * Create an alias to link a demo session to a real user (server-side)
+ * This merges the demo user's events into the authenticated user's profile in PostHog.
+ * @param userId - The authenticated user's ID (new distinct ID)
+ * @param demoDistinctId - The demo session's distinct ID (e.g., 'demo_xxx')
+ */
+export async function aliasUserServer(userId: string, demoDistinctId: string) {
+  await safePostHogOperation("aliasUserServer", async () => {
+    posthogClient?.alias({
+      distinctId: userId,
+      alias: demoDistinctId,
     });
     await posthogClient?.flush();
   });
