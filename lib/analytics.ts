@@ -8,22 +8,6 @@
 import posthog from "posthog-js";
 
 /**
- * Check if PostHog is ready and enabled for tracking
- * @returns true if PostHog is initialized and not opted out
- */
-function isPostHogReady(): boolean {
-  try {
-    return (
-      posthog &&
-      typeof posthog.capture === "function" &&
-      !posthog.has_opted_out_capturing()
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Check if PostHog is initialized (regardless of opt-out status)
  * Used for operations that should work even when user has opted out (e.g., reset on logout)
  * @returns true if PostHog is loaded and available
@@ -31,6 +15,18 @@ function isPostHogReady(): boolean {
 function isPostHogInitialized(): boolean {
   try {
     return posthog && typeof posthog.reset === "function";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if PostHog is ready and enabled for tracking
+ * @returns true if PostHog is initialized and not opted out
+ */
+function isPostHogReady(): boolean {
+  try {
+    return isPostHogInitialized() && !posthog.has_opted_out_capturing();
   } catch {
     return false;
   }
@@ -48,10 +44,10 @@ function safeCapture(
   options?: Record<string, unknown>,
 ): void {
   if (!isPostHogReady()) {
-    // In development, log that the event was skipped
     if (process.env.NODE_ENV === "development") {
-      console.debug(
-        `[PostHog] Event not captured (disabled): ${eventName}`,
+      console.info(
+        "[PostHog] Event capture skipped (disabled)",
+        eventName,
         properties,
       );
     }
@@ -61,21 +57,8 @@ function safeCapture(
   try {
     posthog.capture(eventName, properties, options);
   } catch (error) {
-    // Log errors in development, silent in production
-    if (process.env.NODE_ENV === "development") {
-      console.error(`[PostHog] Failed to capture event "${eventName}":`, error);
-    }
+    console.error("[PostHog] Failed to capture event", eventName, error);
   }
-}
-
-/**
- * Track user signup event
- * @param provider - The authentication provider used (github, google, microsoft)
- */
-export function trackUserSignup(provider: "github" | "google" | "microsoft") {
-  safeCapture("user_signup", {
-    provider,
-  });
 }
 
 /**
@@ -84,45 +67,6 @@ export function trackUserSignup(provider: "github" | "google" | "microsoft") {
  */
 export function trackApiTokenCreated() {
   safeCapture("api_token_created");
-}
-
-/**
- * Track challenge start event
- * @param challengeId - The ID of the challenge being started
- * @param challengeSlug - The slug of the challenge
- * @param difficulty - The difficulty level of the challenge
- */
-export function trackChallengeStarted(
-  challengeId: string,
-  challengeSlug: string,
-  difficulty: string,
-) {
-  safeCapture("challenge_started", {
-    challengeId,
-    challengeSlug,
-    difficulty,
-  });
-}
-
-/**
- * Track challenge completion event
- * @param challengeId - The ID of the challenge that was completed
- * @param challengeSlug - The slug of the challenge
- * @param difficulty - The difficulty level of the challenge
- * @param timeSpent - Time spent on the challenge in seconds (optional)
- */
-export function trackChallengeCompleted(
-  challengeId: string,
-  challengeSlug: string,
-  difficulty: string,
-  timeSpent?: number,
-) {
-  safeCapture("challenge_completed", {
-    challengeId,
-    challengeSlug,
-    difficulty,
-    ...(timeSpent && { timeSpent }),
-  });
 }
 
 /**
@@ -141,7 +85,7 @@ export function identifyUser(
 ) {
   if (!isPostHogReady()) {
     if (process.env.NODE_ENV === "development") {
-      console.debug("[PostHog] User identification skipped (disabled)");
+      console.info("[PostHog] User identification skipped (disabled)");
     }
     return;
   }
@@ -149,9 +93,7 @@ export function identifyUser(
   try {
     posthog.identify(userId, properties);
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("[PostHog] Failed to identify user:", error);
-    }
+    console.error("[PostHog] Failed to identify user", error);
   }
 }
 
@@ -168,9 +110,7 @@ export function resetAnalytics() {
   try {
     posthog.reset();
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("[PostHog] Failed to reset:", error);
-    }
+    console.error("[PostHog] Failed to reset:", error);
   }
 }
 
@@ -294,4 +234,28 @@ export function trackOutboundLinkClicked(
     },
     { transport: "sendBeacon" },
   );
+}
+
+/**
+ * Track demo step completed event
+ * @param stepNumber - The demo step number completed
+ */
+export function trackDemoStepCompleted(stepNumber: number) {
+  safeCapture(`demo_step_${stepNumber}_completed`);
+}
+
+/**
+ * Track demo session created event
+ * Called when a user starts the demo flow
+ */
+export function trackDemoCreated() {
+  safeCapture("demo_created");
+}
+
+/**
+ * Track demo completed event
+ * Called when a user successfully completes the demo
+ */
+export function trackDemoCompleted() {
+  safeCapture("demo_completed");
 }

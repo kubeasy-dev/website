@@ -232,39 +232,3 @@ export async function shutdownPostHog() {
     console.error("[PostHog Server] Failed to shutdown:", error);
   }
 }
-
-/**
- * Track demo session created (server-side)
- * @param token - The demo session token
- */
-export async function trackDemoCreatedServer(token: string) {
-  await safePostHogOperation("trackDemoCreatedServer", async () => {
-    posthogClient?.capture({
-      distinctId: `demo_${token}`,
-      event: "demo_created",
-      properties: {
-        token,
-        source: "server",
-      },
-    });
-    await posthogClient?.flush();
-  });
-}
-
-/**
- * Track demo completed (server-side)
- * @param token - The demo session token
- */
-export async function trackDemoCompletedServer(token: string) {
-  await safePostHogOperation("trackDemoCompletedServer", async () => {
-    posthogClient?.capture({
-      distinctId: `demo_${token}`,
-      event: "demo_completed",
-      properties: {
-        token,
-        source: "server",
-      },
-    });
-    await posthogClient?.flush();
-  });
-}
