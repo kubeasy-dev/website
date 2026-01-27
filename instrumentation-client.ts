@@ -19,28 +19,12 @@ if (posthogKey && posthogHost) {
       ui_host: posthogHost,
       defaults: "2025-05-24",
       capture_exceptions: true, // This enables capturing exceptions using Error Tracking
-      debug: false, // Disable debug logs to reduce console noise
-      loaded: (posthog) => {
-        // Disable PostHog in development to reduce console noise
-        if (isDevelopment) {
-          posthog.opt_out_capturing();
-          console.info(
-            "[PostHog] Disabled in development mode - no events will be captured",
-          );
-        }
-      },
-      // Disable automatic features in development
-      autocapture: !isDevelopment,
-      capture_pageview: !isDevelopment,
+      debug: false,
     });
   } catch (error) {
     // Log initialization errors but don't break the app
     console.error("[PostHog] Failed to initialize:", error);
   }
-} else if (isDevelopment) {
-  console.info(
-    "[PostHog] Not initialized: Missing NEXT_PUBLIC_POSTHOG_KEY or NEXT_PUBLIC_POSTHOG_HOST environment variables",
-  );
 }
 
 // Initialize Sentry

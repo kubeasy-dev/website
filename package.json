@@ -19,7 +19,7 @@
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
     "prepare": "husky",
-    "knip": "dotenv -e .env -- knip"
+    "knip": "dotenv -e .env.local -- knip"
   },
   "dependencies": {
     "@neondatabase/serverless": "1.0.2",
