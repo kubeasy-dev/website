@@ -136,133 +136,146 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         dangerouslySetInnerHTML={{ __html: stringifyJsonLd(blogPostSchema) }}
       />
 
-      <article className="container mx-auto px-4 max-w-5xl">
-        {/* Back link */}
-        <div className="mb-8">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 font-bold text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back to Blog
-          </Link>
-        </div>
+      <article className="w-full overflow-x-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+          {/* Back link */}
+          <div className="mb-6 sm:mb-8">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 font-bold text-muted-foreground hover:text-foreground transition-colors text-sm sm:text-base"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back to Blog
+            </Link>
+          </div>
 
-        {/* Article header - Centered */}
-        <header className="mb-12 text-center">
-          {/* Category badge */}
-          <Link
-            href={`/blog/category/${encodeURIComponent(post.category.name)}`}
-            className="inline-block mb-6"
-          >
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground neo-border-thick font-bold neo-shadow text-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all">
-              {post.category.name}
-            </span>
-          </Link>
+          {/* Article header - Centered */}
+          <header className="mb-8 sm:mb-12 text-center">
+            {/* Category badge */}
+            <Link
+              href={`/blog/category/${encodeURIComponent(post.category.name)}`}
+              className="inline-block mb-4 sm:mb-6"
+            >
+              <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary text-primary-foreground neo-border-thick font-bold shadow sm:neo-shadow text-xs sm:text-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all">
+                {post.category.name}
+              </span>
+            </Link>
 
-          {/* Title */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-balance leading-tight mb-6">
-            {post.title}
-          </h1>
+            {/* Title */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-balance leading-tight mb-4 sm:mb-6">
+              {post.title}
+            </h1>
 
-          {/* Description */}
-          {post.description && (
-            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto mb-8">
-              {post.description}
-            </p>
-          )}
+            {/* Description */}
+            {post.description && (
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto mb-6 sm:mb-8">
+                {post.description}
+              </p>
+            )}
 
-          {/* Meta bar */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium">
-            {/* Author */}
-            <div className="flex items-center gap-3">
-              {post.author.avatar ? (
-                <Image
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  width={40}
-                  height={40}
-                  className="rounded-full neo-border"
-                />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-black neo-border">
-                  {post.author.name.charAt(0)}
+            {/* Meta bar */}
+            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-6 text-sm font-medium">
+              {/* Author */}
+              <div className="flex items-center gap-3">
+                {post.author.avatar ? (
+                  <Image
+                    src={post.author.avatar}
+                    alt={post.author.name}
+                    width={40}
+                    height={40}
+                    className="rounded-full neo-border w-8 h-8 sm:w-10 sm:h-10"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-black neo-border text-sm sm:text-base">
+                    {post.author.name.charAt(0)}
+                  </div>
+                )}
+                <span className="font-bold">{post.author.name}</span>
+              </div>
+
+              <span className="hidden sm:inline text-muted-foreground">•</span>
+
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <time dateTime={post.publishedAt}>{formattedDate}</time>
                 </div>
-              )}
-              <span className="font-bold">{post.author.name}</span>
+
+                <span className="text-muted-foreground">•</span>
+
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>{readingTime} min read</span>
+                </div>
+              </div>
             </div>
 
-            <span className="text-muted-foreground">•</span>
+            {/* Tags */}
+            {post.tags.length > 0 && (
+              <div className="mt-4 sm:mt-6 flex flex-wrap justify-center gap-1.5 sm:gap-2">
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-xs sm:text-sm font-bold text-muted-foreground bg-secondary neo-border px-2 sm:px-3 py-0.5 sm:py-1"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </header>
 
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <time dateTime={post.publishedAt}>{formattedDate}</time>
-            </div>
-
-            <span className="text-muted-foreground">•</span>
-
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>{readingTime} min read</span>
-            </div>
-          </div>
-
-          {/* Tags */}
-          {post.tags.length > 0 && (
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-sm font-bold text-muted-foreground bg-secondary neo-border px-3 py-1"
-                >
-                  #{tag}
-                </span>
-              ))}
+          {/* Cover image - Centered with neo-brutalist frame */}
+          {post.cover && (
+            <div className="mb-8 sm:mb-12 lg:mb-16 mr-1 sm:mr-0">
+              <div className="relative aspect-video overflow-hidden neo-border-thick shadow sm:neo-shadow">
+                <Image
+                  src={post.cover}
+                  alt={post.title}
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 960px"
+                  className="object-cover"
+                />
+              </div>
             </div>
           )}
-        </header>
 
-        {/* Cover image - Centered with neo-brutalist frame */}
-        {post.cover && (
-          <div className="relative mb-16 aspect-video overflow-hidden neo-border-thick neo-shadow mx-auto">
-            <Image
-              src={post.cover}
-              alt={post.title}
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 960px"
-              className="object-cover"
-            />
-          </div>
-        )}
+          {/* Mobile Table of Contents */}
+          {post.headings.length > 0 && (
+            <div className="lg:hidden mb-8">
+              <TableOfContentsClient headings={post.headings} collapsible />
+            </div>
+          )}
 
-        {/* Main content layout */}
-        <div className="grid gap-12 lg:grid-cols-[1fr_250px]">
-          {/* Article content */}
-          <div className="prose-neo max-w-none">
-            <BlockRenderer blocks={post.blocks} />
+          {/* Main content layout */}
+          <div className="grid gap-8 sm:gap-12 lg:grid-cols-[1fr_250px]">
+            {/* Article content */}
+            <div className="prose-neo max-w-none min-w-0">
+              <BlockRenderer blocks={post.blocks} />
 
-            {/* Author bio - Neo-brutalist card */}
-            <div className="mt-16 pt-8 border-t-4 border-foreground">
-              <h2 className="text-xl font-black mb-6 flex items-center gap-2">
-                <span className="inline-block w-8 h-1 bg-primary" />
-                Written by
-              </h2>
-              <AuthorCard author={post.author} />
+              {/* Author bio - Neo-brutalist card */}
+              <div className="mt-10 sm:mt-16 pt-6 sm:pt-8 border-t-4 border-foreground">
+                <h2 className="text-lg sm:text-xl font-black mb-4 sm:mb-6 flex items-center gap-2">
+                  <span className="inline-block w-6 sm:w-8 h-1 bg-primary" />
+                  Written by
+                </h2>
+                <AuthorCard author={post.author} />
+              </div>
+
+              {/* Related posts */}
+              <Suspense fallback={null}>
+                <RelatedPosts posts={relatedPosts} />
+              </Suspense>
             </div>
 
-            {/* Related posts */}
-            <Suspense fallback={null}>
-              <RelatedPosts posts={relatedPosts} />
-            </Suspense>
+            {/* Sidebar - Table of Contents (Desktop only) */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-28">
+                <TableOfContentsClient headings={post.headings} />
+              </div>
+            </aside>
           </div>
-
-          {/* Sidebar - Table of Contents */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-28">
-              <TableOfContentsClient headings={post.headings} />
-            </div>
-          </aside>
         </div>
       </article>
     </>

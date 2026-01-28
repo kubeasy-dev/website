@@ -52,53 +52,55 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   ]);
 
   return (
-    <div className="container mx-auto px-4 max-w-5xl">
-      {/* Hero Section */}
-      <div className="mb-12 space-y-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-foreground neo-border-thick font-bold neo-shadow">
-          <FileText className="h-4 w-4" />
-          <span>{totalPosts} Articles</span>
-        </div>
-        <h1 className="text-4xl md:text-5xl font-black text-balance">
-          Kubeasy Blog
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl leading-relaxed font-bold">
-          Deep dives into Kubernetes, DevOps practices, and cloud-native
-          development. Learn from real-world experiences and best practices.
-        </p>
-      </div>
-
-      {/* Blog list with search and filters */}
-      <Suspense
-        fallback={
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-96 rounded-xl neo-border-thick bg-muted animate-pulse"
-              />
-            ))}
+    <div className="w-full overflow-x-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+        {/* Hero Section */}
+        <div className="mb-8 sm:mb-12 space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-secondary text-foreground neo-border-thick font-bold shadow sm:neo-shadow text-sm">
+            <FileText className="h-4 w-4" />
+            <span>{totalPosts} Articles</span>
           </div>
-        }
-      >
-        <BlogListClient
-          posts={posts}
-          categories={categories}
-          selectedCategory={selectedCategory}
-          totalPosts={totalPosts}
-        />
-      </Suspense>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-12">
-          <BlogPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            category={selectedCategory}
-          />
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-balance">
+            Kubeasy Blog
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed font-bold">
+            Deep dives into Kubernetes, DevOps practices, and cloud-native
+            development. Learn from real-world experiences and best practices.
+          </p>
         </div>
-      )}
+
+        {/* Blog list with search and filters */}
+        <Suspense
+          fallback={
+            <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-72 sm:h-96 rounded-xl neo-border-thick bg-muted animate-pulse"
+                />
+              ))}
+            </div>
+          }
+        >
+          <BlogListClient
+            posts={posts}
+            categories={categories}
+            selectedCategory={selectedCategory}
+            totalPosts={totalPosts}
+          />
+        </Suspense>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 sm:mt-12">
+            <BlogPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              category={selectedCategory}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
