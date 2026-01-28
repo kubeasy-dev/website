@@ -28,7 +28,7 @@ export function AuthorCard({ author, showBio = true }: AuthorCardProps) {
 
       {/* Info */}
       <div className="flex-1 min-w-0 text-center sm:text-left">
-        <h3 className="font-black text-lg sm:text-xl">{author.name}</h3>
+        <h3 className="font-black text-lg sm:text-xl mt-0.5">{author.name}</h3>
         {showBio && author.bio && (
           <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
             {author.bio}

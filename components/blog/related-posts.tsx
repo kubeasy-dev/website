@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import Logo from "@/public/logo.png";
 import type { BlogPost } from "@/types/blog";
 
 interface RelatedPostsProps {
@@ -15,7 +16,7 @@ export function RelatedPosts({
   if (posts.length === 0) return null;
 
   return (
-    <section className="mt-10 sm:mt-16 pt-6 sm:pt-8 border-t-4 border-foreground">
+    <section className="mt-10">
       <h2 className="text-lg sm:text-xl font-black mb-6 sm:mb-8 flex items-center gap-2">
         <span className="inline-block w-6 sm:w-8 h-1 bg-primary" />
         {title}
@@ -35,11 +36,15 @@ export function RelatedPosts({
                   alt={post.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover"
+                  className="object-cover border-none"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center bg-primary/10">
-                  <span className="text-3xl font-black text-primary/30">K</span>
+                <div className="flex h-full items-center justify-center">
+                  <Image
+                    src={Logo}
+                    alt="Logo"
+                    className="w-16 h-16 border-none"
+                  />
                 </div>
               )}
             </div>

@@ -1,6 +1,7 @@
 import { ArrowRight, Calendar } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import Logo from "@/public/logo.png";
 import type { BlogPost } from "@/types/blog";
 
 interface BlogCardProps {
@@ -27,11 +28,15 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                 alt={post.title}
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
+                className="object-cover border-none"
               />
             ) : (
               <div className="flex h-full min-h-[200px] items-center justify-center bg-primary/10">
-                <span className="text-6xl font-black text-primary/30">K</span>
+                <Image
+                  src={Logo}
+                  alt="Logo"
+                  className="w-16 h-16 border-none"
+                />
               </div>
             )}
           </div>

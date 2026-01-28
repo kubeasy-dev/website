@@ -136,7 +136,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         dangerouslySetInnerHTML={{ __html: stringifyJsonLd(blogPostSchema) }}
       />
 
-      <article className="w-full overflow-x-hidden">
+      <article className="w-full overflow-x-clip">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
           {/* Back link */}
           <div className="mb-6 sm:mb-8">
@@ -225,22 +225,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             )}
           </header>
 
-          {/* Cover image - Centered with neo-brutalist frame */}
-          {post.cover && (
-            <div className="mb-8 sm:mb-12 lg:mb-16 mr-1 sm:mr-0">
-              <div className="relative aspect-video overflow-hidden neo-border-thick shadow sm:neo-shadow">
-                <Image
-                  src={post.cover}
-                  alt={post.title}
-                  fill
-                  priority
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 960px"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-          )}
-
           {/* Mobile Table of Contents */}
           {post.headings.length > 0 && (
             <div className="lg:hidden mb-8">
@@ -249,13 +233,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           )}
 
           {/* Main content layout */}
-          <div className="grid gap-8 sm:gap-12 lg:grid-cols-[1fr_250px]">
+          <div className="grid gap-8 sm:gap-12 lg:grid-cols-[1fr_250px] items-start">
             {/* Article content */}
             <div className="prose-neo max-w-none min-w-0">
               <BlockRenderer blocks={post.blocks} />
 
               {/* Author bio - Neo-brutalist card */}
-              <div className="mt-10 sm:mt-16 pt-6 sm:pt-8 border-t-4 border-foreground">
+              <div className="mt-10">
                 <h2 className="text-lg sm:text-xl font-black mb-4 sm:mb-6 flex items-center gap-2">
                   <span className="inline-block w-6 sm:w-8 h-1 bg-primary" />
                   Written by
@@ -270,11 +254,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </div>
 
             {/* Sidebar - Table of Contents (Desktop only) */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-28">
+            {post.headings.length > 0 && (
+              <aside className="hidden lg:block sticky top-28">
                 <TableOfContentsClient headings={post.headings} />
-              </div>
-            </aside>
+              </aside>
+            )}
           </div>
         </div>
       </article>

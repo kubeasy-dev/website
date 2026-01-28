@@ -292,16 +292,18 @@
       margin-bottom: 1.25rem;
     }
 
-    /* Links */
-    & a {
-      color: var(--primary);
-      font-weight: 700;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-      transition: color 0.2s;
+    /* Links - exclude .not-prose elements */
+    & :where(:not(.not-prose, .not-prose *)) {
+      &:is(a) {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        transition: color 0.2s;
 
-      &:hover {
-        color: var(--primary-dark);
+        &:hover {
+          color: var(--primary-dark);
+        }
       }
     }
 

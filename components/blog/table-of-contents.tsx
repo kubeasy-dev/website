@@ -67,24 +67,27 @@ export function TableOfContents({
 
   return (
     <nav
-      className="neo-border-thick shadow sm:neo-shadow bg-secondary p-4 sm:p-6"
+      className="neo-border-thick shadow sm:neo-shadow bg-secondary p-4 sm:p-6 flex flex-col max-h-[calc(100vh-8rem)]"
       aria-label="Table of contents"
     >
       {collapsible ? (
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full text-left"
+          className="w-full text-left shrink-0"
         >
           {headerContent}
         </button>
       ) : (
-        <div className="mb-4">{headerContent}</div>
+        <div className="mb-4 shrink-0">{headerContent}</div>
       )}
 
       {isOpen && (
         <ul
-          className={cn("space-y-1 text-xs sm:text-sm", collapsible && "mt-4")}
+          className={cn(
+            "space-y-1 text-xs sm:text-sm overflow-y-auto min-h-0",
+            collapsible && "mt-4",
+          )}
         >
           {headings.map((heading) => {
             const id = slugify(heading.text);
@@ -95,12 +98,12 @@ export function TableOfContents({
                   href={`#${id}`}
                   onClick={() => collapsible && setIsOpen(false)}
                   className={cn(
-                    "block py-1.5 sm:py-2 px-2 sm:px-3 font-medium transition-all",
-                    heading.level === 2 && "ml-2 sm:ml-3",
-                    heading.level === 3 && "ml-4 sm:ml-6",
+                    "block py-1 px-2 font-medium transition-all border-l-2",
+                    heading.level === 2 && "ml-2",
+                    heading.level === 3 && "ml-4",
                     isActive
-                      ? "bg-primary text-primary-foreground neo-border font-bold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background neo-border border-transparent",
+                      ? "border-primary text-foreground font-bold"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground",
                   )}
                 >
                   {heading.text}
