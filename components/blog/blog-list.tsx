@@ -55,18 +55,18 @@ export function BlogList({
   const regularPosts = filteredPosts.filter((p) => !p.isPinned);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Search and Filters */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {showSearch && (
           <BlogSearch posts={posts} onSearchResults={handleSearchResults} />
         )}
 
         {showFilters && categories.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <Badge
               variant={selectedCategory === null ? "default" : "outline"}
-              className="cursor-pointer neo-border hover:bg-muted transition-colors"
+              className="cursor-pointer neo-border hover:bg-muted transition-colors text-xs sm:text-sm"
               onClick={() => handleCategoryClick(null)}
             >
               All ({totalPosts ?? posts.length})
@@ -76,7 +76,7 @@ export function BlogList({
                 key={cat.name}
                 variant={selectedCategory === cat.name ? "default" : "outline"}
                 className={cn(
-                  "cursor-pointer neo-border hover:bg-muted transition-colors",
+                  "cursor-pointer neo-border hover:bg-muted transition-colors text-xs sm:text-sm",
                   selectedCategory === cat.name && "pointer-events-none",
                 )}
                 onClick={() => handleCategoryClick(cat.name)}
@@ -98,9 +98,9 @@ export function BlogList({
 
       {/* No results */}
       {filteredPosts.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="text-xl font-bold">No articles found</p>
-          <p className="mt-2 text-muted-foreground">
+        <div className="py-8 sm:py-12 text-center">
+          <p className="text-lg sm:text-xl font-bold">No articles found</p>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
             Try adjusting your search or filter criteria
           </p>
         </div>
@@ -108,7 +108,7 @@ export function BlogList({
 
       {/* Posts grid */}
       {filteredPosts.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Featured/Pinned posts */}
           {pinnedPosts.map((post, index) => (
             <BlogCard

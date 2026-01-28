@@ -116,7 +116,7 @@ function Block({ block }: BlockProps) {
       return <Callout block={block} />;
 
     case "divider":
-      return <hr className="my-8 border-t-2 border-border" />;
+      return null;
 
     case "image":
       return <ImageBlock block={block} />;

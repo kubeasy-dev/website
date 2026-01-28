@@ -26,7 +26,7 @@ export function NumberedListItem({ block, children }: ListItemProps) {
   if (!block.numbered_list_item) return null;
 
   return (
-    <li className="flex items-start gap-3 list-decimal marker:text-primary marker:font-black">
+    <li className="marker:text-primary marker:font-black">
       <RichText richText={block.numbered_list_item.rich_text} />
       {children && <ol className="mt-2 space-y-2">{children}</ol>}
     </li>
@@ -70,7 +70,7 @@ export function BulletedList({ children }: ListWrapperProps) {
 }
 
 export function NumberedList({ children }: ListWrapperProps) {
-  return <ol className="my-6 space-y-3 ml-6">{children}</ol>;
+  return <ol className="my-6 space-y-3 list-decimal">{children}</ol>;
 }
 
 export function TodoList({ children }: ListWrapperProps) {

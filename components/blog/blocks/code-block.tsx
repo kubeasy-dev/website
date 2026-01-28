@@ -113,6 +113,7 @@ export function CodeBlock({ block }: CodeBlockProps) {
             "overflow-x-auto p-4 text-sm",
             "[&>pre]:!bg-transparent [&>pre]:!m-0 [&>pre]:!p-0",
             "[&_code]:font-mono",
+            "bg-white dark:bg-black",
           )}
         >
           {html ? (
