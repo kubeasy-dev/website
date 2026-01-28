@@ -1,24 +1,31 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
+import { List, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { useTRPC } from "@/trpc/client";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "./ui/empty";
 
 export function ProfileEmailPreferences() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const { data: categories = [], isLoading } = useQuery({
-    ...trpc.emailPreference.listCategories.queryOptions(),
+  const { data: topics = [], isLoading } = useQuery({
+    ...trpc.emailPreference.listTopics.queryOptions(),
   });
 
   const updateMutation = useMutation({
     ...trpc.emailPreference.updateSubscription.mutationOptions(),
     // Optimistic update for instant UI feedback
     onMutate: async (variables) => {
-      const queryKey = trpc.emailPreference.listCategories.queryKey();
+      const queryKey = trpc.emailPreference.listTopics.queryKey();
 
       // Cancel outgoing queries
       await queryClient.cancelQueries({
@@ -26,28 +33,25 @@ export function ProfileEmailPreferences() {
       });
 
       // Snapshot previous value
-      const previousCategories = queryClient.getQueryData(queryKey);
+      const previousTopics = queryClient.getQueryData(queryKey);
 
       // Optimistically update UI
-      queryClient.setQueryData(
-        queryKey,
-        (old: typeof categories | undefined) => {
-          if (!old) return old;
-          return old.map((cat) =>
-            cat.id === variables.categoryId
-              ? { ...cat, subscribed: variables.subscribed }
-              : cat,
-          );
-        },
-      );
+      queryClient.setQueryData(queryKey, (old: typeof topics | undefined) => {
+        if (!old) return old;
+        return old.map((topic) =>
+          topic.id === variables.topicId
+            ? { ...topic, subscribed: variables.subscribed }
+            : topic,
+        );
+      });
 
-      return { previousCategories };
+      return { previousTopics };
     },
     // Rollback on error
     onError: (error, _variables, context) => {
-      if (context?.previousCategories) {
-        const queryKey = trpc.emailPreference.listCategories.queryKey();
-        queryClient.setQueryData(queryKey, context.previousCategories);
+      if (context?.previousTopics) {
+        const queryKey = trpc.emailPreference.listTopics.queryKey();
+        queryClient.setQueryData(queryKey, context.previousTopics);
       }
       toast.error("Failed to update preferences", {
         description: error.message,
@@ -56,7 +60,7 @@ export function ProfileEmailPreferences() {
     // Refetch on success to sync with server
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: trpc.emailPreference.listCategories.queryKey(),
+        queryKey: trpc.emailPreference.listTopics.queryKey(),
       });
     },
     onSuccess: () => {
@@ -64,9 +68,9 @@ export function ProfileEmailPreferences() {
     },
   });
 
-  const handleSubscriptionChange = (categoryId: number, checked: boolean) => {
+  const handleSubscriptionChange = (topicId: number, checked: boolean) => {
     updateMutation.mutate({
-      categoryId,
+      topicId,
       subscribed: checked,
     });
   };
@@ -87,6 +91,23 @@ export function ProfileEmailPreferences() {
     );
   }
 
+  // Don't show the section if there are no topics
+  if (topics.length === 0) {
+    return (
+      <Empty>
+        <EmptyMedia variant="icon">
+          <List />
+        </EmptyMedia>
+        <EmptyHeader>
+          <EmptyTitle>No email topics found</EmptyTitle>
+          <EmptyDescription>
+            There are currently no email topics available to manage
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
   return (
     <div className="bg-secondary neo-border neo-shadow p-6">
       <div className="flex items-center gap-3 mb-6">
@@ -102,28 +123,25 @@ export function ProfileEmailPreferences() {
       </div>
 
       <div className="space-y-4">
-        {categories.map((category) => (
+        {topics.map((topic) => (
           <div
-            key={category.id}
+            key={topic.id}
             className="flex items-start justify-between p-4 bg-background neo-border"
           >
             <div className="flex-1 pr-4">
-              <div className="font-black mb-1">{category.name}</div>
-              <p className="text-sm text-muted-foreground">
-                {category.description}
-              </p>
-              {category.forceSubscription && (
-                <p className="text-xs text-muted-foreground mt-1 italic">
-                  Required subscription
+              <div className="font-black mb-1">{topic.name}</div>
+              {topic.description && (
+                <p className="text-sm text-muted-foreground">
+                  {topic.description}
                 </p>
               )}
             </div>
             <Switch
-              checked={category.subscribed}
+              checked={topic.subscribed}
               onCheckedChange={(checked) =>
-                handleSubscriptionChange(category.id, checked)
+                handleSubscriptionChange(topic.id, checked)
               }
-              disabled={category.forceSubscription || updateMutation.isPending}
+              disabled={updateMutation.isPending}
             />
           </div>
         ))}
