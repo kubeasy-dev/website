@@ -56,13 +56,15 @@ export function ProfileEmailPreferences() {
       toast.error("Failed to update preferences", {
         description: error.message,
       });
-    },
-    // Refetch on success to sync with server
-    onSettled: () => {
+      // Refetch on error to ensure we have the correct server state
       queryClient.invalidateQueries({
         queryKey: trpc.emailPreference.listTopics.queryKey(),
       });
     },
+    // Don't invalidate on success - trust the optimistic update
+    // Resend API may have eventual consistency, so refetching immediately
+    // could return stale data and revert the toggle
+    onSettled: () => {},
     onSuccess: () => {
       toast.success("Email preferences updated");
     },
