@@ -1,218 +1,175 @@
 import * as Sentry from "@sentry/nextjs";
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { env } from "@/env";
-import { updateContactSubscription } from "@/lib/resend";
+import { getContactSubscriptions, updateContactTopics } from "@/lib/resend";
 import {
   createTRPCRouter,
   privateProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
-import { emailCategory, userEmailPreference } from "@/server/db/schema/email";
+import { user } from "@/server/db/schema/auth";
+import { emailTopic } from "@/server/db/schema/email";
 
 const { logger } = Sentry;
 
 export const emailPreferenceRouter = createTRPCRouter({
   /**
-   * List all email categories with user's subscription status
-   * Public procedure that returns default status if user is not authenticated
+   * List all email topics with user's subscription status
+   * Subscription status is fetched from Resend (source of truth)
    */
-  listCategories: publicProcedure.query(async ({ ctx }) => {
-    const categories = await ctx.db
+  listTopics: publicProcedure.query(async ({ ctx }) => {
+    const topics = await ctx.db
       .select({
-        id: emailCategory.id,
-        name: emailCategory.name,
-        description: emailCategory.description,
-        forceSubscription: emailCategory.forceSubscription,
+        id: emailTopic.id,
+        resendTopicId: emailTopic.resendTopicId,
+        name: emailTopic.name,
+        description: emailTopic.description,
+        defaultOptIn: emailTopic.defaultOptIn,
       })
-      .from(emailCategory);
+      .from(emailTopic);
 
+    // If not authenticated, return default status
     if (!ctx.user) {
-      // Return categories without user preferences if not authenticated
-      return categories.map((cat) => ({
-        ...cat,
-        subscribed: cat.forceSubscription,
+      return topics.map((topic) => ({
+        ...topic,
+        subscribed: topic.defaultOptIn,
       }));
     }
 
-    // Get user preferences
-    const userPrefs = await ctx.db
-      .select({
-        categoryId: userEmailPreference.categoryId,
-        subscribed: userEmailPreference.subscribed,
-      })
-      .from(userEmailPreference)
-      .where(eq(userEmailPreference.userId, ctx.user.id));
+    // Get user's Resend contact ID
+    const [userData] = await ctx.db
+      .select({ resendContactId: user.resendContactId })
+      .from(user)
+      .where(eq(user.id, ctx.user.id))
+      .limit(1);
 
-    const prefsMap = new Map(
-      userPrefs.map((pref) => [pref.categoryId, pref.subscribed]),
-    );
+    // If no Resend contact, return default status
+    if (!userData?.resendContactId || !env.RESEND_API_KEY) {
+      return topics.map((topic) => ({
+        ...topic,
+        subscribed: topic.defaultOptIn,
+      }));
+    }
 
-    return categories.map((cat) => ({
-      ...cat,
-      subscribed: prefsMap.get(cat.id) ?? cat.forceSubscription,
-    }));
+    try {
+      // Fetch subscription status from Resend
+      const subscriptions = await getContactSubscriptions(
+        userData.resendContactId,
+      );
+      const subMap = new Map(
+        subscriptions.map((s) => [s.topicId, s.subscribed]),
+      );
+
+      return topics.map((topic) => ({
+        ...topic,
+        subscribed: subMap.get(topic.resendTopicId) ?? topic.defaultOptIn,
+      }));
+    } catch (error) {
+      logger.error("Failed to fetch Resend subscriptions", {
+        userId: ctx.user.id,
+        contactId: userData.resendContactId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      Sentry.captureException(error, {
+        tags: { operation: "emailPreference.listTopics" },
+        contexts: {
+          user: { id: ctx.user.id },
+          resend: { contactId: userData.resendContactId },
+        },
+      });
+      // Graceful degradation - return default status
+      return topics.map((topic) => ({
+        ...topic,
+        subscribed: topic.defaultOptIn,
+      }));
+    }
   }),
 
   /**
-   * Update user's subscription status for a specific email category
+   * Update user's subscription status for a specific topic
+   * Updates directly in Resend (source of truth)
    */
   updateSubscription: privateProcedure
     .input(
       z.object({
-        categoryId: z.number().int(),
+        topicId: z.number().int(),
         subscribed: z.boolean(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Check if category exists
-      const [category] = await ctx.db
+      // Get topic and validate
+      const [topic] = await ctx.db
         .select()
-        .from(emailCategory)
-        .where(eq(emailCategory.id, input.categoryId))
+        .from(emailTopic)
+        .where(eq(emailTopic.id, input.topicId))
         .limit(1);
 
-      if (!category) {
-        logger.warn("Email category not found", {
+      if (!topic) {
+        logger.warn("Email topic not found", {
           userId: ctx.user.id,
-          categoryId: input.categoryId,
+          topicId: input.topicId,
         });
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Email category not found",
+          message: "Email topic not found",
         });
       }
 
-      // Cannot unsubscribe from forced categories (transactional emails)
-      if (category.forceSubscription && !input.subscribed) {
-        logger.warn("Attempted to unsubscribe from transactional emails", {
-          userId: ctx.user.id,
-          categoryId: input.categoryId,
-          categoryName: category.name,
-        });
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Cannot unsubscribe from transactional emails",
-        });
-      }
-
-      // Get user's current preference to retrieve contactId
-      const [existingPref] = await ctx.db
-        .select()
-        .from(userEmailPreference)
-        .where(
-          and(
-            eq(userEmailPreference.userId, ctx.user.id),
-            eq(userEmailPreference.categoryId, input.categoryId),
-          ),
-        )
+      // Get user's Resend contact ID
+      const [userData] = await ctx.db
+        .select({ resendContactId: user.resendContactId })
+        .from(user)
+        .where(eq(user.id, ctx.user.id))
         .limit(1);
 
-      const wasSubscribed =
-        existingPref?.subscribed ?? category.forceSubscription;
+      if (!userData?.resendContactId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "No Resend contact found for user",
+        });
+      }
 
       try {
-        // Upsert user preference
-        const [updatedPref] = await ctx.db
-          .insert(userEmailPreference)
-          .values({
-            userId: ctx.user.id,
-            categoryId: input.categoryId,
-            subscribed: input.subscribed,
-            updatedAt: new Date(),
-            contactId: existingPref?.contactId || null,
-          })
-          .onConflictDoUpdate({
-            target: [
-              userEmailPreference.userId,
-              userEmailPreference.categoryId,
-            ],
-            set: {
-              subscribed: input.subscribed,
-              updatedAt: new Date(),
+        // Update subscription directly in Resend
+        await updateContactTopics({
+          contactIdOrEmail: userData.resendContactId,
+          topics: [
+            {
+              id: topic.resendTopicId,
+              subscription: input.subscribed ? "opt_in" : "opt_out",
             },
-          })
-          .returning();
+          ],
+        });
 
-        // Sync with Resend if we have a contactId and audienceId
-        if (
-          updatedPref?.contactId &&
-          category.audienceId &&
-          env.RESEND_API_KEY
-        ) {
-          try {
-            await updateContactSubscription({
-              contactId: updatedPref.contactId,
-              audienceId: category.audienceId,
-              subscribed: input.subscribed,
-            });
-
-            logger.info("Email preference updated and synced with Resend", {
-              userId: ctx.user.id,
-              categoryId: input.categoryId,
-              categoryName: category.name,
-              subscribed: input.subscribed,
-              previouslySubscribed: wasSubscribed,
-              contactId: updatedPref.contactId,
-            });
-          } catch (resendError) {
-            logger.error("Failed to sync email preference with Resend", {
-              userId: ctx.user.id,
-              categoryId: input.categoryId,
-              categoryName: category.name,
-              contactId: updatedPref.contactId,
-              audienceId: category.audienceId,
-              error:
-                resendError instanceof Error
-                  ? resendError.message
-                  : String(resendError),
-            });
-            Sentry.captureException(resendError, {
-              tags: { operation: "emailPreference.resendSync" },
-              contexts: {
-                user: {
-                  id: ctx.user.id,
-                },
-                emailCategory: {
-                  id: input.categoryId,
-                  name: category.name,
-                },
-              },
-            });
-            // Don't throw - the database update was successful
-            // The sync can be retried later
-          }
-        } else {
-          logger.info("Email preference updated", {
-            userId: ctx.user.id,
-            categoryId: input.categoryId,
-            categoryName: category.name,
-            subscribed: input.subscribed,
-            previouslySubscribed: wasSubscribed,
-          });
-        }
-
-        // Invalidate email preferences cache
-        revalidateTag(`user-${ctx.user.id}-email-prefs`, "max");
+        logger.info("Email subscription updated via Resend Topics", {
+          userId: ctx.user.id,
+          topicId: input.topicId,
+          resendTopicId: topic.resendTopicId,
+          topicName: topic.name,
+          subscribed: input.subscribed,
+        });
 
         return { success: true };
       } catch (error) {
-        logger.error("Failed to update email preference", {
+        logger.error("Failed to update Resend subscription", {
           userId: ctx.user.id,
-          categoryId: input.categoryId,
+          topicId: input.topicId,
+          resendTopicId: topic.resendTopicId,
           error: error instanceof Error ? error.message : String(error),
         });
         Sentry.captureException(error, {
-          tags: { operation: "emailPreference.update" },
+          tags: { operation: "emailPreference.updateSubscription" },
           contexts: {
-            user: {
-              id: ctx.user.id,
-            },
+            user: { id: ctx.user.id },
+            topic: { id: input.topicId, name: topic.name },
           },
         });
-        throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update email subscription",
+        });
       }
     }),
 });

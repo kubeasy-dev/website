@@ -8,15 +8,14 @@ const { logger } = Sentry;
 const resend = new Resend(env.RESEND_API_KEY);
 
 /**
- * Create a contact in Resend and add to a specific audience
+ * Create a contact in Resend
+ * New contacts are automatically subscribed to topics with default_subscription: opt_in
  */
 export async function createResendContact(params: {
   email: string;
   firstName?: string;
   lastName?: string;
   userId: string;
-  audienceId: string;
-  unsubscribed?: boolean;
 }): Promise<{ contactId: string }> {
   return Sentry.startSpan(
     {
@@ -24,18 +23,13 @@ export async function createResendContact(params: {
       name: "Resend API - Create Contact",
     },
     async (span) => {
-      span.setAttribute("audienceId", params.audienceId);
       span.setAttribute("userId", params.userId);
-      span.setAttribute("unsubscribed", params.unsubscribed ?? false);
 
       try {
-        // Create the contact
         const contact = await resend.contacts.create({
           email: params.email,
           firstName: params.firstName,
           lastName: params.lastName,
-          unsubscribed: params.unsubscribed ?? false,
-          audienceId: params.audienceId,
         });
 
         if (!contact.data?.id) {
@@ -45,22 +39,18 @@ export async function createResendContact(params: {
         logger.info("Resend contact created", {
           userId: params.userId,
           contactId: contact.data.id,
-          audienceId: params.audienceId,
-          unsubscribed: params.unsubscribed ?? false,
         });
 
         return { contactId: contact.data.id };
       } catch (error) {
         logger.error("Failed to create Resend contact", {
           userId: params.userId,
-          audienceId: params.audienceId,
           error: error instanceof Error ? error.message : String(error),
         });
         Sentry.captureException(error, {
           tags: { operation: "resend.createContact" },
           contexts: {
             resend: {
-              audienceId: params.audienceId,
               userId: params.userId,
             },
           },
@@ -72,77 +62,45 @@ export async function createResendContact(params: {
 }
 
 /**
- * Add a contact to an audience
+ * Update contact topic subscriptions
  */
-export async function addContactToAudience(params: {
-  contactId: string;
-  audienceId: string;
-  unsubscribed?: boolean;
-}): Promise<void> {
-  try {
-    await resend.contacts.update({
-      id: params.contactId,
-      audienceId: params.audienceId,
-      unsubscribed: params.unsubscribed ?? false,
-    });
-
-    logger.info("Contact added to audience", {
-      contactId: params.contactId,
-      audienceId: params.audienceId,
-    });
-  } catch (error) {
-    logger.error("Failed to add contact to audience", {
-      contactId: params.contactId,
-      audienceId: params.audienceId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
-  }
-}
-
-/**
- * Update contact subscription status for an audience
- */
-export async function updateContactSubscription(params: {
-  contactId: string;
-  audienceId: string;
-  subscribed: boolean;
+export async function updateContactTopics(params: {
+  contactIdOrEmail: string;
+  topics: Array<{ id: string; subscription: "opt_in" | "opt_out" }>;
 }): Promise<void> {
   return Sentry.startSpan(
     {
       op: "http.client",
-      name: "Resend API - Update Subscription",
+      name: "Resend API - Update Contact Topics",
     },
     async (span) => {
-      span.setAttribute("contactId", params.contactId);
-      span.setAttribute("audienceId", params.audienceId);
-      span.setAttribute("subscribed", params.subscribed);
+      span.setAttribute("contactIdOrEmail", params.contactIdOrEmail);
+      span.setAttribute("topicsCount", params.topics.length);
 
       try {
-        await resend.contacts.update({
-          id: params.contactId,
-          audienceId: params.audienceId,
-          unsubscribed: !params.subscribed,
-        });
+        // Determine if we're using ID or email
+        const isEmail = params.contactIdOrEmail.includes("@");
+        const updateParams = isEmail
+          ? { email: params.contactIdOrEmail, topics: params.topics }
+          : { id: params.contactIdOrEmail, topics: params.topics };
 
-        logger.info("Resend subscription updated", {
-          contactId: params.contactId,
-          audienceId: params.audienceId,
-          subscribed: params.subscribed,
+        await resend.contacts.topics.update(updateParams);
+
+        logger.info("Resend contact topics updated", {
+          contactIdOrEmail: params.contactIdOrEmail,
+          topics: params.topics,
         });
       } catch (error) {
-        logger.error("Failed to update Resend subscription", {
-          contactId: params.contactId,
-          audienceId: params.audienceId,
-          subscribed: params.subscribed,
+        logger.error("Failed to update Resend contact topics", {
+          contactIdOrEmail: params.contactIdOrEmail,
+          topics: params.topics,
           error: error instanceof Error ? error.message : String(error),
         });
         Sentry.captureException(error, {
-          tags: { operation: "resend.updateSubscription" },
+          tags: { operation: "resend.updateContactTopics" },
           contexts: {
             resend: {
-              contactId: params.contactId,
-              audienceId: params.audienceId,
+              contactIdOrEmail: params.contactIdOrEmail,
             },
           },
         });
@@ -153,28 +111,60 @@ export async function updateContactSubscription(params: {
 }
 
 /**
- * Remove a contact from a specific audience in Resend
+ * Get contact's topic subscriptions from Resend
  */
-export async function deleteResendContact(
+export async function getContactSubscriptions(
   contactId: string,
-  audienceId: string,
-): Promise<void> {
-  try {
-    await resend.contacts.remove({
-      id: contactId,
-      audienceId: audienceId,
-    });
+): Promise<Array<{ topicId: string; subscribed: boolean }>> {
+  return Sentry.startSpan(
+    {
+      op: "http.client",
+      name: "Resend API - Get Contact Subscriptions",
+    },
+    async (span) => {
+      span.setAttribute("contactId", contactId);
 
-    logger.info("Resend contact deleted", {
-      contactId,
-      audienceId,
-    });
-  } catch (error) {
-    logger.error("Failed to delete Resend contact", {
-      contactId,
-      audienceId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
-  }
+      try {
+        // Use the dedicated topics list endpoint to get topic subscriptions
+        const response = await resend.contacts.topics.list({ id: contactId });
+
+        // Response is { data: PaginatedData<ContactTopic[]> | null, error: ... }
+        // PaginatedData = { object: 'list', data: ContactTopic[], has_more: boolean }
+        if (!response.data || !Array.isArray(response.data.data)) {
+          throw new Error("Failed to get contact topics from Resend");
+        }
+
+        // Map topic subscriptions to our format
+        // Each item has id (topic ID) and subscription ("opt_in" | "opt_out")
+        const subscriptions: Array<{ topicId: string; subscribed: boolean }> =
+          response.data.data.map((topic) => ({
+            topicId: topic.id,
+            subscribed: topic.subscription === "opt_in",
+          }));
+
+        logger.debug(
+          logger.fmt`Fetched subscriptions for contact ${contactId}`,
+          {
+            subscriptionsCount: subscriptions.length,
+          },
+        );
+
+        return subscriptions;
+      } catch (error) {
+        logger.error("Failed to get Resend contact subscriptions", {
+          contactId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        Sentry.captureException(error, {
+          tags: { operation: "resend.getContactSubscriptions" },
+          contexts: {
+            resend: {
+              contactId,
+            },
+          },
+        });
+        throw error;
+      }
+    },
+  );
 }

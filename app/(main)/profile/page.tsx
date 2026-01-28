@@ -33,7 +33,7 @@ async function ProfileContent() {
 
   // Prefetch data in parallel (prefetch won't throw on error, data will be hydrated to client)
   await Promise.all([
-    prefetch(trpc.emailPreference.listCategories.queryOptions()),
+    prefetch(trpc.emailPreference.listTopics.queryOptions()),
     prefetch(trpc.userProgress.getXpAndRank.queryOptions()),
   ]);
 

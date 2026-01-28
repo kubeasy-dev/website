@@ -2,44 +2,20 @@ import {
   boolean,
   integer,
   pgTable,
-  primaryKey,
   text,
   timestamp,
-  uuid,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth";
 
 /**
- * Email categories for managing user email preferences
- * Each category can be linked to a Resend audience
+ * Email topics synced from Resend
+ * This table mirrors Resend Topics for local reference and UI display
  */
-export const emailCategory = pgTable("email_category", {
+export const emailTopic = pgTable("email_topic", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull().unique(),
-  description: text("description").notNull(),
-  audienceId: uuid("audience_id"), // Resend audience ID
-  forceSubscription: boolean("force_subscription").default(false).notNull(), // True for transactional emails
+  resendTopicId: text("resend_topic_id").notNull().unique(), // Resend topic ID
+  name: text("name").notNull(),
+  description: text("description"),
+  defaultOptIn: boolean("default_opt_in").default(true).notNull(), // Resend's default_subscription
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
-/**
- * User email preferences
- * Links users to email categories and tracks their subscription status
- */
-export const userEmailPreference = pgTable(
-  "user_email_preference",
-  {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    categoryId: integer("category_id")
-      .notNull()
-      .references(() => emailCategory.id, { onDelete: "cascade" }),
-    subscribed: boolean("subscribed").default(true).notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    contactId: uuid("contact_id"), // Resend contact ID
-  },
-  (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.categoryId] }),
-  }),
-);

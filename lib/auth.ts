@@ -8,7 +8,6 @@ import { trackUserSignupServer } from "@/lib/analytics-server";
 import { isRedisConfigured, redis } from "@/lib/redis";
 import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
-import { emailCategory, userEmailPreference } from "@/server/db/schema/email";
 import { createResendContact } from "./resend";
 
 const { logger } = Sentry;
@@ -42,6 +41,15 @@ export const auth = betterAuth({
     provider: "pg", // or "mysql", "sqlite"
     schema: schema,
   }),
+  user: {
+    additionalFields: {
+      resendContactId: {
+        type: "string",
+        required: false,
+        input: false, // Not set by user, only by server
+      },
+    },
+  },
   // Redis as secondary storage for session caching and revocation (optional)
   // This allows stateless session validation via cookie while maintaining
   // the ability to revoke sessions through Redis
@@ -142,93 +150,45 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          // Initialize email preferences for new user
+          // Create Resend contact for new user
+          // Topic subscriptions are managed by Resend (opt_in by default)
           logger.info("User account created", {
             userId: user.id,
             email: user.email,
             hasName: !!user.name,
           });
 
-          try {
-            // Get all email categories
-            const categories = await db.select().from(emailCategory);
+          if (!env.RESEND_API_KEY) {
+            return;
+          }
 
-            // Split name into first and last name
+          try {
             const [firstName, lastName] = user.name?.split(" ") || ["", ""];
 
-            // Create contact in Resend for the first category with an audienceId
-            let resendContactId: string | null = null;
-
-            if (env.RESEND_API_KEY) {
-              // Find the first category with an audienceId (usually marketing)
-              const categoryWithAudience = categories.find(
-                (cat) => cat.audienceId,
-              );
-
-              if (categoryWithAudience?.audienceId) {
-                try {
-                  const { contactId } = await createResendContact({
-                    email: user.email,
-                    firstName: firstName || undefined,
-                    lastName: lastName || undefined,
-                    userId: user.id,
-                    audienceId: categoryWithAudience.audienceId,
-                    unsubscribed: !categoryWithAudience.forceSubscription, // Unsubscribed if not forced
-                  });
-                  resendContactId = contactId;
-
-                  logger.info("Resend contact created", {
-                    userId: user.id,
-                    contactId,
-                    audienceId: categoryWithAudience.audienceId,
-                    categoryName: categoryWithAudience.name,
-                  });
-                } catch (resendError) {
-                  logger.error("Failed to create Resend contact", {
-                    userId: user.id,
-                    error:
-                      resendError instanceof Error
-                        ? resendError.message
-                        : String(resendError),
-                  });
-                  Sentry.captureException(resendError, {
-                    tags: { operation: "resend.createContact" },
-                    contexts: {
-                      user: {
-                        id: user.id,
-                        email: user.email,
-                      },
-                    },
-                  });
-                  // Continue without Resend contact - preferences will still be created
-                }
-              }
-            }
-
-            // Create preferences for all categories
-            // Force subscription for transactional emails, unsubscribed for marketing
-            const prefsToInsert = categories.map((cat) => ({
+            const { contactId } = await createResendContact({
+              email: user.email,
+              firstName: firstName || undefined,
+              lastName: lastName || undefined,
               userId: user.id,
-              categoryId: cat.id,
-              subscribed: cat.forceSubscription,
-              updatedAt: new Date(),
-              contactId: resendContactId, // Store Resend contact ID (same for all)
-            }));
+            });
 
-            await db.insert(userEmailPreference).values(prefsToInsert);
+            // Store Resend contact ID on user record
+            await db
+              .update(schema.user)
+              .set({ resendContactId: contactId })
+              .where(eq(schema.user.id, user.id));
 
-            logger.info("Email preferences initialized", {
+            logger.info("Resend contact created and stored", {
               userId: user.id,
-              categoriesCount: categories.length,
-              hasResendContact: !!resendContactId,
+              contactId,
             });
           } catch (error) {
-            logger.error("Failed to initialize email preferences", {
+            logger.error("Failed to create Resend contact", {
               userId: user.id,
               error: error instanceof Error ? error.message : String(error),
             });
             Sentry.captureException(error, {
-              tags: { operation: "auth.initializeEmailPreferences" },
+              tags: { operation: "resend.createContact" },
               contexts: {
                 user: {
                   id: user.id,
@@ -236,8 +196,7 @@ export const auth = betterAuth({
                 },
               },
             });
-            // Don't throw the error to avoid blocking user creation
-            // Email preferences can be initialized later if needed
+            // Don't throw - graceful degradation, user can still use the app
           }
 
           // Note: PostHog user_signup tracking moved to account.create.after hook
