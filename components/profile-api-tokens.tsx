@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertCircle, Check, Copy, Key, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -38,7 +38,11 @@ export function ProfileApiTokens() {
     name: string | null;
   } | null>(null);
 
-  const { data: tokens, refetch } = useSuspenseQuery({
+  const {
+    data: tokens,
+    refetch,
+    isLoading,
+  } = useQuery({
     queryKey: ["apiKey.list"],
     queryFn: async () => {
       const { data, error } = await authClient.apiKey.list();
@@ -207,7 +211,12 @@ export function ProfileApiTokens() {
 
       {/* Tokens List */}
       <div className="space-y-3">
-        {tokens.length === 0 ? (
+        {isLoading ? (
+          <div className="p-4 bg-background neo-border animate-pulse">
+            <div className="h-6 w-32 bg-muted rounded mb-2" />
+            <div className="h-4 w-48 bg-muted rounded" />
+          </div>
+        ) : !tokens || tokens.length === 0 ? (
           <Empty>
             <EmptyMedia variant="icon">
               <Key />
