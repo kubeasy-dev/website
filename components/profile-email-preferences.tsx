@@ -3,15 +3,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { List, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
-import { useTRPC } from "@/trpc/client";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "./ui/empty";
+} from "@/components/ui/empty";
+import { Switch } from "@/components/ui/switch";
+import { useTRPC } from "@/trpc/client";
 
 export function ProfileEmailPreferences() {
   const trpc = useTRPC();
