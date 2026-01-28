@@ -125,36 +125,21 @@ export async function getContactSubscriptions(
       span.setAttribute("contactId", contactId);
 
       try {
-        const response = await resend.contacts.get({ id: contactId });
+        // Use the dedicated topics list endpoint to get topic subscriptions
+        const response = await resend.contacts.topics.list({ id: contactId });
 
         if (!response.data) {
-          throw new Error("Failed to get contact from Resend");
+          throw new Error("Failed to get contact topics from Resend");
         }
 
         // Map topic subscriptions to our format
-        // The contact data includes topic subscriptions
+        // Response is PaginatedData<ContactTopic[]> with nested data array
+        // Each item has id (topic ID) and subscription ("opt_in" | "opt_out")
         const subscriptions: Array<{ topicId: string; subscribed: boolean }> =
-          [];
-
-        // Access topic subscriptions from the contact data
-        // Note: Resend's contact response includes topic_subscriptions
-        const contact = response.data as {
-          id: string;
-          email: string;
-          topic_subscriptions?: Array<{
-            topic_id: string;
-            status: "subscribed" | "unsubscribed";
-          }>;
-        };
-
-        if (contact.topic_subscriptions) {
-          for (const sub of contact.topic_subscriptions) {
-            subscriptions.push({
-              topicId: sub.topic_id,
-              subscribed: sub.status === "subscribed",
-            });
-          }
-        }
+          response.data.data.map((topic) => ({
+            topicId: topic.id,
+            subscribed: topic.subscription === "opt_in",
+          }));
 
         logger.debug(
           logger.fmt`Fetched subscriptions for contact ${contactId}`,

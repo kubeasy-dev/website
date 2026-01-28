@@ -72,6 +72,13 @@ export const emailPreferenceRouter = createTRPCRouter({
         contactId: userData.resendContactId,
         error: error instanceof Error ? error.message : String(error),
       });
+      Sentry.captureException(error, {
+        tags: { operation: "emailPreference.listTopics" },
+        contexts: {
+          user: { id: ctx.user.id },
+          resend: { contactId: userData.resendContactId },
+        },
+      });
       // Graceful degradation - return default status
       return topics.map((topic) => ({
         ...topic,
