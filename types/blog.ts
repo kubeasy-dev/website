@@ -4,6 +4,9 @@ export interface Author {
   id: string;
   name: string;
   avatar: string;
+  bio?: string;
+  twitter?: string;
+  github?: string;
 }
 
 export interface CategoryInfo {

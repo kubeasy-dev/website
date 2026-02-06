@@ -1,4 +1,6 @@
+import { Github, Twitter } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import type { Author } from "@/types/blog";
 
 interface AuthorCardProps {
@@ -26,6 +28,41 @@ export function AuthorCard({ author }: AuthorCardProps) {
       {/* Info */}
       <div className="flex-1 min-w-0 text-center sm:text-left">
         <h3 className="font-black text-lg sm:text-xl mt-0.5">{author.name}</h3>
+        {author.bio && (
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            {author.bio}
+          </p>
+        )}
+
+        {/* Social links */}
+        {(author.twitter || author.github) && (
+          <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3">
+            {author.twitter && (
+              <Link
+                href={author.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${author.name} on Twitter`}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-background neo-border font-bold text-sm hover:bg-primary hover:text-primary-foreground transition-colors"
+              >
+                <Twitter className="h-4 w-4" />
+                <span className="hidden xs:inline">Twitter</span>
+              </Link>
+            )}
+            {author.github && (
+              <Link
+                href={author.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${author.name} on GitHub`}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-background neo-border font-bold text-sm hover:bg-primary hover:text-primary-foreground transition-colors"
+              >
+                <Github className="h-4 w-4" />
+                <span className="hidden xs:inline">GitHub</span>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

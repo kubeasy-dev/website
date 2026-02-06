@@ -41,6 +41,7 @@ function getNotionClient(): Client {
 
 // Database IDs
 const BLOG_DATABASE_ID = env.NOTION_BLOG_DATASOURCE_ID ?? "";
+const DIRECTORY_DATABASE_ID = env.NOTION_DIRECTORY_DATASOURCE_ID ?? "";
 
 // Default author for when no author is linked
 const DEFAULT_AUTHOR: Author = {
@@ -85,6 +86,52 @@ function getPropertyValue(
   propertyName: string,
 ): PageObjectResponse["properties"][string] | undefined {
   return page.properties[propertyName];
+}
+
+// Look up additional author info from the workspace directory
+async function getAuthorProfile(
+  userId: string,
+): Promise<Partial<Author> | null> {
+  if (!DIRECTORY_DATABASE_ID) return null;
+
+  try {
+    // Find the directory entry matching this Notion user
+    const response = await getNotionClient().dataSources.query({
+      data_source_id: DIRECTORY_DATABASE_ID,
+      filter: {
+        property: "Person",
+        people: { contains: userId },
+      },
+    });
+
+    if (response.results.length === 0) return null;
+    const page = response.results[0];
+    if (!isFullPage(page)) return null;
+
+    const props = page.properties;
+
+    const aboutProp = props.About;
+    const bio =
+      aboutProp?.type === "rich_text"
+        ? extractPlainText(aboutProp.rich_text)
+        : undefined;
+
+    const twitterProp = props.twitter;
+    const twitter =
+      twitterProp?.type === "url" ? (twitterProp.url ?? undefined) : undefined;
+
+    const githubProp = props.github;
+    const github =
+      githubProp?.type === "url" ? (githubProp.url ?? undefined) : undefined;
+
+    return { bio, twitter, github };
+  } catch (error) {
+    logger.error("Failed to get author profile from directory", {
+      userId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 // Convert a Notion page to a BlogPost
@@ -133,7 +180,7 @@ async function pageToPost(page: PageObjectResponse): Promise<BlogPost | null> {
     const cover = getCoverUrl(page);
 
     // Get author from Notion workspace people directory
-    let author = DEFAULT_AUTHOR;
+    let author: Author = DEFAULT_AUTHOR;
     const authorProp = getPropertyValue(page, "author");
     if (authorProp?.type === "people" && authorProp.people.length > 0) {
       const person = authorProp.people[0];
@@ -148,6 +195,12 @@ async function pageToPost(page: PageObjectResponse): Promise<BlogPost | null> {
           name: person.name,
           avatar: "avatar_url" in person ? (person.avatar_url ?? "") : "",
         };
+
+        // Enrich with additional info from workspace directory
+        const profile = await getAuthorProfile(person.id);
+        if (profile) {
+          author = { ...author, ...profile };
+        }
       }
     }
 
