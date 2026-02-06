@@ -107,7 +107,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     author: {
       "@type": "Person",
       name: post.author.name,
-      url: post.author.twitter || post.author.github,
     },
     publisher: {
       "@type": "Organization",

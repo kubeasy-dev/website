@@ -26,7 +26,6 @@ export const env = createEnv({
     // Notion integration for blog (uses dataSources API in SDK v5+)
     NOTION_INTEGRATION_TOKEN: z.string().min(1).optional(),
     NOTION_BLOG_DATASOURCE_ID: z.string().min(1).optional(),
-    NOTION_PEOPLE_DATASOURCE_ID: z.string().min(1).optional(),
   },
 
   /**
@@ -58,7 +57,6 @@ export const env = createEnv({
     KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN,
     NOTION_INTEGRATION_TOKEN: process.env.NOTION_INTEGRATION_TOKEN,
     NOTION_BLOG_DATASOURCE_ID: process.env.NOTION_BLOG_DATASOURCE_ID,
-    NOTION_PEOPLE_DATASOURCE_ID: process.env.NOTION_PEOPLE_DATASOURCE_ID,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

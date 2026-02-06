@@ -3,10 +3,7 @@
 export interface Author {
   id: string;
   name: string;
-  bio: string;
   avatar: string;
-  twitter?: string;
-  github?: string;
 }
 
 export interface CategoryInfo {

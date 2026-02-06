@@ -22,9 +22,7 @@ const { logger } = Sentry;
 
 // Check if Notion is configured
 export const isNotionConfigured = Boolean(
-  env.NOTION_INTEGRATION_TOKEN &&
-    env.NOTION_BLOG_DATASOURCE_ID &&
-    env.NOTION_PEOPLE_DATASOURCE_ID,
+  env.NOTION_INTEGRATION_TOKEN && env.NOTION_BLOG_DATASOURCE_ID,
 );
 
 // Create Notion client (only if configured)
@@ -43,14 +41,11 @@ function getNotionClient(): Client {
 
 // Database IDs
 const BLOG_DATABASE_ID = env.NOTION_BLOG_DATASOURCE_ID ?? "";
-// Reserved for future use when fetching authors independently
-const _PEOPLE_DATABASE_ID = env.NOTION_PEOPLE_DATASOURCE_ID ?? "";
 
 // Default author for when no author is linked
 const DEFAULT_AUTHOR: Author = {
   id: "default",
   name: "Kubeasy Team",
-  bio: "The Kubeasy team is dedicated to helping developers learn Kubernetes through hands-on challenges.",
   avatar: "/images/kubeasy-logo.png",
 };
 
@@ -74,20 +69,6 @@ function convertRichText(richText: RichTextItemResponse[]): RichTextItem[] {
     plain_text: item.plain_text,
     href: item.href,
   }));
-}
-
-// Helper to extract file URL (handles both file and external types)
-function extractFileUrl(
-  file:
-    | { type: "file"; file: { url: string } }
-    | { type: "external"; external: { url: string } }
-    | null
-    | undefined,
-): string {
-  if (!file) return "";
-  if (file.type === "file") return file.file.url;
-  if (file.type === "external") return file.external.url;
-  return "";
 }
 
 // Helper to get cover image URL from a page
@@ -151,14 +132,22 @@ async function pageToPost(page: PageObjectResponse): Promise<BlogPost | null> {
     // Get cover image
     const cover = getCoverUrl(page);
 
-    // Get author from relation
+    // Get author from Notion workspace people directory
     let author = DEFAULT_AUTHOR;
     const authorProp = getPropertyValue(page, "author");
-    if (authorProp?.type === "relation" && authorProp.relation.length > 0) {
-      const authorId = authorProp.relation[0].id;
-      const fetchedAuthor = await getAuthor(authorId);
-      if (fetchedAuthor) {
-        author = fetchedAuthor;
+    if (authorProp?.type === "people" && authorProp.people.length > 0) {
+      const person = authorProp.people[0];
+      if (
+        "object" in person &&
+        person.object === "user" &&
+        "name" in person &&
+        person.name
+      ) {
+        author = {
+          id: person.id,
+          name: person.name,
+          avatar: "avatar_url" in person ? (person.avatar_url ?? "") : "",
+        };
       }
     }
 
@@ -183,60 +172,6 @@ async function pageToPost(page: PageObjectResponse): Promise<BlogPost | null> {
     Sentry.captureException(error, {
       tags: { operation: "notion.pageToPost" },
       contexts: { page: { id: page.id } },
-    });
-    return null;
-  }
-}
-
-// Get author by ID from People database
-async function getAuthor(authorId: string): Promise<Author | null> {
-  if (!isNotionConfigured) return null;
-
-  try {
-    const page = await getNotionClient().pages.retrieve({ page_id: authorId });
-    if (!isFullPage(page)) return null;
-
-    const props = page.properties;
-
-    const nameProp = props.Nom;
-    if (!nameProp || nameProp.type !== "title") return null;
-    const name = extractPlainText(nameProp.title);
-
-    const bioProp = props.bio;
-    const bio =
-      bioProp?.type === "rich_text" ? extractPlainText(bioProp.rich_text) : "";
-
-    const avatarProp = props.avatar;
-    let avatar = "";
-    if (avatarProp?.type === "files" && avatarProp.files.length > 0) {
-      const file = avatarProp.files[0];
-      avatar = extractFileUrl(
-        file as
-          | { type: "file"; file: { url: string } }
-          | { type: "external"; external: { url: string } },
-      );
-    }
-
-    const twitterProp = props.twitter;
-    const twitter =
-      twitterProp?.type === "url" ? (twitterProp.url ?? undefined) : undefined;
-
-    const githubProp = props.github;
-    const github =
-      githubProp?.type === "url" ? (githubProp.url ?? undefined) : undefined;
-
-    return {
-      id: authorId,
-      name,
-      bio,
-      avatar,
-      twitter,
-      github,
-    };
-  } catch (error) {
-    logger.error("Failed to get author", {
-      authorId,
-      error: error instanceof Error ? error.message : String(error),
     });
     return null;
   }
