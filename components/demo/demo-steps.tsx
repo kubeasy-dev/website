@@ -1,57 +1,29 @@
 "use client";
 
 import {
-  ArrowRight,
   Check,
   ChevronDown,
   Copy,
   ExternalLink,
   Loader2,
-  Rocket,
   Terminal,
-  Zap,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
 import { trackDemoStepCompleted } from "@/lib/analytics";
 import { useRealtime } from "@/lib/realtime-client";
 import { cn } from "@/lib/utils";
+import {
+  createDemoSteps,
+  DEMO_EVENTS,
+  DEMO_TOTAL_STEPS,
+  STEP_COLORS,
+} from "@/lib/workflow";
 
 interface DemoStepsProps {
   token: string;
   onComplete: () => void;
 }
-
-const STEP_COLORS = {
-  primary: {
-    bg: "bg-primary",
-    bgLight: "bg-primary/5",
-    text: "text-primary",
-    textOnBg: "text-primary-foreground",
-  },
-  accent: {
-    bg: "bg-accent",
-    bgLight: "bg-accent/10",
-    text: "text-accent",
-    textOnBg: "text-foreground",
-  },
-  green: {
-    bg: "bg-green-500",
-    bgLight: "bg-green-50",
-    text: "text-green-500",
-    textOnBg: "text-white",
-  },
-  amber: {
-    bg: "bg-amber-500",
-    bgLight: "bg-amber-50",
-    text: "text-amber-500",
-    textOnBg: "text-white",
-  },
-} as const;
-
-type StepColor = keyof typeof STEP_COLORS;
-
-const TOTAL_STEPS = 4;
 
 export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -63,71 +35,24 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
     objectiveKey: string;
   } | null>(null);
 
-  const steps = useMemo(
-    () => [
-      {
-        number: 1,
-        title: "Install the CLI",
-        description: "Install the Kubeasy CLI globally using npm.",
-        command: "npm install -g @kubeasy-dev/kubeasy-cli",
-        icon: Terminal,
-        color: "primary" as StepColor,
-        autoAdvance: true, // Auto-advance on copy
-        links: [
-          {
-            text: "Install npm",
-            url: "https://docs.npmjs.com/downloading-and-installing-node-js-and-npm",
-          },
-        ],
-      },
-      {
-        number: 2,
-        title: "Start the Demo",
-        description:
-          "Sets up a local Kind cluster and creates a demo namespace.",
-        command: `kubeasy demo start --token=${token}`,
-        icon: Rocket,
-        color: "accent" as StepColor,
-        eventType: "demo.started", // Wait for CLI event
-      },
-      {
-        number: 3,
-        title: "Create the nginx Pod",
-        description: "Run a simple nginx pod in the demo namespace.",
-        command: "kubectl run nginx --image=nginx -n demo",
-        icon: Zap,
-        color: "green" as StepColor,
-        autoAdvance: true, // Auto-advance on copy
-      },
-      {
-        number: 4,
-        title: "Submit Your Solution",
-        description:
-          "Validate that the pod is running and see your results update live.",
-        command: "kubeasy demo submit",
-        icon: ArrowRight,
-        color: "amber" as StepColor,
-        eventType: "validation.update", // Wait for validation
-      },
-    ],
-    [token],
-  );
+  // Use workflow definition for steps
+  const steps = useMemo(() => createDemoSteps(token), [token]);
 
   // Listen for realtime events from the CLI
   useRealtime({
     enabled: !!token,
     channels: [`demo:${token}`],
-    events: ["demo.started", "validation.update"],
+    events: [DEMO_EVENTS.STARTED, DEMO_EVENTS.VALIDATION_UPDATE],
     onData(event) {
       const eventType = event.event;
 
-      if (eventType === "demo.started") {
+      if (eventType === DEMO_EVENTS.STARTED) {
         // CLI started the demo - complete step 2, move to step 3
         setCompletedSteps((prev) => new Set([...prev, 0, 1]));
         setCurrentStep(2);
         setWaitingForEvent(null);
         trackDemoStepCompleted(2);
-      } else if (eventType === "validation.update") {
+      } else if (eventType === DEMO_EVENTS.VALIDATION_UPDATE) {
         // Validation received - complete step 4
         const data = event.data as { objectiveKey: string; passed: boolean };
         setValidationResult(data);
@@ -145,7 +70,7 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
     const stepNumber = steps[currentStep].number;
     setCurrentStep((curr) => {
       setCompletedSteps((prev) => new Set([...prev, curr]));
-      return curr < TOTAL_STEPS - 1 ? curr + 1 : curr;
+      return curr < DEMO_TOTAL_STEPS - 1 ? curr + 1 : curr;
     });
     // Track outside of state updater to avoid double-firing in Strict Mode
     trackDemoStepCompleted(stepNumber);
@@ -156,8 +81,9 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
     setCopiedStep(stepIndex);
 
     const step = steps[stepIndex];
+    const isAutoAdvance = step.advancement.type === "auto-on-copy";
 
-    if (step.autoAdvance) {
+    if (isAutoAdvance) {
       // Step 1: auto-advance on copy
       setTimeout(() => {
         setCopiedStep(null);
@@ -282,6 +208,7 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
         const colors = STEP_COLORS[step.color];
         const isCompleted = completedSteps.has(index);
         const isCurrent = index === currentStep;
+        const isAutoAdvance = step.advancement.type === "auto-on-copy";
 
         if (!isCurrent && !isCompleted) return null;
 
@@ -354,7 +281,7 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
               </button>
 
               {/* Expanded content - only for current step */}
-              {isCurrent && (
+              {isCurrent && step.command && (
                 <div className="animate-in slide-in-from-top-2 duration-300">
                   <div className="px-4 pb-2 pt-2">
                     <p className="text-sm text-muted-foreground font-medium">
@@ -379,7 +306,11 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => handleCopyCommand(step.command, index)}
+                          onClick={() => {
+                            if (step.command) {
+                              handleCopyCommand(step.command, index);
+                            }
+                          }}
                           className={cn(
                             "flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wide transition-all",
                             copiedStep === index
@@ -395,7 +326,7 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
                           ) : (
                             <>
                               <Copy className="w-4 h-4" />
-                              {step.autoAdvance ? "Copy & Continue" : "Copy"}
+                              {isAutoAdvance ? "Copy & Continue" : "Copy"}
                             </>
                           )}
                         </button>

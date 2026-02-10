@@ -41,4 +41,12 @@ export async function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
   }
 }
 
-export const caller = appRouter.createCaller(createTRPCContext);
+/**
+ * Create a tRPC caller for server-side use.
+ * This properly handles the headers context for authentication.
+ */
+export async function createServerCaller() {
+  return appRouter.createCaller(
+    await createTRPCContext({ headers: await headers() }),
+  );
+}

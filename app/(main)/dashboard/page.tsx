@@ -6,11 +6,12 @@ import { ErrorBoundary } from "react-error-boundary";
 import { DashboardChart } from "@/components/dashboard-chart";
 import { DashboardRecentGains } from "@/components/dashboard-recent-gains";
 import { DashboardStats } from "@/components/dashboard-stats";
+import { DashboardChecklist } from "@/components/onboarding/dashboard-checklist";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { requireAuth } from "@/lib/require-auth";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
+import { getQueryClient, HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Dashboard",
@@ -127,9 +128,11 @@ function DashboardSkeleton() {
 
 async function DashboardContent() {
   const session = await requireAuth();
+  const queryClient = getQueryClient();
 
-  // Prefetch data for client components (prefetch won't throw on auth errors)
-  await Promise.all([
+  // Fetch onboarding status and prefetch data for client components
+  const [onboardingStatus] = await Promise.all([
+    queryClient.fetchQuery(trpc.onboarding.getStatus.queryOptions()),
     prefetch(
       trpc.userProgress.getCompletionPercentage.queryOptions({
         splitByTheme: true,
@@ -145,6 +148,10 @@ async function DashboardContent() {
     prefetch(trpc.theme.list.queryOptions()),
   ]);
 
+  const isOnboardingComplete =
+    onboardingStatus.isComplete || onboardingStatus.steps.hasCompletedChallenge;
+  const firstName = session.user.name?.split(" ")[0] || "there";
+
   return (
     <HydrateClient>
       <div className="min-h-screen bg-background">
@@ -152,35 +159,69 @@ async function DashboardContent() {
           {/* Header */}
           <div className="mb-12">
             <h1 className="text-5xl font-black mb-4">
-              Welcome back,{" "}
-              <span className="text-primary">
-                {session.user.name.split(" ")[0]}
-              </span>
-              !
+              {isOnboardingComplete ? (
+                <>
+                  Welcome back,{" "}
+                  <span className="text-primary">{firstName}</span>!
+                </>
+              ) : (
+                <>
+                  Hey <span className="text-primary">{firstName}</span>, let's
+                  get started!
+                </>
+              )}
             </h1>
             <p className="text-xl text-muted-foreground font-bold">
-              Track your Kubernetes learning journey
+              {isOnboardingComplete
+                ? "Track your Kubernetes learning journey"
+                : "Complete the setup to start your Kubernetes journey"}
             </p>
           </div>
 
-          {/* Stats Cards */}
-          <DashboardStats />
+          {/* Onboarding Checklist - shown if not complete */}
+          {!isOnboardingComplete && (
+            <DashboardChecklist
+              steps={onboardingStatus.steps}
+              currentStep={onboardingStatus.currentStep}
+            />
+          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Radar Chart */}
-            <ErrorBoundary fallback={<DashboardChartError />}>
-              <Suspense fallback={<DashboardChartSkeleton />}>
-                <DashboardChart />
+          {/* Stats and Charts - only shown after onboarding complete */}
+          {isOnboardingComplete && (
+            <>
+              {/* Stats Cards */}
+              <Suspense
+                fallback={
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="bg-secondary neo-border-thick neo-shadow p-6 h-32 animate-pulse"
+                      />
+                    ))}
+                  </div>
+                }
+              >
+                <DashboardStats />
               </Suspense>
-            </ErrorBoundary>
 
-            {/* Recent Activity */}
-            <ErrorBoundary fallback={<DashboardRecentGainsError />}>
-              <Suspense fallback={<DashboardRecentGainsSkeleton />}>
-                <DashboardRecentGains />
-              </Suspense>
-            </ErrorBoundary>
-          </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                {/* Radar Chart */}
+                <ErrorBoundary fallback={<DashboardChartError />}>
+                  <Suspense fallback={<DashboardChartSkeleton />}>
+                    <DashboardChart />
+                  </Suspense>
+                </ErrorBoundary>
+
+                {/* Recent Activity */}
+                <ErrorBoundary fallback={<DashboardRecentGainsError />}>
+                  <Suspense fallback={<DashboardRecentGainsSkeleton />}>
+                    <DashboardRecentGains />
+                  </Suspense>
+                </ErrorBoundary>
+              </div>
+            </>
+          )}
 
           {/* Quick Actions */}
           <div className="bg-primary neo-border-thick neo-shadow p-8">

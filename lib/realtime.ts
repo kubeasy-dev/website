@@ -8,6 +8,7 @@ import { redis } from "./redis";
  * Events:
  * - validation.update: Emitted when a challenge objective is validated
  * - demo.started: Emitted when CLI starts the demo (kubeasy demo start)
+ * - onboarding.stepCompleted: Emitted when an onboarding step is completed
  */
 const schema = {
   validation: {
@@ -19,6 +20,17 @@ const schema = {
   },
   demo: {
     started: z.object({
+      timestamp: z.date(),
+    }),
+  },
+  onboarding: {
+    stepCompleted: z.object({
+      step: z.enum([
+        "cliAuthenticated",
+        "clusterInitialized",
+        "hasStartedChallenge",
+        "hasCompletedChallenge",
+      ]),
       timestamp: z.date(),
     }),
   },
