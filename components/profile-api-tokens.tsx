@@ -22,7 +22,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import { trackApiTokenCopied } from "@/lib/analytics";
+import { trackApiTokenCopied, trackApiTokenCreated } from "@/lib/analytics";
 import { authClient } from "@/lib/auth-client";
 
 export function ProfileApiTokens() {
@@ -61,6 +61,7 @@ export function ProfileApiTokens() {
       setNewlyCreatedToken(data.key);
       setShowNewTokenDialog(false);
       setNewTokenName("");
+      trackApiTokenCreated();
       refetch();
     },
     onError: (error) => {
