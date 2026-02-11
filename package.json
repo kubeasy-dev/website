@@ -75,7 +75,7 @@
     "@eslint/eslintrc": "3.3.3",
     "@tailwindcss/postcss": "4.1.18",
     "@tanstack/react-query-devtools": "5.91.3",
-    "@types/node": "24.10.11",
+    "@types/node": "24.10.12",
     "@types/react": "19.2.13",
     "@types/react-dom": "19.2.3",
     "@vitest/ui": "4.0.18",
@@ -94,7 +94,7 @@
     "typescript": "5.9.3",
     "vitest": "4.0.18"
   },
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@10.29.1",
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
       "biome check --write --unsafe --files-ignore-unknown=true --no-errors-on-unmatched"
