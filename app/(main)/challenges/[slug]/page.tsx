@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
 import { ArrowLeft, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -31,8 +30,7 @@ export async function generateStaticParams() {
     return challenges.map((challenge) => ({
       slug: challenge.slug,
     }));
-  } catch (error) {
-    Sentry.captureException(error);
+  } catch {
     // Fallback: no pre-generation, pages will be rendered on-demand
     return [];
   }

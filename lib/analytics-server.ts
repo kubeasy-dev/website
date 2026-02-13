@@ -219,6 +219,44 @@ export async function trackChallengeValidationFailedServer(
 }
 
 /**
+ * Capture an exception in PostHog Error Tracking (server-side)
+ * @param error - The error to capture
+ * @param distinctId - Optional user ID for attribution
+ * @param additionalProperties - Optional extra properties for context
+ */
+export async function captureServerException(
+  error: unknown,
+  distinctId?: string,
+  additionalProperties?: Record<string, unknown>,
+): Promise<void> {
+  if (!posthogClient) {
+    if (isDevelopment) {
+      console.debug(
+        "[PostHog Server] captureServerException - Not initialized",
+      );
+    }
+    return;
+  }
+
+  try {
+    posthogClient.captureException(error, distinctId, additionalProperties);
+    await posthogClient.flush();
+  } catch (captureError) {
+    console.error(
+      "[PostHog Server] captureServerException failed:",
+      captureError,
+    );
+  }
+}
+
+/**
+ * Get the PostHog server client instance (for instrumentation.ts)
+ */
+export function getPostHogClient(): PostHog | null {
+  return posthogClient;
+}
+
+/**
  * Shutdown PostHog client (call on server shutdown)
  */
 export async function shutdownPostHog() {

@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
@@ -32,8 +31,7 @@ export async function generateStaticParams() {
     return themes.map((theme) => ({
       slug: theme.slug,
     }));
-  } catch (error) {
-    Sentry.captureException(error);
+  } catch {
     // Fallback: no pre-generation, pages will be rendered on-demand
     return [];
   }

@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { captureServerException } from "@/lib/analytics-server";
 import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 import { isRedisConfigured } from "@/lib/redis";
 import {
@@ -8,8 +8,6 @@ import {
   markDemoCompleted,
 } from "@/server/demo-session";
 import type { ObjectiveResult } from "@/types/cli-api";
-
-const { logger } = Sentry;
 
 /**
  * Demo challenge objectives (hardcoded - no DB lookup)
@@ -27,18 +25,6 @@ const DEMO_OBJECTIVES = [
 /**
  * POST /api/demo/submit
  * Submits demo validation results
- *
- * Request body:
- * {
- *   token: string;
- *   results: ObjectiveResult[];
- * }
- *
- * Response:
- * {
- *   success: boolean;
- *   message?: string;
- * }
  */
 export async function POST(request: Request) {
   if (!isRedisConfigured) {
@@ -113,12 +99,6 @@ export async function POST(request: Request) {
     // Determine if all objectives passed
     const validated = results.every((r) => r.passed);
 
-    logger.info("Demo submission received", {
-      token,
-      validated,
-      resultsCount: results.length,
-    });
-
     // Broadcast validation updates via Upstash Realtime
     if (isRealtimeConfigured && realtime) {
       const channel = realtime.channel(`demo:${token}`);
@@ -134,7 +114,6 @@ export async function POST(request: Request) {
     // Mark demo as completed if validation passed
     if (validated) {
       await markDemoCompleted(token);
-      logger.info("Demo completed successfully", { token });
     }
 
     return NextResponse.json({
@@ -144,11 +123,8 @@ export async function POST(request: Request) {
         : "Validation failed. Make sure the nginx pod is running in the demo namespace.",
     });
   } catch (error) {
-    logger.error("Demo submission error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "demo.submit" },
+    captureServerException(error, undefined, {
+      operation: "demo.submit",
     });
     return NextResponse.json(
       { error: "Internal server error" },

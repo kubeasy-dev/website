@@ -1,37 +1,11 @@
-import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { captureServerException } from "@/lib/analytics-server";
 import { authenticateApiRequest, createApiCaller } from "@/lib/api-auth";
 import type { ObjectiveResult } from "@/types/cli-api";
-
-const { logger } = Sentry;
 
 /**
  * POST /api/cli/challenge/[slug]/submit
  * Submits a challenge with validation results from Kubernetes CRDs
- *
- * Authentication: Requires API token in Authorization header
- * Format: Bearer <token>
- *
- * Request body:
- * {
- *   results: ObjectiveResult[] // Raw results from validation CRDs
- * }
- *
- * Response (success):
- * {
- *   success: true,
- *   xpAwarded: number,
- *   totalXp: number,
- *   rank: string,
- *   rankUp?: boolean,
- *   firstChallenge?: boolean
- * }
- *
- * Response (failure):
- * {
- *   success: false,
- *   message: string
- * }
  */
 export async function POST(
   request: Request,
@@ -73,14 +47,6 @@ export async function POST(
       );
     }
 
-    const allPassed = results.every((r) => r.passed);
-    logger.info("Challenge submission received", {
-      slug,
-      allPassed,
-      resultsCount: results.length,
-      userId: auth.user.id,
-    });
-
     // Create tRPC caller with authenticated context
     const trpc = createApiCaller(auth.user, auth.session);
 
@@ -92,13 +58,9 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
-    logger.error("Challenge submission failed", {
+    captureServerException(error, auth.user.id, {
+      operation: "cli.challenge.submit",
       slug,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "cli.challenge.submit" },
-      contexts: { challenge: { slug } },
     });
     const message = error instanceof Error ? error.message : "Unknown error";
 

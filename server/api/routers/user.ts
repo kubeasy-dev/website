@@ -1,12 +1,10 @@
-import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
+import { captureServerException } from "@/lib/analytics-server";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import { userProgress, userXp, userXpTransaction } from "@/server/db/schema";
 import { user } from "@/server/db/schema/auth";
-
-const { logger } = Sentry;
 
 export const userRouter = createTRPCRouter({
   /**
@@ -36,25 +34,10 @@ export const userRouter = createTRPCRouter({
         // Invalidate user-related caches
         revalidateTag(`user-${userId}-profile`, "max");
 
-        logger.info("User name updated", {
-          userId,
-          firstName: input.firstName,
-          hasLastName: !!input.lastName,
-        });
-
         return { success: true, name: fullName };
       } catch (error) {
-        logger.error("Failed to update user name", {
-          userId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        Sentry.captureException(error, {
-          tags: { operation: "user.updateName" },
-          contexts: {
-            user: {
-              id: userId,
-            },
-          },
+        captureServerException(error, userId, {
+          operation: "user.updateName",
         });
         throw error;
       }
@@ -67,79 +50,32 @@ export const userRouter = createTRPCRouter({
   resetProgress: privateProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.user.id;
 
-    return Sentry.startSpan(
-      {
-        op: "user.resetProgress",
-        name: "Reset User Progress",
-      },
-      async (span) => {
-        span.setAttribute("userId", userId);
+    try {
+      // Delete all user progress (neon-http doesn't support transactions)
+      await ctx.db.delete(userProgress).where(eq(userProgress.userId, userId));
 
-        try {
-          // Get current stats before reset for logging
-          const [xpData] = await ctx.db
-            .select({ totalXp: userXp.totalXp })
-            .from(userXp)
-            .where(eq(userXp.userId, userId))
-            .limit(1);
+      // Delete all XP transactions
+      await ctx.db
+        .delete(userXpTransaction)
+        .where(eq(userXpTransaction.userId, userId));
 
-          const completedChallenges = await ctx.db
-            .select()
-            .from(userProgress)
-            .where(eq(userProgress.userId, userId));
+      // Delete user XP record
+      await ctx.db.delete(userXp).where(eq(userXp.userId, userId));
 
-          const completedCount = completedChallenges.length;
-          const currentXp = xpData?.totalXp ?? 0;
+      // Invalidate all user-related caches
+      revalidateTag(`user-${userId}-stats`, "max");
+      revalidateTag(`user-${userId}-progress`, "max");
+      revalidateTag(`user-${userId}-xp`, "max");
+      revalidateTag(`user-${userId}-streak`, "max");
 
-          // Delete all user progress (neon-http doesn't support transactions)
-          await ctx.db
-            .delete(userProgress)
-            .where(eq(userProgress.userId, userId));
-
-          // Delete all XP transactions
-          await ctx.db
-            .delete(userXpTransaction)
-            .where(eq(userXpTransaction.userId, userId));
-
-          // Delete user XP record
-          await ctx.db.delete(userXp).where(eq(userXp.userId, userId));
-
-          // Invalidate all user-related caches
-          revalidateTag(`user-${userId}-stats`, "max");
-          revalidateTag(`user-${userId}-progress`, "max");
-          revalidateTag(`user-${userId}-xp`, "max");
-          revalidateTag(`user-${userId}-streak`, "max");
-
-          logger.info("User progress reset", {
-            userId,
-            completedChallengesDeleted: completedCount,
-            xpDeleted: currentXp,
-          });
-
-          span.setAttribute("completedChallengesDeleted", completedCount);
-          span.setAttribute("xpDeleted", currentXp);
-
-          return {
-            success: true,
-            deletedChallenges: completedCount,
-            deletedXp: currentXp,
-          };
-        } catch (error) {
-          logger.error("Failed to reset user progress", {
-            userId,
-            error: error instanceof Error ? error.message : String(error),
-          });
-          Sentry.captureException(error, {
-            tags: { operation: "user.resetProgress" },
-            contexts: {
-              user: {
-                id: userId,
-              },
-            },
-          });
-          throw error;
-        }
-      },
-    );
+      return {
+        success: true,
+      };
+    } catch (error) {
+      captureServerException(error, userId, {
+        operation: "user.resetProgress",
+      });
+      throw error;
+    }
   }),
 });

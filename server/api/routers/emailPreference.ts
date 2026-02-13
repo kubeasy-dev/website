@@ -1,8 +1,8 @@
-import * as Sentry from "@sentry/nextjs";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { env } from "@/env";
+import { captureServerException } from "@/lib/analytics-server";
 import { getContactSubscriptions, updateContactTopics } from "@/lib/resend";
 import {
   createTRPCRouter,
@@ -11,8 +11,6 @@ import {
 } from "@/server/api/trpc";
 import { user } from "@/server/db/schema/auth";
 import { emailTopic } from "@/server/db/schema/email";
-
-const { logger } = Sentry;
 
 export const emailPreferenceRouter = createTRPCRouter({
   /**
@@ -67,17 +65,9 @@ export const emailPreferenceRouter = createTRPCRouter({
         subscribed: subMap.get(topic.resendTopicId) ?? topic.defaultOptIn,
       }));
     } catch (error) {
-      logger.error("Failed to fetch Resend subscriptions", {
-        userId: ctx.user.id,
+      captureServerException(error, ctx.user.id, {
+        operation: "emailPreference.listTopics",
         contactId: userData.resendContactId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      Sentry.captureException(error, {
-        tags: { operation: "emailPreference.listTopics" },
-        contexts: {
-          user: { id: ctx.user.id },
-          resend: { contactId: userData.resendContactId },
-        },
       });
       // Graceful degradation - return default status
       return topics.map((topic) => ({
@@ -107,10 +97,6 @@ export const emailPreferenceRouter = createTRPCRouter({
         .limit(1);
 
       if (!topic) {
-        logger.warn("Email topic not found", {
-          userId: ctx.user.id,
-          topicId: input.topicId,
-        });
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Email topic not found",
@@ -143,28 +129,12 @@ export const emailPreferenceRouter = createTRPCRouter({
           ],
         });
 
-        logger.info("Email subscription updated via Resend Topics", {
-          userId: ctx.user.id,
-          topicId: input.topicId,
-          resendTopicId: topic.resendTopicId,
-          topicName: topic.name,
-          subscribed: input.subscribed,
-        });
-
         return { success: true };
       } catch (error) {
-        logger.error("Failed to update Resend subscription", {
-          userId: ctx.user.id,
+        captureServerException(error, ctx.user.id, {
+          operation: "emailPreference.updateSubscription",
           topicId: input.topicId,
-          resendTopicId: topic.resendTopicId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        Sentry.captureException(error, {
-          tags: { operation: "emailPreference.updateSubscription" },
-          contexts: {
-            user: { id: ctx.user.id },
-            topic: { id: input.topicId, name: topic.name },
-          },
+          topicName: topic.name,
         });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

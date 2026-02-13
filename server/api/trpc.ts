@@ -7,11 +7,11 @@
  * need to use are documented accordingly near the end.
  */
 
-import * as Sentry from "@sentry/node";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { cache } from "react";
 import superjson from "superjson";
 import { ZodError, z } from "zod";
+import { captureServerException } from "@/lib/analytics-server";
 import { auth } from "@/lib/auth";
 import db from "@/server/db";
 
@@ -83,11 +83,16 @@ export const createCallerFactory = t.createCallerFactory;
  */
 export const createTRPCRouter = t.router;
 
-const sentryMiddleware = t.middleware(
-  Sentry.trpcMiddleware({
-    attachRpcInput: true,
-  }),
-);
+const errorMiddleware = t.middleware(async ({ path, type, next }) => {
+  const result = await next();
+  if (!result.ok) {
+    captureServerException(result.error, undefined, {
+      trpcPath: path,
+      trpcType: type,
+    });
+  }
+  return result;
+});
 
 /**
  * Public (unauthenticated) procedure
@@ -96,7 +101,7 @@ const sentryMiddleware = t.middleware(
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(sentryMiddleware);
+export const publicProcedure = t.procedure.use(errorMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -106,15 +111,8 @@ export const publicProcedure = t.procedure.use(sentryMiddleware);
  *
  * @see https://trpc.io/docs/procedures
  */
-const enforceUserIsAuthed = t.middleware(async ({ ctx, next, path }) => {
+const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   if (!ctx.user || !ctx.session) {
-    // Log unauthorized access attempts
-    const { logger } = Sentry;
-    logger.warn("Unauthorized access attempt", {
-      path,
-      hasUser: !!ctx.user,
-      hasSession: !!ctx.session,
-    });
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
@@ -127,15 +125,8 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next, path }) => {
   });
 });
 
-const enforceUserIsAdmin = t.middleware(async ({ ctx, next, path }) => {
+const enforceUserIsAdmin = t.middleware(async ({ ctx, next }) => {
   if (!ctx.user?.role || ctx.user.role !== "admin") {
-    // Log unauthorized access attempts
-    const { logger } = Sentry;
-    logger.warn("Unauthorized admin access attempt", {
-      path,
-      userId: ctx.user?.id || null,
-      userRole: ctx.user?.role || null,
-    });
     throw new TRPCError({ code: "FORBIDDEN", message: "Admin access only" });
   }
   return next();

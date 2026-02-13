@@ -5,8 +5,8 @@ import type {
   PartialBlockObjectResponse,
   RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import * as Sentry from "@sentry/nextjs";
 import { env } from "@/env";
+import { captureServerException } from "@/lib/analytics-server";
 import type {
   Author,
   BlogPost,
@@ -17,8 +17,6 @@ import type {
   RichTextItem,
   TableOfContentsItem,
 } from "@/types/blog";
-
-const { logger } = Sentry;
 
 // Check if Notion is configured
 export const isNotionConfigured = Boolean(
@@ -176,13 +174,9 @@ async function pageToPost(page: PageObjectResponse): Promise<BlogPost | null> {
       author,
     };
   } catch (error) {
-    logger.error("Failed to convert page to post", {
+    captureServerException(error, undefined, {
+      operation: "notion.pageToPost",
       pageId: page.id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "notion.pageToPost" },
-      contexts: { page: { id: page.id } },
     });
     return null;
   }
@@ -233,11 +227,7 @@ async function getAuthor(authorId: string): Promise<Author | null> {
       twitter,
       github,
     };
-  } catch (error) {
-    logger.error("Failed to get author", {
-      authorId,
-      error: error instanceof Error ? error.message : String(error),
-    });
+  } catch {
     return null;
   }
 }
@@ -422,13 +412,9 @@ async function fetchBlocks(pageId: string): Promise<NotionBlock[]> {
         : undefined;
     } while (cursor);
   } catch (error) {
-    logger.error("Failed to fetch blocks", {
+    captureServerException(error, undefined, {
+      operation: "notion.fetchBlocks",
       pageId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "notion.fetchBlocks" },
-      contexts: { page: { id: pageId } },
     });
   }
 
@@ -505,11 +491,8 @@ export async function getAllPosts(includeDrafts = false): Promise<BlogPost[]> {
 
     return posts;
   } catch (error) {
-    logger.error("Failed to get all posts", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "notion.getAllPosts" },
+    captureServerException(error, undefined, {
+      operation: "notion.getAllPosts",
     });
     return [];
   }
@@ -537,13 +520,9 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 
     return await pageToPost(page);
   } catch (error) {
-    logger.error("Failed to get post by slug", {
+    captureServerException(error, undefined, {
+      operation: "notion.getPostBySlug",
       slug,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "notion.getPostBySlug" },
-      contexts: { post: { slug } },
     });
     return null;
   }
@@ -601,13 +580,9 @@ export async function getPostsByCategory(
 
     return posts;
   } catch (error) {
-    logger.error("Failed to get posts by category", {
+    captureServerException(error, undefined, {
+      operation: "notion.getPostsByCategory",
       category,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "notion.getPostsByCategory" },
-      contexts: { query: { category } },
     });
     return [];
   }
@@ -651,11 +626,8 @@ export async function getAllCategories(
       count: categoryCountMap.get(opt.name) ?? 0,
     }));
   } catch (error) {
-    logger.error("Failed to get all categories", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "notion.getAllCategories" },
+    captureServerException(error, undefined, {
+      operation: "notion.getAllCategories",
     });
     return [];
   }

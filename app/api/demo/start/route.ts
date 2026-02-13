@@ -1,24 +1,12 @@
-import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { captureServerException } from "@/lib/analytics-server";
 import { isRealtimeConfigured, realtime } from "@/lib/realtime";
 import { isRedisConfigured } from "@/lib/redis";
 import { getDemoSession, isValidDemoToken } from "@/server/demo-session";
 
-const { logger } = Sentry;
-
 /**
  * POST /api/demo/start
  * Called by the CLI when `kubeasy demo start` completes successfully
- *
- * Request body:
- * {
- *   token: string;
- * }
- *
- * Response:
- * {
- *   success: boolean;
- * }
  */
 export async function POST(request: Request) {
   if (!isRedisConfigured) {
@@ -53,8 +41,6 @@ export async function POST(request: Request) {
       );
     }
 
-    logger.info("Demo started", { token });
-
     // Broadcast demo.started event via Upstash Realtime
     if (isRealtimeConfigured && realtime) {
       const channel = realtime.channel(`demo:${token}`);
@@ -65,11 +51,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Demo start error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "demo.start" },
+    captureServerException(error, undefined, {
+      operation: "demo.start",
     });
     return NextResponse.json(
       { error: "Internal server error" },

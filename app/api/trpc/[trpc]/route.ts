@@ -1,7 +1,7 @@
-import * as Sentry from "@sentry/nextjs";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { NextRequest } from "next/server";
 import { env } from "@/env";
+import { captureServerException } from "@/lib/analytics-server";
 import { appRouter } from "@/server/api/root";
 import { createTRPCContext } from "@/server/api/trpc";
 
@@ -32,10 +32,7 @@ const handler = (req: NextRequest) =>
           `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
         );
       }
-      // Always capture errors in Sentry (both dev and prod)
-      Sentry.captureException(error, {
-        extra: { path },
-      });
+      captureServerException(error, undefined, { trpcPath: path });
     },
   });
 

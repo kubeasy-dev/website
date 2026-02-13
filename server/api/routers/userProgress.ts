@@ -1,9 +1,9 @@
-import * as Sentry from "@sentry/nextjs";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import {
+  captureServerException,
   trackChallengeCompletedServer,
   trackChallengeStartedServer,
   trackChallengeValidationFailedServer,
@@ -23,8 +23,6 @@ import {
   calculateStreak,
   calculateXPGain,
 } from "@/server/services/xp";
-
-const { logger } = Sentry;
 
 export const userProgressRouter = createTRPCRouter({
   // Get completion percentage
@@ -171,228 +169,155 @@ export const userProgressRouter = createTRPCRouter({
       const userId = ctx.user.id;
       const { challengeId } = input;
 
-      return Sentry.startSpan(
-        {
-          op: "challenge.complete",
-          name: "Complete Challenge",
-        },
-        async (span) => {
-          span.setAttribute("userId", userId);
-          span.setAttribute("challengeId", challengeId);
+      // Check if challenge exists and get its difficulty
+      const [challengeData] = await ctx.db
+        .select({
+          id: challenge.id,
+          difficulty: challenge.difficulty,
+        })
+        .from(challenge)
+        .where(eq(challenge.id, challengeId));
 
-          // Check if challenge exists and get its difficulty
-          const [challengeData] = await ctx.db
-            .select({
-              id: challenge.id,
-              difficulty: challenge.difficulty,
+      if (!challengeData) {
+        throw new Error("Challenge not found");
+      }
+
+      // Check if user already completed this challenge
+      const [existingProgress] = await ctx.db
+        .select()
+        .from(userProgress)
+        .where(
+          and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.challengeId, challengeId),
+          ),
+        );
+
+      if (existingProgress?.status === "completed") {
+        throw new Error("Challenge already completed");
+      }
+
+      // Check if this is the user's first challenge
+      const [completedCount] = await ctx.db
+        .select({ count: count() })
+        .from(userProgress)
+        .where(
+          and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.status, "completed"),
+          ),
+        );
+
+      const isFirstChallenge = (completedCount?.count ?? 0) === 0;
+
+      // Get current streak to calculate streak bonus
+      const currentStreak = await calculateStreak(userId);
+
+      // Calculate XP using XP service
+      const xpGain = calculateXPGain({
+        difficulty: challengeData.difficulty,
+        isFirstChallenge,
+        currentStreak,
+      });
+
+      try {
+        // Update or create user progress
+        if (existingProgress) {
+          await ctx.db
+            .update(userProgress)
+            .set({
+              status: "completed",
+              completedAt: new Date(),
+              updatedAt: new Date(),
             })
-            .from(challenge)
-            .where(eq(challenge.id, challengeId));
-
-          if (!challengeData) {
-            logger.warn("Challenge not found", { challengeId, userId });
-            throw new Error("Challenge not found");
-          }
-
-          span.setAttribute("difficulty", challengeData.difficulty);
-
-          // Check if user already completed this challenge
-          const [existingProgress] = await ctx.db
-            .select()
-            .from(userProgress)
-            .where(
-              and(
-                eq(userProgress.userId, userId),
-                eq(userProgress.challengeId, challengeId),
-              ),
-            );
-
-          if (existingProgress?.status === "completed") {
-            logger.warn("Challenge already completed", {
-              challengeId,
-              userId,
-              completedAt: existingProgress.completedAt,
-            });
-            throw new Error("Challenge already completed");
-          }
-
-          // Check if this is the user's first challenge
-          const [completedCount] = await ctx.db
-            .select({ count: count() })
-            .from(userProgress)
-            .where(
-              and(
-                eq(userProgress.userId, userId),
-                eq(userProgress.status, "completed"),
-              ),
-            );
-
-          const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-
-          // Get current streak to calculate streak bonus
-          const currentStreak = await calculateStreak(userId);
-
-          // Calculate XP using XP service
-          const xpGain = calculateXPGain({
-            difficulty: challengeData.difficulty,
-            isFirstChallenge,
-            currentStreak,
+            .where(eq(userProgress.id, existingProgress.id));
+        } else {
+          await ctx.db.insert(userProgress).values({
+            id: nanoid(),
+            userId,
+            challengeId,
+            status: "completed",
+            completedAt: new Date(),
           });
+        }
 
-          span.setAttribute("baseXp", xpGain.baseXP);
-          span.setAttribute("firstChallengeBonus", xpGain.firstChallengeBonus);
-          span.setAttribute("streakBonus", xpGain.streakBonus);
-          span.setAttribute("totalXp", xpGain.total);
-          span.setAttribute("isFirstChallenge", isFirstChallenge);
-          span.setAttribute("currentStreak", currentStreak);
+        // Get old rank before XP update
+        const _oldRankInfo = await calculateLevel(userId);
 
-          try {
-            // Update or create user progress
-            if (existingProgress) {
-              await ctx.db
-                .update(userProgress)
-                .set({
-                  status: "completed",
-                  completedAt: new Date(),
-                  updatedAt: new Date(),
-                })
-                .where(eq(userProgress.id, existingProgress.id));
-            } else {
-              await ctx.db.insert(userProgress).values({
-                id: nanoid(),
-                userId,
-                challengeId,
-                status: "completed",
-                completedAt: new Date(),
-              });
-            }
+        // Check if user has XP record (still used for backward compatibility)
+        const [existingXp] = await ctx.db
+          .select()
+          .from(userXp)
+          .where(eq(userXp.userId, userId));
 
-            // Get old rank before XP update
-            const oldRankInfo = await calculateLevel(userId);
+        const oldXp = existingXp?.totalXp ?? 0;
+        const newXp = oldXp + xpGain.total;
 
-            // Check if user has XP record (still used for backward compatibility)
-            const [existingXp] = await ctx.db
-              .select()
-              .from(userXp)
-              .where(eq(userXp.userId, userId));
+        if (existingXp) {
+          // Update existing XP
+          await ctx.db
+            .update(userXp)
+            .set({
+              totalXp: newXp,
+              updatedAt: new Date(),
+            })
+            .where(eq(userXp.userId, userId));
+        } else {
+          // Create new XP record
+          await ctx.db.insert(userXp).values({
+            userId,
+            totalXp: xpGain.total,
+          });
+        }
 
-            const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + xpGain.total;
+        // Record base XP transaction
+        await ctx.db.insert(userXpTransaction).values({
+          userId,
+          action: "challenge_completed",
+          xpAmount: xpGain.baseXP,
+          challengeId,
+          description: `Completed ${challengeData.difficulty} challenge`,
+        });
 
-            if (existingXp) {
-              // Update existing XP
-              await ctx.db
-                .update(userXp)
-                .set({
-                  totalXp: newXp,
-                  updatedAt: new Date(),
-                })
-                .where(eq(userXp.userId, userId));
-            } else {
-              // Create new XP record
-              await ctx.db.insert(userXp).values({
-                userId,
-                totalXp: xpGain.total,
-              });
-            }
+        // Record first challenge bonus transaction if applicable
+        if (xpGain.firstChallengeBonus > 0) {
+          await ctx.db.insert(userXpTransaction).values({
+            userId,
+            action: "first_challenge",
+            xpAmount: xpGain.firstChallengeBonus,
+            challengeId,
+            description: "First challenge bonus",
+          });
+        }
 
-            // Record base XP transaction
-            await ctx.db.insert(userXpTransaction).values({
-              userId,
-              action: "challenge_completed",
-              xpAmount: xpGain.baseXP,
-              challengeId,
-              description: `Completed ${challengeData.difficulty} challenge`,
-            });
+        // Record streak bonus transaction if applicable
+        if (xpGain.streakBonus > 0) {
+          await ctx.db.insert(userXpTransaction).values({
+            userId,
+            action: "daily_streak",
+            xpAmount: xpGain.streakBonus,
+            challengeId,
+            description: `${currentStreak} day streak bonus`,
+          });
+        }
 
-            // Record first challenge bonus transaction if applicable
-            if (xpGain.firstChallengeBonus > 0) {
-              await ctx.db.insert(userXpTransaction).values({
-                userId,
-                action: "first_challenge",
-                xpAmount: xpGain.firstChallengeBonus,
-                challengeId,
-                description: "First challenge bonus",
-              });
-
-              logger.info("First challenge completed", {
-                userId,
-                challengeId,
-                totalXp: xpGain.total,
-                baseXp: xpGain.baseXP,
-                bonusXp: xpGain.firstChallengeBonus,
-              });
-            }
-
-            // Record streak bonus transaction if applicable
-            if (xpGain.streakBonus > 0) {
-              await ctx.db.insert(userXpTransaction).values({
-                userId,
-                action: "daily_streak",
-                xpAmount: xpGain.streakBonus,
-                challengeId,
-                description: `${currentStreak} day streak bonus`,
-              });
-            }
-
-            // Get new rank after XP update
-            const newRankInfo = await calculateLevel(userId);
-
-            // Log rank upgrade if applicable
-            if (oldRankInfo.name !== newRankInfo.name) {
-              logger.info("User rank upgraded", {
-                userId,
-                oldRank: oldRankInfo.name,
-                newRank: newRankInfo.name,
-                oldXp,
-                newXp,
-                challengeId,
-              });
-            }
-
-            logger.info("Challenge completed successfully", {
-              userId,
-              challengeId,
-              difficulty: challengeData.difficulty,
-              xpAwarded: xpGain.total,
-              baseXp: xpGain.baseXP,
-              firstChallengeBonus: xpGain.firstChallengeBonus,
-              streakBonus: xpGain.streakBonus,
-              currentStreak,
-              isFirstChallenge,
-            });
-
-            return {
-              success: true,
-              xpAwarded: xpGain.total,
-              baseXp: xpGain.baseXP,
-              bonusXp: xpGain.firstChallengeBonus + xpGain.streakBonus,
-              streakBonus: xpGain.streakBonus,
-              currentStreak,
-              isFirstChallenge,
-            };
-          } catch (error) {
-            logger.error("Failed to complete challenge", {
-              userId,
-              challengeId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "challenge.complete" },
-              contexts: {
-                challenge: {
-                  id: challengeId,
-                  difficulty: challengeData.difficulty,
-                },
-                user: {
-                  id: userId,
-                },
-              },
-            });
-            throw error;
-          }
-        },
-      );
+        return {
+          success: true,
+          xpAwarded: xpGain.total,
+          baseXp: xpGain.baseXP,
+          bonusXp: xpGain.firstChallengeBonus + xpGain.streakBonus,
+          streakBonus: xpGain.streakBonus,
+          currentStreak,
+          isFirstChallenge,
+        };
+      } catch (error) {
+        captureServerException(error, userId, {
+          operation: "challenge.complete",
+          challengeId,
+          difficulty: challengeData.difficulty,
+        });
+        throw error;
+      }
     }),
 
   // Get challenge status for CLI
@@ -489,10 +414,6 @@ export const userProgressRouter = createTRPCRouter({
       if (existingProgress) {
         // Already completed
         if (existingProgress.status === "completed") {
-          logger.info("Challenge already completed", {
-            userId,
-            challengeId: challengeData.id,
-          });
           return {
             status: existingProgress.status,
             startedAt: existingProgress.startedAt,
@@ -509,12 +430,6 @@ export const userProgressRouter = createTRPCRouter({
               startedAt: now,
             })
             .where(eq(userProgress.id, existingProgress.id));
-
-          logger.info("Challenge status updated to in_progress", {
-            userId,
-            challengeId: challengeData.id,
-            challengeTitle: challengeData.title,
-          });
 
           // Track challenge started event in PostHog
           await trackChallengeStartedServer(
@@ -538,12 +453,6 @@ export const userProgressRouter = createTRPCRouter({
         challengeId: challengeData.id,
         status: "in_progress",
         startedAt: now,
-      });
-
-      logger.info("Challenge started", {
-        userId,
-        challengeId: challengeData.id,
-        challengeTitle: challengeData.title,
       });
 
       // Track challenge started event in PostHog
@@ -580,376 +489,290 @@ export const userProgressRouter = createTRPCRouter({
       const userId = ctx.user.id;
       const { challengeSlug, results } = input;
 
-      return Sentry.startSpan(
-        {
-          op: "challenge.submit",
-          name: "Submit Challenge",
-        },
-        async (span) => {
-          span.setAttribute("userId", userId);
-          span.setAttribute("challengeSlug", challengeSlug);
+      // Find challenge by slug
+      const [challengeData] = await ctx.db
+        .select({
+          id: challenge.id,
+          title: challenge.title,
+          difficulty: challenge.difficulty,
+        })
+        .from(challenge)
+        .where(eq(challenge.slug, challengeSlug))
+        .limit(1);
 
-          // Find challenge by slug
-          const [challengeData] = await ctx.db
-            .select({
-              id: challenge.id,
-              title: challenge.title,
-              difficulty: challenge.difficulty,
-            })
-            .from(challenge)
-            .where(eq(challenge.slug, challengeSlug))
-            .limit(1);
+      if (!challengeData) {
+        throw new Error("Challenge not found");
+      }
 
-          if (!challengeData) {
-            logger.warn("Challenge not found", { challengeSlug, userId });
-            throw new Error("Challenge not found");
-          }
+      // Check if already completed
+      const [existingProgress] = await ctx.db
+        .select({
+          id: userProgress.id,
+          status: userProgress.status,
+          completedAt: userProgress.completedAt,
+        })
+        .from(userProgress)
+        .where(
+          and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.challengeId, challengeData.id),
+          ),
+        )
+        .limit(1);
 
-          span.setAttribute("challengeId", challengeData.id);
+      if (existingProgress?.status === "completed") {
+        throw new Error("Challenge already completed");
+      }
 
-          // Check if already completed
-          const [existingProgress] = await ctx.db
-            .select({
-              id: userProgress.id,
-              status: userProgress.status,
-              completedAt: userProgress.completedAt,
-            })
-            .from(userProgress)
-            .where(
-              and(
-                eq(userProgress.userId, userId),
-                eq(userProgress.challengeId, challengeData.id),
-              ),
-            )
-            .limit(1);
+      // Fetch objective metadata from challengeObjective table
+      const objectiveMetadata = await ctx.db
+        .select({
+          objectiveKey: challengeObjective.objectiveKey,
+          title: challengeObjective.title,
+          description: challengeObjective.description,
+          category: challengeObjective.category,
+        })
+        .from(challengeObjective)
+        .where(eq(challengeObjective.challengeId, challengeData.id));
 
-          if (existingProgress?.status === "completed") {
-            logger.warn("Challenge already completed", {
-              userId,
-              challengeId: challengeData.id,
-              completedAt: existingProgress.completedAt,
-            });
-            throw new Error("Challenge already completed");
-          }
+      // Create a map for quick lookup
+      const metadataMap = new Map(
+        objectiveMetadata.map((m) => [m.objectiveKey, m]),
+      );
 
-          // Fetch objective metadata from challengeObjective table
-          const objectiveMetadata = await ctx.db
-            .select({
-              objectiveKey: challengeObjective.objectiveKey,
-              title: challengeObjective.title,
-              description: challengeObjective.description,
-              category: challengeObjective.category,
-            })
-            .from(challengeObjective)
-            .where(eq(challengeObjective.challengeId, challengeData.id));
+      // Security validation: ensure ALL registered objectives are present in the submission
+      const expectedKeys = new Set(
+        objectiveMetadata.map((m) => m.objectiveKey),
+      );
+      const submittedKeys = new Set(results.map((r) => r.objectiveKey));
 
-          // Create a map for quick lookup
-          const metadataMap = new Map(
-            objectiveMetadata.map((m) => [m.objectiveKey, m]),
-          );
+      // Check for missing objectives (objectives in DB but not in submission)
+      const missingKeys = [...expectedKeys].filter(
+        (key) => !submittedKeys.has(key),
+      );
+      if (missingKeys.length > 0) {
+        throw new Error(
+          `Missing required objectives: ${missingKeys.join(", ")}`,
+        );
+      }
 
-          // Security validation: ensure ALL registered objectives are present in the submission
-          const expectedKeys = new Set(
-            objectiveMetadata.map((m) => m.objectiveKey),
-          );
-          const submittedKeys = new Set(results.map((r) => r.objectiveKey));
+      // Check for unknown objectives (objectives in submission but not in DB)
+      const unknownKeys = [...submittedKeys].filter(
+        (key) => !expectedKeys.has(key),
+      );
+      if (unknownKeys.length > 0) {
+        throw new Error(
+          `Unknown objectives submitted: ${unknownKeys.join(", ")}`,
+        );
+      }
 
-          // Check for missing objectives (objectives in DB but not in submission)
-          const missingKeys = [...expectedKeys].filter(
-            (key) => !submittedKeys.has(key),
-          );
-          if (missingKeys.length > 0) {
-            logger.warn("Submission missing required objectives", {
-              userId,
-              challengeId: challengeData.id,
-              missingKeys,
-            });
-            throw new Error(
-              `Missing required objectives: ${missingKeys.join(", ")}`,
-            );
-          }
+      // Enrich results with metadata and build objectives array for storage
+      const objectives = results.map((result) => {
+        const metadata = metadataMap.get(result.objectiveKey);
+        return {
+          id: result.objectiveKey,
+          name: metadata?.title ?? result.objectiveKey,
+          description: metadata?.description,
+          passed: result.passed,
+          category: metadata?.category ?? "status",
+          message: result.message ?? "",
+        };
+      });
 
-          // Check for unknown objectives (objectives in submission but not in DB)
-          const unknownKeys = [...submittedKeys].filter(
-            (key) => !expectedKeys.has(key),
-          );
-          if (unknownKeys.length > 0) {
-            logger.warn("Submission contains unknown objectives", {
-              userId,
-              challengeId: challengeData.id,
-              unknownKeys,
-            });
-            throw new Error(
-              `Unknown objectives submitted: ${unknownKeys.join(", ")}`,
-            );
-          }
+      // Determine if all objectives passed
+      const validated = results.every((r) => r.passed);
 
-          // Enrich results with metadata and build objectives array for storage
-          const objectives = results.map((result) => {
-            const metadata = metadataMap.get(result.objectiveKey);
-            return {
-              id: result.objectiveKey,
-              name: metadata?.title ?? result.objectiveKey,
-              description: metadata?.description,
-              passed: result.passed,
-              category: metadata?.category ?? "status",
-              message: result.message ?? "",
-            };
+      // Always store the submission (even if validation failed)
+      await ctx.db.insert(userSubmission).values({
+        id: nanoid(),
+        userId,
+        challengeId: challengeData.id,
+        validated,
+        objectives,
+      });
+
+      // Publish validation events to Upstash Realtime for real-time updates
+      if (isRealtimeConfigured && realtime) {
+        const channel = realtime.channel(`${userId}:${challengeSlug}`);
+        for (const result of results) {
+          await channel.emit("validation.update", {
+            objectiveKey: result.objectiveKey,
+            passed: result.passed,
+            timestamp: new Date(),
           });
+        }
+      }
 
-          // Determine if all objectives passed
-          const validated = results.every((r) => r.passed);
-          span.setAttribute("validated", validated);
+      // If validation failed, return with failed objectives info
+      if (!validated) {
+        const failedObjectives = objectives.filter((obj) => !obj.passed);
 
-          // Always store the submission (even if validation failed)
-          await ctx.db.insert(userSubmission).values({
+        // Track validation failure in PostHog
+        await trackChallengeValidationFailedServer(
+          userId,
+          challengeData.id,
+          challengeSlug,
+          failedObjectives.length,
+          failedObjectives.map((obj) => obj.id),
+        );
+
+        return {
+          success: false,
+          message: "Validation failed",
+          failedObjectives: failedObjectives.map((obj) => ({
+            id: obj.id,
+            name: obj.name,
+            message: obj.message,
+          })),
+        };
+      }
+
+      // Validation passed - calculate XP using XP service
+      // Check if this is the user's first challenge
+      const [completedCount] = await ctx.db
+        .select({ count: count() })
+        .from(userProgress)
+        .where(
+          and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.status, "completed"),
+          ),
+        );
+
+      const isFirstChallenge = (completedCount?.count ?? 0) === 0;
+
+      // Get current streak to calculate streak bonus
+      const currentStreak = await calculateStreak(userId);
+
+      // Calculate XP using XP service
+      const xpGain = calculateXPGain({
+        difficulty: challengeData.difficulty,
+        isFirstChallenge,
+        currentStreak,
+      });
+
+      try {
+        // Update or create user progress
+        if (existingProgress) {
+          await ctx.db
+            .update(userProgress)
+            .set({
+              status: "completed",
+              completedAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(userProgress.id, existingProgress.id));
+        } else {
+          await ctx.db.insert(userProgress).values({
             id: nanoid(),
             userId,
             challengeId: challengeData.id,
-            validated,
-            objectives,
+            status: "completed",
+            completedAt: new Date(),
           });
+        }
 
-          // Publish validation events to Upstash Realtime for real-time updates
-          if (isRealtimeConfigured && realtime) {
-            const channel = realtime.channel(`${userId}:${challengeSlug}`);
-            for (const result of results) {
-              await channel.emit("validation.update", {
-                objectiveKey: result.objectiveKey,
-                passed: result.passed,
-                timestamp: new Date(),
-              });
-            }
-          }
+        // Submission details were already stored before validation check
 
-          // If validation failed, return with failed objectives info
-          if (!validated) {
-            const failedObjectives = objectives.filter((obj) => !obj.passed);
-            logger.info("Challenge validation failed", {
-              userId,
-              challengeId: challengeData.id,
-              failedObjectives: failedObjectives.map((obj) => obj.id),
-            });
+        // Get old rank before XP update
+        const oldRankInfo = await calculateLevel(userId);
 
-            // Track validation failure in PostHog
-            await trackChallengeValidationFailedServer(
-              userId,
-              challengeData.id,
-              challengeSlug,
-              failedObjectives.length,
-              failedObjectives.map((obj) => obj.id),
-            );
+        // Check if user has XP record (still used for backward compatibility)
+        const [existingXp] = await ctx.db
+          .select()
+          .from(userXp)
+          .where(eq(userXp.userId, userId));
 
-            return {
-              success: false,
-              message: "Validation failed",
-              failedObjectives: failedObjectives.map((obj) => ({
-                id: obj.id,
-                name: obj.name,
-                message: obj.message,
-              })),
-            };
-          }
+        const oldXp = existingXp?.totalXp ?? 0;
+        const newXp = oldXp + xpGain.total;
 
-          // Validation passed - calculate XP using XP service
-          // Check if this is the user's first challenge
-          const [completedCount] = await ctx.db
-            .select({ count: count() })
-            .from(userProgress)
-            .where(
-              and(
-                eq(userProgress.userId, userId),
-                eq(userProgress.status, "completed"),
-              ),
-            );
-
-          const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-
-          // Get current streak to calculate streak bonus
-          const currentStreak = await calculateStreak(userId);
-
-          // Calculate XP using XP service
-          const xpGain = calculateXPGain({
-            difficulty: challengeData.difficulty,
-            isFirstChallenge,
-            currentStreak,
-          });
-
-          span.setAttribute("baseXp", xpGain.baseXP);
-          span.setAttribute("firstChallengeBonus", xpGain.firstChallengeBonus);
-          span.setAttribute("streakBonus", xpGain.streakBonus);
-          span.setAttribute("totalXp", xpGain.total);
-          span.setAttribute("isFirstChallenge", isFirstChallenge);
-          span.setAttribute("currentStreak", currentStreak);
-
-          try {
-            // Update or create user progress
-            if (existingProgress) {
-              await ctx.db
-                .update(userProgress)
-                .set({
-                  status: "completed",
-                  completedAt: new Date(),
-                  updatedAt: new Date(),
-                })
-                .where(eq(userProgress.id, existingProgress.id));
-            } else {
-              await ctx.db.insert(userProgress).values({
-                id: nanoid(),
-                userId,
-                challengeId: challengeData.id,
-                status: "completed",
-                completedAt: new Date(),
-              });
-            }
-
-            // Submission details were already stored before validation check
-
-            // Get old rank before XP update
-            const oldRankInfo = await calculateLevel(userId);
-
-            // Check if user has XP record (still used for backward compatibility)
-            const [existingXp] = await ctx.db
-              .select()
-              .from(userXp)
-              .where(eq(userXp.userId, userId));
-
-            const oldXp = existingXp?.totalXp ?? 0;
-            const newXp = oldXp + xpGain.total;
-
-            if (existingXp) {
-              // Update existing XP
-              await ctx.db
-                .update(userXp)
-                .set({
-                  totalXp: newXp,
-                  updatedAt: new Date(),
-                })
-                .where(eq(userXp.userId, userId));
-            } else {
-              // Create new XP record
-              await ctx.db.insert(userXp).values({
-                userId,
-                totalXp: xpGain.total,
-              });
-            }
-
-            // Record base XP transaction
-            await ctx.db.insert(userXpTransaction).values({
-              userId,
-              action: "challenge_completed",
-              xpAmount: xpGain.baseXP,
-              challengeId: challengeData.id,
-              description: `Completed ${challengeData.difficulty} challenge`,
-            });
-
-            // Record first challenge bonus transaction if applicable
-            if (xpGain.firstChallengeBonus > 0) {
-              await ctx.db.insert(userXpTransaction).values({
-                userId,
-                action: "first_challenge",
-                xpAmount: xpGain.firstChallengeBonus,
-                challengeId: challengeData.id,
-                description: "First challenge bonus",
-              });
-
-              logger.info("First challenge completed", {
-                userId,
-                challengeId: challengeData.id,
-                totalXp: xpGain.total,
-                baseXp: xpGain.baseXP,
-                bonusXp: xpGain.firstChallengeBonus,
-              });
-            }
-
-            // Record streak bonus transaction if applicable
-            if (xpGain.streakBonus > 0) {
-              await ctx.db.insert(userXpTransaction).values({
-                userId,
-                action: "daily_streak",
-                xpAmount: xpGain.streakBonus,
-                challengeId: challengeData.id,
-                description: `${currentStreak} day streak bonus`,
-              });
-            }
-
-            // Get new rank after XP update
-            const newRankInfo = await calculateLevel(userId);
-
-            // Log rank upgrade
-            if (oldRankInfo.name !== newRankInfo.name) {
-              logger.info("User rank upgraded", {
-                userId,
-                oldRank: oldRankInfo.name,
-                newRank: newRankInfo.name,
-                oldXp,
-                newXp,
-                challengeId: challengeData.id,
-              });
-            }
-
-            logger.info("Challenge completed successfully", {
-              userId,
-              challengeId: challengeData.id,
-              difficulty: challengeData.difficulty,
-              xpAwarded: xpGain.total,
-              baseXp: xpGain.baseXP,
-              firstChallengeBonus: xpGain.firstChallengeBonus,
-              streakBonus: xpGain.streakBonus,
-              currentStreak,
-              isFirstChallenge,
-            });
-
-            // Track challenge completed event in PostHog
-            await trackChallengeCompletedServer(
-              userId,
-              challengeData.id,
-              challengeSlug,
-              challengeData.difficulty,
-              xpGain.total,
-              isFirstChallenge,
-            );
-
-            // Invalidate caches after successful completion
-            revalidateTag(`user-${userId}-stats`, "max");
-            revalidateTag(`user-${userId}-progress`, "max");
-            revalidateTag(`user-${userId}-xp`, "max");
-            revalidateTag(`user-${userId}-streak`, "max");
-            revalidateTag(`challenge-${challengeSlug}`, "max");
-            revalidateTag("challenges", "max");
-
-            return {
-              success: true,
-              xpAwarded: xpGain.total,
+        if (existingXp) {
+          // Update existing XP
+          await ctx.db
+            .update(userXp)
+            .set({
               totalXp: newXp,
-              rank: newRankInfo.name,
-              rankUp: oldRankInfo.name !== newRankInfo.name,
-              firstChallenge: isFirstChallenge,
-              streakBonus: xpGain.streakBonus,
-              currentStreak,
-            };
-          } catch (error) {
-            logger.error("Failed to complete challenge", {
-              userId,
-              challengeId: challengeData.id,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "challenge.submit" },
-              contexts: {
-                challenge: {
-                  id: challengeData.id,
-                  difficulty: challengeData.difficulty,
-                },
-                user: {
-                  id: userId,
-                },
-              },
-            });
-            throw error;
-          }
-        },
-      );
+              updatedAt: new Date(),
+            })
+            .where(eq(userXp.userId, userId));
+        } else {
+          // Create new XP record
+          await ctx.db.insert(userXp).values({
+            userId,
+            totalXp: xpGain.total,
+          });
+        }
+
+        // Record base XP transaction
+        await ctx.db.insert(userXpTransaction).values({
+          userId,
+          action: "challenge_completed",
+          xpAmount: xpGain.baseXP,
+          challengeId: challengeData.id,
+          description: `Completed ${challengeData.difficulty} challenge`,
+        });
+
+        // Record first challenge bonus transaction if applicable
+        if (xpGain.firstChallengeBonus > 0) {
+          await ctx.db.insert(userXpTransaction).values({
+            userId,
+            action: "first_challenge",
+            xpAmount: xpGain.firstChallengeBonus,
+            challengeId: challengeData.id,
+            description: "First challenge bonus",
+          });
+        }
+
+        // Record streak bonus transaction if applicable
+        if (xpGain.streakBonus > 0) {
+          await ctx.db.insert(userXpTransaction).values({
+            userId,
+            action: "daily_streak",
+            xpAmount: xpGain.streakBonus,
+            challengeId: challengeData.id,
+            description: `${currentStreak} day streak bonus`,
+          });
+        }
+
+        // Get new rank after XP update
+        const newRankInfo = await calculateLevel(userId);
+
+        // Track challenge completed event in PostHog
+        await trackChallengeCompletedServer(
+          userId,
+          challengeData.id,
+          challengeSlug,
+          challengeData.difficulty,
+          xpGain.total,
+          isFirstChallenge,
+        );
+
+        // Invalidate caches after successful completion
+        revalidateTag(`user-${userId}-stats`, "max");
+        revalidateTag(`user-${userId}-progress`, "max");
+        revalidateTag(`user-${userId}-xp`, "max");
+        revalidateTag(`user-${userId}-streak`, "max");
+        revalidateTag(`challenge-${challengeSlug}`, "max");
+        revalidateTag("challenges", "max");
+
+        return {
+          success: true,
+          xpAwarded: xpGain.total,
+          totalXp: newXp,
+          rank: newRankInfo.name,
+          rankUp: oldRankInfo.name !== newRankInfo.name,
+          firstChallenge: isFirstChallenge,
+          streakBonus: xpGain.streakBonus,
+          currentStreak,
+        };
+      } catch (error) {
+        captureServerException(error, userId, {
+          operation: "challenge.submit",
+          challengeId: challengeData.id,
+          difficulty: challengeData.difficulty,
+        });
+        throw error;
+      }
     }),
 
   // Reset challenge progress for CLI
@@ -963,84 +786,52 @@ export const userProgressRouter = createTRPCRouter({
       const userId = ctx.user.id;
       const { challengeSlug } = input;
 
-      return Sentry.startSpan(
-        {
-          op: "challenge.reset",
-          name: "Reset Challenge Progress",
-        },
-        async (span) => {
-          span.setAttribute("userId", userId);
-          span.setAttribute("challengeSlug", challengeSlug);
+      // Find challenge by slug
+      const [challengeData] = await ctx.db
+        .select({
+          id: challenge.id,
+          title: challenge.title,
+        })
+        .from(challenge)
+        .where(eq(challenge.slug, challengeSlug))
+        .limit(1);
 
-          // Find challenge by slug
-          const [challengeData] = await ctx.db
-            .select({
-              id: challenge.id,
-              title: challenge.title,
-            })
-            .from(challenge)
-            .where(eq(challenge.slug, challengeSlug))
-            .limit(1);
+      if (!challengeData) {
+        throw new Error("Challenge not found");
+      }
 
-          if (!challengeData) {
-            logger.warn("Challenge not found", { challengeSlug, userId });
-            throw new Error("Challenge not found");
-          }
+      try {
+        // Delete user progress
+        await ctx.db
+          .delete(userProgress)
+          .where(
+            and(
+              eq(userProgress.userId, userId),
+              eq(userProgress.challengeId, challengeData.id),
+            ),
+          );
 
-          span.setAttribute("challengeId", challengeData.id);
+        // Delete user submissions for this challenge
+        await ctx.db
+          .delete(userSubmission)
+          .where(
+            and(
+              eq(userSubmission.userId, userId),
+              eq(userSubmission.challengeId, challengeData.id),
+            ),
+          );
 
-          try {
-            // Delete user progress
-            await ctx.db
-              .delete(userProgress)
-              .where(
-                and(
-                  eq(userProgress.userId, userId),
-                  eq(userProgress.challengeId, challengeData.id),
-                ),
-              );
-
-            // Delete user submissions for this challenge
-            await ctx.db
-              .delete(userSubmission)
-              .where(
-                and(
-                  eq(userSubmission.userId, userId),
-                  eq(userSubmission.challengeId, challengeData.id),
-                ),
-              );
-
-            logger.info("Challenge progress reset", {
-              userId,
-              challengeId: challengeData.id,
-              challengeTitle: challengeData.title,
-            });
-
-            return {
-              success: true,
-              message: "Challenge progress reset successfully",
-            };
-          } catch (error) {
-            logger.error("Failed to reset challenge progress", {
-              userId,
-              challengeId: challengeData.id,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "challenge.reset" },
-              contexts: {
-                challenge: {
-                  id: challengeData.id,
-                },
-                user: {
-                  id: userId,
-                },
-              },
-            });
-            throw error;
-          }
-        },
-      );
+        return {
+          success: true,
+          message: "Challenge progress reset successfully",
+        };
+      } catch (error) {
+        captureServerException(error, userId, {
+          operation: "challenge.reset",
+          challengeId: challengeData.id,
+        });
+        throw error;
+      }
     }),
 
   /**

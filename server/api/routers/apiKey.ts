@@ -1,13 +1,13 @@
-import * as Sentry from "@sentry/nextjs";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { trackApiTokenCreatedServer } from "@/lib/analytics-server";
+import {
+  captureServerException,
+  trackApiTokenCreatedServer,
+} from "@/lib/analytics-server";
 import { auth } from "@/lib/auth";
 import { createTRPCRouter, privateProcedure } from "@/server/api/trpc";
 import { apikey } from "@/server/db/schema/auth";
-
-const { logger } = Sentry;
 
 export const apiKeyRouter = createTRPCRouter({
   /**
@@ -38,15 +38,6 @@ export const apiKeyRouter = createTRPCRouter({
           },
         });
 
-        logger.info("API key created", {
-          userId: ctx.user.id,
-          keyId: result.id,
-          keyPrefix: result.prefix,
-          keyName: input.name,
-          expiresAt: result.expiresAt?.toString(),
-          hasExpiration: !!result.expiresAt,
-        });
-
         // Track API token creation in PostHog
         await trackApiTokenCreatedServer(ctx.user.id);
 
@@ -62,18 +53,8 @@ export const apiKeyRouter = createTRPCRouter({
           fullKey: result.key, // This is the ONLY time the full key is returned
         };
       } catch (error) {
-        logger.error("Failed to create API key", {
-          userId: ctx.user.id,
-          keyName: input.name,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        Sentry.captureException(error, {
-          tags: { operation: "apiKey.create" },
-          contexts: {
-            user: {
-              id: ctx.user.id,
-            },
-          },
+        captureServerException(error, ctx.user.id, {
+          operation: "apiKey.create",
         });
         throw error;
       }
@@ -97,10 +78,6 @@ export const apiKeyRouter = createTRPCRouter({
         .limit(1);
 
       if (!existingKey) {
-        logger.warn("API key revoke attempt - key not found", {
-          userId: ctx.user.id,
-          keyId: input.id,
-        });
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "API key not found",
@@ -117,27 +94,11 @@ export const apiKeyRouter = createTRPCRouter({
           })
           .where(eq(apikey.id, input.id));
 
-        logger.info("API key revoked", {
-          userId: ctx.user.id,
-          keyId: input.id,
-          keyName: existingKey.name,
-          keyPrefix: existingKey.prefix,
-        });
-
         return { success: true };
       } catch (error) {
-        logger.error("Failed to revoke API key", {
-          userId: ctx.user.id,
+        captureServerException(error, ctx.user.id, {
+          operation: "apiKey.revoke",
           keyId: input.id,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        Sentry.captureException(error, {
-          tags: { operation: "apiKey.revoke" },
-          contexts: {
-            user: {
-              id: ctx.user.id,
-            },
-          },
         });
         throw error;
       }
@@ -161,10 +122,6 @@ export const apiKeyRouter = createTRPCRouter({
         .limit(1);
 
       if (!existingKey) {
-        logger.warn("API key delete attempt - key not found", {
-          userId: ctx.user.id,
-          keyId: input.id,
-        });
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "API key not found",
@@ -174,27 +131,11 @@ export const apiKeyRouter = createTRPCRouter({
       try {
         await ctx.db.delete(apikey).where(eq(apikey.id, input.id));
 
-        logger.info("API key permanently deleted", {
-          userId: ctx.user.id,
-          keyId: input.id,
-          keyName: existingKey.name,
-          keyPrefix: existingKey.prefix,
-        });
-
         return { success: true };
       } catch (error) {
-        logger.error("Failed to delete API key", {
-          userId: ctx.user.id,
+        captureServerException(error, ctx.user.id, {
+          operation: "apiKey.delete",
           keyId: input.id,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        Sentry.captureException(error, {
-          tags: { operation: "apiKey.delete" },
-          contexts: {
-            user: {
-              id: ctx.user.id,
-            },
-          },
         });
         throw error;
       }

@@ -1,13 +1,23 @@
-import * as Sentry from "@sentry/nextjs";
+import type { Instrumentation } from "next";
+import { getPostHogClient } from "@/lib/analytics-server";
 
-export async function register() {
-  if (process.env.NEXT_RUNTIME === "nodejs") {
-    await import("./sentry.server.config");
+export const onRequestError: Instrumentation.onRequestError = async (
+  error,
+  request,
+  context,
+) => {
+  const client = getPostHogClient();
+  if (!client) return;
+
+  try {
+    client.captureException(error, undefined, {
+      path: request.path,
+      method: request.method,
+      routeType: context.routeType,
+      routerKind: context.routerKind,
+    });
+    await client.flush();
+  } catch {
+    // Silently fail - error tracking should never break the app
   }
-
-  if (process.env.NEXT_RUNTIME === "edge") {
-    await import("./sentry.edge.config");
-  }
-}
-
-export const onRequestError = Sentry.captureRequestError;
+};
