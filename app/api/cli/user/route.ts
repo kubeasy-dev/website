@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { trackCliLoginServer } from "@/lib/analytics-server";
@@ -104,9 +104,19 @@ export async function POST(request: Request) {
       const userId = auth.user.id;
       span.setAttribute("userId", userId);
 
+      // Parse JSON body with dedicated error handling
+      let body: unknown;
       try {
-        // Parse and validate body
-        const body = await request.json();
+        body = await request.json();
+      } catch {
+        return NextResponse.json(
+          { error: "Malformed JSON body" },
+          { status: 400 },
+        );
+      }
+
+      try {
+        // Validate body schema
         const parsed = cliMetadataSchema.safeParse(body);
 
         if (!parsed.success) {
@@ -121,28 +131,36 @@ export async function POST(request: Request) {
         span.setAttribute("os", os);
         span.setAttribute("arch", arch);
 
-        // Check if this is the first time the user is logging in via CLI
-        const [existing] = await db
-          .select({ cliAuthenticated: userOnboarding.cliAuthenticated })
-          .from(userOnboarding)
-          .where(eq(userOnboarding.userId, userId));
+        // Atomically determine firstLogin and set cliAuthenticated = true
+        // Step 1: Try to update existing record where cliAuthenticated = false
+        const updateResult = await db
+          .update(userOnboarding)
+          .set({ cliAuthenticated: true, updatedAt: new Date() })
+          .where(
+            and(
+              eq(userOnboarding.userId, userId),
+              eq(userOnboarding.cliAuthenticated, false),
+            ),
+          )
+          .returning({ userId: userOnboarding.userId });
 
-        const firstLogin = !existing?.cliAuthenticated;
+        let firstLogin: boolean;
 
-        // Upsert onboarding record with cliAuthenticated = true
-        await db
-          .insert(userOnboarding)
-          .values({
-            userId,
-            cliAuthenticated: true,
-          })
-          .onConflictDoUpdate({
-            target: userOnboarding.userId,
-            set: {
-              cliAuthenticated: true,
-              updatedAt: new Date(),
-            },
-          });
+        if (updateResult.length > 0) {
+          // Updated from false to true - this is first login
+          firstLogin = true;
+        } else {
+          // Either record doesn't exist, or cliAuthenticated was already true
+          // Try to insert new record (will do nothing if exists)
+          const insertResult = await db
+            .insert(userOnboarding)
+            .values({ userId, cliAuthenticated: true })
+            .onConflictDoNothing({ target: userOnboarding.userId })
+            .returning({ userId: userOnboarding.userId });
+
+          // If insert succeeded, this is a new user's first login
+          firstLogin = insertResult.length > 0;
+        }
 
         // Track in PostHog
         await trackCliLoginServer(userId, { cliVersion, os, arch });
