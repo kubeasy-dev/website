@@ -39,15 +39,28 @@ if (posthogKey && posthogHost) {
 
 /**
  * Safe wrapper for PostHog server-side operations
+ * In development, logs the event details to the console instead of sending to PostHog
  */
 async function safePostHogOperation<T>(
   operation: string,
   fn: () => Promise<T>,
+  devLog?: { event: string; properties?: Record<string, unknown> },
 ): Promise<void> {
   if (!posthogClient) {
-    if (isDevelopment) {
-      console.debug(`[PostHog Server] ${operation} - Not initialized`);
+    if (isDevelopment && devLog) {
+      console.debug(
+        `[PostHog Server] ${devLog.event}`,
+        devLog.properties ?? "",
+      );
     }
+    return;
+  }
+
+  if (isDevelopment && devLog) {
+    console.debug(
+      `[PostHog Server] ${devLog.event}`,
+      devLog.properties ?? "",
+    );
     return;
   }
 
@@ -70,17 +83,19 @@ export async function trackUserSignupServer(
   provider: "github" | "google" | "microsoft",
   email?: string,
 ) {
-  await safePostHogOperation("trackUserSignupServer", async () => {
-    posthogClient?.capture({
-      distinctId: userId,
-      event: "user_signup",
-      properties: {
-        provider,
-        ...(email && { email }),
-      },
-    });
-    await posthogClient?.flush();
-  });
+  const properties = { provider, ...(email && { email }) };
+  await safePostHogOperation(
+    "trackUserSignupServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "user_signup",
+        properties,
+      });
+      await posthogClient?.flush();
+    },
+    { event: "user_signup", properties },
+  );
 }
 
 /**
@@ -88,16 +103,18 @@ export async function trackUserSignupServer(
  * @param userId - The user ID who created the token
  */
 export async function trackApiTokenCreatedServer(userId: string) {
-  await safePostHogOperation("trackApiTokenCreatedServer", async () => {
-    posthogClient?.capture({
-      distinctId: userId,
-      event: "api_token_created",
-      properties: {
-        source: "server",
-      },
-    });
-    await posthogClient?.flush();
-  });
+  await safePostHogOperation(
+    "trackApiTokenCreatedServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "api_token_created",
+        properties: { source: "server" },
+      });
+      await posthogClient?.flush();
+    },
+    { event: "api_token_created", properties: { source: "server" } },
+  );
 }
 
 /**
@@ -113,19 +130,19 @@ export async function trackChallengeStartedServer(
   challengeSlug: string,
   challengeTitle: string,
 ) {
-  await safePostHogOperation("trackChallengeStartedServer", async () => {
-    posthogClient?.capture({
-      distinctId: userId,
-      event: "challenge_started",
-      properties: {
-        challengeId,
-        challengeSlug,
-        challengeTitle,
-        source: "cli",
-      },
-    });
-    await posthogClient?.flush();
-  });
+  const properties = { challengeId, challengeSlug, challengeTitle, source: "cli" };
+  await safePostHogOperation(
+    "trackChallengeStartedServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "challenge_started",
+        properties,
+      });
+      await posthogClient?.flush();
+    },
+    { event: "challenge_started", properties },
+  );
 }
 
 /**
@@ -145,21 +162,19 @@ export async function trackChallengeCompletedServer(
   xpAwarded: number,
   isFirstChallenge: boolean,
 ) {
-  await safePostHogOperation("trackChallengeCompletedServer", async () => {
-    posthogClient?.capture({
-      distinctId: userId,
-      event: "challenge_completed",
-      properties: {
-        challengeId,
-        challengeSlug,
-        difficulty,
-        xpAwarded,
-        isFirstChallenge,
-        source: "cli",
-      },
-    });
-    await posthogClient?.flush();
-  });
+  const properties = { challengeId, challengeSlug, difficulty, xpAwarded, isFirstChallenge, source: "cli" };
+  await safePostHogOperation(
+    "trackChallengeCompletedServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "challenge_completed",
+        properties,
+      });
+      await posthogClient?.flush();
+    },
+    { event: "challenge_completed", properties },
+  );
 }
 
 /**
@@ -175,13 +190,17 @@ export async function identifyUserServer(
     provider?: string;
   },
 ) {
-  await safePostHogOperation("identifyUserServer", async () => {
-    posthogClient?.identify({
-      distinctId: userId,
-      properties,
-    });
-    await posthogClient?.flush();
-  });
+  await safePostHogOperation(
+    "identifyUserServer",
+    async () => {
+      posthogClient?.identify({
+        distinctId: userId,
+        properties,
+      });
+      await posthogClient?.flush();
+    },
+    { event: "identify", properties: { userId, ...properties } },
+  );
 }
 
 /**
@@ -199,22 +218,18 @@ export async function trackChallengeValidationFailedServer(
   failedObjectiveCount: number,
   failedObjectiveIds: string[],
 ) {
+  const properties = { challengeId, challengeSlug, failedObjectiveCount, failedObjectiveIds, source: "cli" };
   await safePostHogOperation(
     "trackChallengeValidationFailedServer",
     async () => {
       posthogClient?.capture({
         distinctId: userId,
         event: "challenge_validation_failed",
-        properties: {
-          challengeId,
-          challengeSlug,
-          failedObjectiveCount,
-          failedObjectiveIds,
-          source: "cli",
-        },
+        properties,
       });
       await posthogClient?.flush();
     },
+    { event: "challenge_validation_failed", properties },
   );
 }
 
@@ -229,12 +244,16 @@ export async function captureServerException(
   distinctId?: string,
   additionalProperties?: Record<string, unknown>,
 ): Promise<void> {
+  if (isDevelopment) {
+    console.debug(
+      "[PostHog Server] $exception",
+      error instanceof Error ? error.message : error,
+      additionalProperties ?? "",
+    );
+    return;
+  }
+
   if (!posthogClient) {
-    if (isDevelopment) {
-      console.debug(
-        "[PostHog Server] captureServerException - Not initialized",
-      );
-    }
     return;
   }
 
