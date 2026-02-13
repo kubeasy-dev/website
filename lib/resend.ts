@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 import { env } from "@/env";
 import { captureServerException } from "@/lib/analytics-server";
-import { EMAIL_TEMPLATES } from "./email/templates";
 
 // Initialize Resend client
 const resend = new Resend(env.RESEND_API_KEY);
@@ -92,99 +91,4 @@ export async function getContactSubscriptions(
     });
     throw error;
   }
-}
-
-/**
- * Send an email using a Resend template
- */
-export async function sendTemplateEmail(params: {
-  to: string;
-  templateId: string;
-  data: Record<string, string>;
-  userId?: string;
-}): Promise<{ emailId: string }> {
-  try {
-    const response = await resend.emails.send({
-      from: "Kubeasy <noreply@kubeasy.dev>",
-      to: params.to,
-      subject: "", // Subject is defined in the template
-      react: undefined,
-      html: undefined,
-      // @ts-expect-error - Resend SDK types don't include template yet
-      template_id: params.templateId,
-      template_data: params.data,
-    });
-
-    if (!response.data?.id) {
-      throw new Error("Failed to send email via Resend");
-    }
-
-    return { emailId: response.data.id };
-  } catch (error) {
-    await captureServerException(error, params.userId, {
-      operation: "resend.sendTemplateEmail",
-      templateId: params.templateId,
-    });
-    throw error;
-  }
-}
-
-/**
- * Send onboarding CLI reminder email (Day 1)
- * Sent to users who signed up but haven't installed/configured the CLI
- */
-export async function sendOnboardingCliReminderEmail(params: {
-  to: string;
-  firstName: string;
-  userId: string;
-}): Promise<{ emailId: string }> {
-  return sendTemplateEmail({
-    to: params.to,
-    templateId: EMAIL_TEMPLATES.onboardingCliReminder,
-    data: {
-      firstName: params.firstName,
-      dashboardUrl: "https://kubeasy.dev/dashboard",
-    },
-    userId: params.userId,
-  });
-}
-
-/**
- * Send onboarding challenge reminder email (Day 3)
- * Sent to users who have CLI setup but haven't started a challenge
- */
-export async function sendOnboardingChallengeReminderEmail(params: {
-  to: string;
-  firstName: string;
-  userId: string;
-}): Promise<{ emailId: string }> {
-  return sendTemplateEmail({
-    to: params.to,
-    templateId: EMAIL_TEMPLATES.onboardingChallengeReminder,
-    data: {
-      firstName: params.firstName,
-      challengeUrl: "https://kubeasy.dev/challenges/pod-evicted",
-    },
-    userId: params.userId,
-  });
-}
-
-/**
- * Send onboarding completion reminder email (Day 7)
- * Sent to users who started but haven't completed their first challenge
- */
-export async function sendOnboardingCompletionReminderEmail(params: {
-  to: string;
-  firstName: string;
-  userId: string;
-}): Promise<{ emailId: string }> {
-  return sendTemplateEmail({
-    to: params.to,
-    templateId: EMAIL_TEMPLATES.onboardingCompletionReminder,
-    data: {
-      firstName: params.firstName,
-      challengeUrl: "https://kubeasy.dev/challenges/pod-evicted",
-    },
-    userId: params.userId,
-  });
 }
