@@ -27,6 +27,8 @@ export const env = createEnv({
     NOTION_INTEGRATION_TOKEN: z.string().min(1).optional(),
     NOTION_BLOG_DATASOURCE_ID: z.string().min(1).optional(),
     NOTION_PEOPLE_DATASOURCE_ID: z.string().min(1).optional(),
+    // Cron job secret (Vercel Cron)
+    CRON_SECRET: z.string().min(1).optional(),
   },
 
   /**
@@ -59,6 +61,7 @@ export const env = createEnv({
     NOTION_INTEGRATION_TOKEN: process.env.NOTION_INTEGRATION_TOKEN,
     NOTION_BLOG_DATASOURCE_ID: process.env.NOTION_BLOG_DATASOURCE_ID,
     NOTION_PEOPLE_DATASOURCE_ID: process.env.NOTION_PEOPLE_DATASOURCE_ID,
+    CRON_SECRET: process.env.CRON_SECRET,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
