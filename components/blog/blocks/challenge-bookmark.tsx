@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { trackChallengeCardClicked } from "@/lib/analytics";
 import { getChallengeBySlug } from "@/server/db/queries";
 import type { RichTextItem } from "@/types/blog";
 import { RichText } from "./text";
@@ -24,12 +25,21 @@ export async function ChallengeBookmark({
 }: ChallengeBookmarkProps) {
   const challenge = await getChallengeBySlug(slug);
 
+  const handleClick = () => {
+    trackChallengeCardClicked(
+      challenge.slug,
+      challenge.difficulty,
+      "blog_post",
+    );
+  };
+
   if (!challenge) {
     return (
       <div className="my-6">
         <Link
           href={`/challenges/${slug}`}
           className="block rounded-lg neo-border p-4 hover:bg-muted/50 transition-colors"
+          onClick={handleClick}
         >
           <span className="text-sm text-primary">View Challenge: {slug}</span>
         </Link>
