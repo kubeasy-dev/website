@@ -29,6 +29,8 @@ function parseUserName(fullName: string | null) {
 }
 
 /**
+ * @deprecated Use POST /api/cli/user instead which also tracks CLI login.
+ *
  * GET /api/cli/user
  * Returns the authenticated user's first name and last name
  *
@@ -53,10 +55,15 @@ export async function GET(request: Request) {
 
   const { firstName, lastName } = parseUserName(auth.user.name);
 
-  return NextResponse.json({
-    firstName,
-    lastName,
-  });
+  return NextResponse.json(
+    { firstName, lastName },
+    {
+      headers: {
+        Deprecation: "true",
+        Link: '</api/cli/user>; rel="successor-version"',
+      },
+    },
+  );
 }
 
 /**
