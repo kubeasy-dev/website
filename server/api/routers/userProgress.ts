@@ -816,6 +816,19 @@ export const userProgressRouter = createTRPCRouter({
           ),
         );
 
+      // Recalculate userXp.totalXp from remaining transactions
+      const [xpResult] = await ctx.db
+        .select({
+          totalXp: sql<number>`COALESCE(SUM(${userXpTransaction.xpAmount}), 0)`,
+        })
+        .from(userXpTransaction)
+        .where(eq(userXpTransaction.userId, userId));
+
+      await ctx.db
+        .update(userXp)
+        .set({ totalXp: xpResult.totalXp })
+        .where(eq(userXp.userId, userId));
+
       return {
         success: true,
         message: "Challenge progress reset successfully",

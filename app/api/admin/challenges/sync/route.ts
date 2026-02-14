@@ -85,7 +85,15 @@ export async function POST(request: Request) {
     }
 
     // Parse and validate request body
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 },
+      );
+    }
     const validationResult = syncRequestSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -157,6 +165,7 @@ export async function POST(request: Request) {
     const deleted: string[] = [];
 
     // Process incoming challenges (create or update)
+    // Note: neon-http driver doesn't support transactions, so changes are not atomic
     for (const incomingChallenge of incomingChallenges) {
       const existing = existingChallengeMap.get(incomingChallenge.slug);
 

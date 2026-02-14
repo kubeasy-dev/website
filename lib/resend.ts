@@ -53,7 +53,7 @@ export async function updateContactTopics(params: {
   } catch (error) {
     await captureServerException(error, undefined, {
       operation: "resend.updateContactTopics",
-      contactIdOrEmail: params.contactIdOrEmail,
+      isEmail: params.contactIdOrEmail.includes("@"),
     });
     throw error;
   }
