@@ -249,6 +249,102 @@ export async function trackChallengeValidationFailedServer(
 }
 
 /**
+ * Track CLI login event (server-side)
+ * @param userId - The user ID
+ * @param metadata - CLI metadata (version, os, arch)
+ */
+export async function trackCliLoginServer(
+  userId: string,
+  metadata: { cliVersion: string; os: string; arch: string },
+) {
+  const properties = {
+    cliVersion: metadata.cliVersion,
+    os: metadata.os,
+    arch: metadata.arch,
+    source: "cli",
+  };
+  await safePostHogOperation(
+    "trackCliLoginServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "cli_login",
+        properties,
+      });
+      await posthogClient?.flush();
+    },
+    { event: "cli_login", properties },
+  );
+}
+
+/**
+ * Track CLI setup event (server-side)
+ * @param userId - The user ID
+ * @param metadata - CLI metadata (version, os, arch)
+ */
+export async function trackCliSetupServer(
+  userId: string,
+  metadata: { cliVersion: string; os: string; arch: string },
+) {
+  const properties = {
+    cliVersion: metadata.cliVersion,
+    os: metadata.os,
+    arch: metadata.arch,
+    source: "cli",
+  };
+  await safePostHogOperation(
+    "trackCliSetupServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "cli_setup",
+        properties,
+      });
+      await posthogClient?.flush();
+    },
+    { event: "cli_setup", properties },
+  );
+}
+
+/**
+ * Track onboarding completed event (server-side)
+ * @param userId - The user ID
+ */
+export async function trackOnboardingCompletedServer(userId: string) {
+  await safePostHogOperation(
+    "trackOnboardingCompletedServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "onboarding_completed",
+        properties: { source: "server" },
+      });
+      await posthogClient?.flush();
+    },
+    { event: "onboarding_completed", properties: { source: "server" } },
+  );
+}
+
+/**
+ * Track onboarding skipped event (server-side)
+ * @param userId - The user ID
+ */
+export async function trackOnboardingSkippedServer(userId: string) {
+  await safePostHogOperation(
+    "trackOnboardingSkippedServer",
+    async () => {
+      posthogClient?.capture({
+        distinctId: userId,
+        event: "onboarding_skipped",
+        properties: { source: "server" },
+      });
+      await posthogClient?.flush();
+    },
+    { event: "onboarding_skipped", properties: { source: "server" } },
+  );
+}
+
+/**
  * Capture an exception in PostHog Error Tracking (server-side)
  * @param error - The error to capture
  * @param distinctId - Optional user ID for attribution

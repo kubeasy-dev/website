@@ -449,6 +449,15 @@ export const userProgressRouter = createTRPCRouter({
         challengeData.title,
       );
 
+      // Publish realtime event for onboarding UI update
+      if (isRealtimeConfigured && realtime) {
+        const channel = realtime.channel(`onboarding:${userId}`);
+        await channel.emit("onboarding.stepCompleted", {
+          step: "hasStartedChallenge" as const,
+          timestamp: new Date(),
+        });
+      }
+
       return {
         status: "in_progress" as const,
         startedAt: now,
@@ -730,6 +739,15 @@ export const userProgressRouter = createTRPCRouter({
         xpGain.total,
         isFirstChallenge,
       );
+
+      // Publish realtime event for onboarding UI update
+      if (isRealtimeConfigured && realtime) {
+        const onboardingChannel = realtime.channel(`onboarding:${userId}`);
+        await onboardingChannel.emit("onboarding.stepCompleted", {
+          step: "hasCompletedChallenge" as const,
+          timestamp: new Date(),
+        });
+      }
 
       // Invalidate caches after successful completion
       revalidateTag(`user-${userId}-stats`, "max");

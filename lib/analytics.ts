@@ -259,3 +259,59 @@ export function trackDemoCreated() {
 export function trackDemoCompleted() {
   safeCapture("demo_completed");
 }
+
+// Onboarding step types
+export type OnboardingStep =
+  | "welcome"
+  | "cli_install"
+  | "api_token"
+  | "cli_login"
+  | "cli_setup"
+  | "challenge_start"
+  | "challenge_complete";
+
+/**
+ * Track onboarding started event
+ * Called when a user begins the onboarding flow
+ */
+export function trackOnboardingStarted() {
+  safeCapture("onboarding_started");
+}
+
+/**
+ * Track onboarding step completed event
+ * @param step - The step that was completed
+ * @param stepNumber - The step number (1-7)
+ */
+export function trackOnboardingStepCompleted(
+  step: OnboardingStep,
+  stepNumber: number,
+) {
+  safeCapture("onboarding_step_completed", {
+    step,
+    stepNumber,
+  });
+}
+
+/**
+ * Track onboarding completed event
+ * Called when a user successfully completes the entire onboarding
+ */
+export function trackOnboardingCompleted() {
+  safeCapture("onboarding_completed");
+}
+
+/**
+ * Track onboarding skipped event
+ * @param atStep - The step where the user skipped
+ * @param stepNumber - The step number where they skipped
+ */
+export function trackOnboardingSkipped(
+  atStep: OnboardingStep,
+  stepNumber: number,
+) {
+  safeCapture("onboarding_skipped", {
+    atStep,
+    stepNumber,
+  });
+}

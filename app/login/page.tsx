@@ -46,7 +46,9 @@ async function LoginContent({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const callbackUrl = next && isValidCallbackUrl(next) ? next : "/dashboard";
+  // Default to auth callback for onboarding check, unless a specific path is requested
+  const callbackUrl =
+    next && isValidCallbackUrl(next) ? next : "/auth/callback";
 
   const session = await auth.api.getSession({
     headers: await headers(),
