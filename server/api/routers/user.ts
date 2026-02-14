@@ -43,12 +43,21 @@ export const userRouter = createTRPCRouter({
     const userId = ctx.user.id;
 
     // Delete all user progress (neon-http doesn't support transactions)
-    await ctx.db.delete(userProgress).where(eq(userProgress.userId, userId));
+    const deletedProgress = await ctx.db
+      .delete(userProgress)
+      .where(eq(userProgress.userId, userId))
+      .returning();
 
     // Delete all XP transactions
-    await ctx.db
+    const deletedTransactions = await ctx.db
       .delete(userXpTransaction)
-      .where(eq(userXpTransaction.userId, userId));
+      .where(eq(userXpTransaction.userId, userId))
+      .returning();
+
+    const deletedXp = deletedTransactions.reduce(
+      (sum, t) => sum + t.xpAmount,
+      0,
+    );
 
     // Delete user XP record
     await ctx.db.delete(userXp).where(eq(userXp.userId, userId));
@@ -61,6 +70,8 @@ export const userRouter = createTRPCRouter({
 
     return {
       success: true,
+      deletedChallenges: deletedProgress.length,
+      deletedXp,
     };
   }),
 });
