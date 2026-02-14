@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { captureServerException } from "@/lib/analytics-server";
 import { isRedisConfigured } from "@/lib/redis";
 import {
   createDemoSession,
@@ -7,15 +7,12 @@ import {
   isValidDemoToken,
 } from "@/server/demo-session";
 
-const { logger } = Sentry;
-
 /**
  * POST /api/demo/session
  * Creates a new demo session (stored in Redis, tracked in PostHog)
  */
 export async function POST() {
   if (!isRedisConfigured) {
-    logger.warn("Demo session creation failed: Redis not configured");
     return NextResponse.json(
       { error: "Demo mode not available" },
       { status: 503 },
@@ -26,24 +23,18 @@ export async function POST() {
     const session = await createDemoSession();
 
     if (!session) {
-      logger.error("Failed to create demo session");
       return NextResponse.json(
         { error: "Failed to create demo session" },
         { status: 500 },
       );
     }
 
-    logger.info("Demo session created", { token: session.token });
-
     return NextResponse.json({
       token: session.token,
     });
   } catch (error) {
-    logger.error("Demo session creation error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "demo.session.create" },
+    await captureServerException(error, undefined, {
+      operation: "demo.session.create",
     });
     return NextResponse.json(
       { error: "Internal server error" },
@@ -55,12 +46,6 @@ export async function POST() {
 /**
  * GET /api/demo/session?token=xxx
  * Gets the status of a demo session
- *
- * Response:
- * {
- *   valid: boolean;
- *   completedAt?: number;
- * }
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -98,12 +83,8 @@ export async function GET(request: Request) {
       completedAt: session.completedAt,
     });
   } catch (error) {
-    logger.error("Demo session status error", {
-      token,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, {
-      tags: { operation: "demo.session.status" },
+    await captureServerException(error, undefined, {
+      operation: "demo.session.status",
     });
     return NextResponse.json(
       { error: "Internal server error" },

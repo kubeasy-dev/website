@@ -1,16 +1,16 @@
-import * as Sentry from "@sentry/nextjs";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
-import { trackUserSignupServer } from "@/lib/analytics-server";
+import {
+  captureServerException,
+  trackUserSignupServer,
+} from "@/lib/analytics-server";
 import { isRedisConfigured, redis } from "@/lib/redis";
 import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
 import { createResendContact } from "./resend";
-
-const { logger } = Sentry;
 
 const socialProviders = {
   github: {
@@ -64,14 +64,9 @@ export const auth = betterAuth({
             const value = await redis.get<string>(key);
             return value;
           } catch (error) {
-            logger.error("Redis secondaryStorage.get failed", {
+            await captureServerException(error, undefined, {
+              operation: "redis.secondaryStorage.get",
               key,
-              operation: "get",
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "redis.secondaryStorage.get" },
-              contexts: { redis: { key } },
             });
             // Return null on error - Better Auth will fall back to database
             return null;
@@ -91,15 +86,10 @@ export const auth = betterAuth({
               await redis.set(key, value);
             }
           } catch (error) {
-            logger.error("Redis secondaryStorage.set failed", {
+            await captureServerException(error, undefined, {
+              operation: "redis.secondaryStorage.set",
               key,
-              operation: "set",
               ttl,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "redis.secondaryStorage.set" },
-              contexts: { redis: { key, ttl } },
             });
             // Don't throw - Better Auth will continue without caching
           }
@@ -110,14 +100,9 @@ export const auth = betterAuth({
           try {
             await redis.del(key);
           } catch (error) {
-            logger.error("Redis secondaryStorage.delete failed", {
+            await captureServerException(error, undefined, {
+              operation: "redis.secondaryStorage.delete",
               key,
-              operation: "delete",
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "redis.secondaryStorage.delete" },
-              contexts: { redis: { key } },
             });
             // Don't throw - session will expire naturally
           }
@@ -152,11 +137,6 @@ export const auth = betterAuth({
         after: async (user) => {
           // Create Resend contact for new user
           // Topic subscriptions are managed by Resend (opt_in by default)
-          logger.info("User account created", {
-            userId: user.id,
-            email: user.email,
-            hasName: !!user.name,
-          });
 
           if (!env.RESEND_API_KEY) {
             return;
@@ -177,24 +157,9 @@ export const auth = betterAuth({
               .update(schema.user)
               .set({ resendContactId: contactId })
               .where(eq(schema.user.id, user.id));
-
-            logger.info("Resend contact created and stored", {
-              userId: user.id,
-              contactId,
-            });
           } catch (error) {
-            logger.error("Failed to create Resend contact", {
-              userId: user.id,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "resend.createContact" },
-              contexts: {
-                user: {
-                  id: user.id,
-                  email: user.email,
-                },
-              },
+            await captureServerException(error, user.id, {
+              operation: "resend.createContact",
             });
             // Don't throw - graceful degradation, user can still use the app
           }
@@ -218,14 +183,6 @@ export const auth = betterAuth({
 
             // Only track signup for first account (the one just created)
             if (existingAccounts.length > 1) {
-              logger.info(
-                "Skipping signup tracking - user linking additional provider",
-                {
-                  userId: account.userId,
-                  provider: account.providerId,
-                  accountCount: existingAccounts.length,
-                },
-              );
               return;
             }
 
@@ -239,24 +196,10 @@ export const auth = betterAuth({
               .limit(1);
 
             await trackUserSignupServer(account.userId, provider, user?.email);
-
-            logger.info("User signup tracked in PostHog", {
-              userId: account.userId,
-              provider: account.providerId,
-            });
           } catch (error) {
-            logger.error("Failed to track user signup in PostHog", {
-              userId: account.userId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            Sentry.captureException(error, {
-              tags: { operation: "posthog.trackUserSignup" },
-              contexts: {
-                account: {
-                  userId: account.userId,
-                  providerId: account.providerId,
-                },
-              },
+            await captureServerException(error, account.userId, {
+              operation: "posthog.trackUserSignup",
+              providerId: account.providerId,
             });
             // Don't throw the error to avoid blocking account creation
           }

@@ -9,7 +9,6 @@
     "trpc/**/*.{ts,tsx}",
     "scripts/**/*.ts",
     "*.config.{js,ts,mjs}",
-    "sentry.*.config.ts",
     "instrumentation*.ts"
   ],
   "project": ["**/*.{ts,tsx,js,jsx,mjs,cjs}"],

@@ -1,7 +1,7 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import NextError from "next/error";
+import posthog from "posthog-js";
 import { useEffect } from "react";
 
 export default function GlobalError({
@@ -10,7 +10,13 @@ export default function GlobalError({
   error: Error & { digest?: string };
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    try {
+      if (posthog && typeof posthog.captureException === "function") {
+        posthog.captureException(error);
+      }
+    } catch {
+      // PostHog may not be initialized in the error boundary context
+    }
   }, [error]);
 
   return (
