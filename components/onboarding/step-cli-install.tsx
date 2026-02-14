@@ -1,11 +1,11 @@
 "use client";
 
 import { CheckCircle2, Download, Terminal } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { trackCommandCopied } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
-import { INSTALL_COMMANDS, PLATFORMS, type Platform } from "./constants";
+import { INSTALL_COMMANDS, METHODS, type Method } from "./constants";
 import { TerminalCommand } from "./terminal-command";
 
 interface StepCliInstallProps {
@@ -13,25 +13,12 @@ interface StepCliInstallProps {
   onBack: () => void;
 }
 
-function detectPlatform(): Platform {
-  if (typeof window === "undefined") return "mac";
-
-  const ua = navigator.userAgent.toLowerCase();
-  if (ua.includes("win")) return "windows";
-  if (ua.includes("linux")) return "linux";
-  return "mac";
-}
-
 /**
  * CLI installation step for onboarding wizard.
  * Detects user's platform and shows the appropriate install command.
  */
 export function StepCliInstall({ onContinue, onBack }: StepCliInstallProps) {
-  const [platform, setPlatform] = useState<Platform>("mac");
-
-  useEffect(() => {
-    setPlatform(detectPlatform());
-  }, []);
+  const [method, setMethod] = useState<Method>("npm");
 
   return (
     <div className="flex flex-col items-center space-y-8 max-w-2xl mx-auto">
@@ -49,33 +36,33 @@ export function StepCliInstall({ onContinue, onBack }: StepCliInstallProps) {
         </p>
       </div>
 
-      {/* Platform Tabs */}
+      {/* Methods Tabs */}
       <div
         className="w-full"
         role="tablist"
         aria-label="Select your operating system"
       >
         <div className="flex neo-border-thick rounded-xl overflow-hidden">
-          {PLATFORMS.map((p) => (
+          {METHODS.map((m) => (
             <button
-              key={p}
+              key={m}
               type="button"
               role="tab"
-              aria-selected={platform === p}
-              aria-controls={`panel-${p}`}
-              onClick={() => setPlatform(p)}
+              aria-selected={method === m}
+              aria-controls={`panel-${m}`}
+              onClick={() => setMethod(m)}
               className={cn(
                 "flex-1 px-4 py-3 font-bold transition-all flex items-center justify-center gap-2",
-                platform === p
+                method === m
                   ? "bg-primary text-primary-foreground"
                   : "bg-card hover:bg-secondary text-foreground/70 hover:text-foreground",
               )}
             >
               <span className="text-lg" aria-hidden="true">
-                {INSTALL_COMMANDS[p].icon}
+                {INSTALL_COMMANDS[m].icon}
               </span>
               <span className="hidden sm:inline">
-                {INSTALL_COMMANDS[p].label}
+                {INSTALL_COMMANDS[m].label}
               </span>
             </button>
           ))}
@@ -84,16 +71,16 @@ export function StepCliInstall({ onContinue, onBack }: StepCliInstallProps) {
 
       {/* Terminal Command */}
       <div
-        id={`panel-${platform}`}
+        id={`panel-${method}`}
         role="tabpanel"
-        aria-labelledby={`tab-${platform}`}
+        aria-labelledby={`tab-${method}`}
         className="w-full"
       >
         <TerminalCommand
-          command={INSTALL_COMMANDS[platform].command}
+          command={INSTALL_COMMANDS[method].command}
           onCopy={() =>
             trackCommandCopied(
-              INSTALL_COMMANDS[platform].command,
+              INSTALL_COMMANDS[method].command,
               "onboarding_cli_install",
             )
           }

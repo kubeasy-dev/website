@@ -17,32 +17,17 @@ export const CLI_COMMANDS = ONBOARDING_CLI_COMMANDS;
 
 /** Installation commands per platform - from GitHub releases */
 export const INSTALL_COMMANDS = {
-  mac: {
-    command: `curl -LO https://github.com/kubeasy-dev/kubeasy-cli/releases/latest/download/kubeasy-darwin-arm64
-chmod +x kubeasy-darwin-arm64
-sudo mv kubeasy-darwin-arm64 /usr/local/bin/kubeasy`,
-    label: "macOS",
-    icon: "🍎",
-  },
-  linux: {
-    command: `curl -LO https://github.com/kubeasy-dev/kubeasy-cli/releases/latest/download/kubeasy-linux-amd64
-chmod +x kubeasy-linux-amd64
-sudo mv kubeasy-linux-amd64 /usr/local/bin/kubeasy`,
-    label: "Linux",
-    icon: "🐧",
-  },
-  windows: {
-    command:
-      "# Download from https://github.com/kubeasy-dev/kubeasy-cli/releases/latest",
-    label: "Windows",
-    icon: "🪟",
+  npm: {
+    command: `npm install -g @kubeasy-dev/kubeasy-cli@latest`,
+    label: "npm",
+    icon: "⋂₱₥",
   },
 } as const;
 
 /** Polling interval for async step detection (in ms) */
 export const POLLING_INTERVAL = 2000;
 
-export type Platform = keyof typeof INSTALL_COMMANDS;
+export type Method = keyof typeof INSTALL_COMMANDS;
 
-/** Available platforms for CLI installation */
-export const PLATFORMS: Platform[] = ["mac", "linux", "windows"];
+/** Available methods for CLI installation */
+export const METHODS: Method[] = ["npm"];
