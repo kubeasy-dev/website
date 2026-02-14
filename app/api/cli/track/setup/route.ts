@@ -1,14 +1,14 @@
-import * as Sentry from "@sentry/nextjs";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { trackCliSetupServer } from "@/lib/analytics-server";
+import {
+  captureServerException,
+  trackCliSetupServer,
+} from "@/lib/analytics-server";
 import { authenticateApiRequest } from "@/lib/api-auth";
 import { realtime } from "@/lib/realtime";
 import db from "@/server/db";
 import { userOnboarding } from "@/server/db/schema/onboarding";
-
-const { logger } = Sentry;
 
 const trackSetupSchema = z.object({
   cliVersion: z.string(),
@@ -38,101 +38,79 @@ const trackSetupSchema = z.object({
  * }
  */
 export async function POST(request: Request) {
-  return Sentry.startSpan(
-    { op: "cli.track.setup", name: "Track CLI Setup" },
-    async (span) => {
-      // Authenticate the request
-      const auth = await authenticateApiRequest(request);
+  // Authenticate the request
+  const auth = await authenticateApiRequest(request);
 
-      if (!auth.success || !auth.user) {
-        return NextResponse.json(
-          { error: auth.error || "Unauthorized" },
-          { status: 401 },
-        );
-      }
+  if (!auth.success || !auth.user) {
+    return NextResponse.json(
+      { error: auth.error || "Unauthorized" },
+      { status: 401 },
+    );
+  }
 
-      const userId = auth.user.id;
-      span.setAttribute("userId", userId);
+  const userId = auth.user.id;
 
-      try {
-        // Parse and validate body
-        const body = await request.json();
-        const parsed = trackSetupSchema.safeParse(body);
+  try {
+    // Parse and validate body
+    const body = await request.json();
+    const parsed = trackSetupSchema.safeParse(body);
 
-        if (!parsed.success) {
-          return NextResponse.json(
-            { error: "Invalid request body", details: parsed.error.format() },
-            { status: 400 },
-          );
-        }
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.format() },
+        { status: 400 },
+      );
+    }
 
-        const { cliVersion, os, arch } = parsed.data;
-        span.setAttribute("cliVersion", cliVersion);
-        span.setAttribute("os", os);
-        span.setAttribute("arch", arch);
+    const { cliVersion, os, arch } = parsed.data;
 
-        // Check if this is the first time the user is setting up the cluster
-        const [existing] = await db
-          .select({ clusterInitialized: userOnboarding.clusterInitialized })
-          .from(userOnboarding)
-          .where(eq(userOnboarding.userId, userId));
+    // Check if this is the first time the user is setting up the cluster
+    const [existing] = await db
+      .select({ clusterInitialized: userOnboarding.clusterInitialized })
+      .from(userOnboarding)
+      .where(eq(userOnboarding.userId, userId));
 
-        const firstTime = !existing?.clusterInitialized;
+    const firstTime = !existing?.clusterInitialized;
 
-        // Upsert onboarding record with clusterInitialized = true
-        await db
-          .insert(userOnboarding)
-          .values({
-            userId,
-            clusterInitialized: true,
-          })
-          .onConflictDoUpdate({
-            target: userOnboarding.userId,
-            set: {
-              clusterInitialized: true,
-              updatedAt: new Date(),
-            },
-          });
+    // Upsert onboarding record with clusterInitialized = true
+    await db
+      .insert(userOnboarding)
+      .values({
+        userId,
+        clusterInitialized: true,
+      })
+      .onConflictDoUpdate({
+        target: userOnboarding.userId,
+        set: {
+          clusterInitialized: true,
+          updatedAt: new Date(),
+        },
+      });
 
-        // Track in PostHog
-        await trackCliSetupServer(userId, { cliVersion, os, arch });
+    // Track in PostHog
+    await trackCliSetupServer(userId, { cliVersion, os, arch });
 
-        // Publish realtime event for instant UI update
-        if (realtime) {
-          const channel = realtime.channel(`onboarding:${userId}`);
-          await channel.emit("onboarding.stepCompleted", {
-            step: "clusterInitialized" as const,
-            timestamp: new Date(),
-          });
-        }
+    // Publish realtime event for instant UI update
+    if (realtime) {
+      const channel = realtime.channel(`onboarding:${userId}`);
+      await channel.emit("onboarding.stepCompleted", {
+        step: "clusterInitialized" as const,
+        timestamp: new Date(),
+      });
+    }
 
-        logger.info("CLI setup tracked", {
-          userId,
-          cliVersion,
-          os,
-          arch,
-          firstTime,
-        });
+    return NextResponse.json({
+      success: true,
+      firstTime,
+    });
+  } catch (error) {
+    await captureServerException(error, userId, {
+      operation: "cli.track.setup",
+    });
 
-        return NextResponse.json({
-          success: true,
-          firstTime,
-        });
-      } catch (error) {
-        logger.error("Failed to track CLI setup", {
-          userId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        Sentry.captureException(error, {
-          tags: { operation: "cli.track.setup" },
-          contexts: { user: { id: userId } },
-        });
-
-        return NextResponse.json(
-          { error: "Internal server error" },
-          { status: 500 },
-        );
-      }
-    },
-  );
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
 }

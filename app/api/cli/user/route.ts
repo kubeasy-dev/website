@@ -1,14 +1,14 @@
-import * as Sentry from "@sentry/nextjs";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { trackCliLoginServer } from "@/lib/analytics-server";
+import {
+  captureServerException,
+  trackCliLoginServer,
+} from "@/lib/analytics-server";
 import { authenticateApiRequest } from "@/lib/api-auth";
 import { realtime } from "@/lib/realtime";
 import db from "@/server/db";
 import { userOnboarding } from "@/server/db/schema/onboarding";
-
-const { logger } = Sentry;
 
 const cliMetadataSchema = z.object({
   cliVersion: z.string(),
@@ -89,122 +89,100 @@ export async function GET(request: Request) {
  * }
  */
 export async function POST(request: Request) {
-  return Sentry.startSpan(
-    { op: "cli.user.login", name: "CLI User Login" },
-    async (span) => {
-      const auth = await authenticateApiRequest(request);
+  const auth = await authenticateApiRequest(request);
 
-      if (!auth.success || !auth.user) {
-        return NextResponse.json(
-          { error: auth.error || "Unauthorized" },
-          { status: 401 },
-        );
-      }
+  if (!auth.success || !auth.user) {
+    return NextResponse.json(
+      { error: auth.error || "Unauthorized" },
+      { status: 401 },
+    );
+  }
 
-      const userId = auth.user.id;
-      span.setAttribute("userId", userId);
+  const userId = auth.user.id;
 
-      // Parse JSON body with dedicated error handling
-      let body: unknown;
-      try {
-        body = await request.json();
-      } catch {
-        return NextResponse.json(
-          { error: "Malformed JSON body" },
-          { status: 400 },
-        );
-      }
+  // Parse JSON body with dedicated error handling
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Malformed JSON body" },
+      { status: 400 },
+    );
+  }
 
-      try {
-        // Validate body schema
-        const parsed = cliMetadataSchema.safeParse(body);
+  try {
+    // Validate body schema
+    const parsed = cliMetadataSchema.safeParse(body);
 
-        if (!parsed.success) {
-          return NextResponse.json(
-            { error: "Invalid request body", details: parsed.error.format() },
-            { status: 400 },
-          );
-        }
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.format() },
+        { status: 400 },
+      );
+    }
 
-        const { cliVersion, os, arch } = parsed.data;
-        span.setAttribute("cliVersion", cliVersion);
-        span.setAttribute("os", os);
-        span.setAttribute("arch", arch);
+    const { cliVersion, os, arch } = parsed.data;
 
-        // Atomically determine firstLogin and set cliAuthenticated = true
-        // Step 1: Try to update existing record where cliAuthenticated = false
-        const updateResult = await db
-          .update(userOnboarding)
-          .set({ cliAuthenticated: true, updatedAt: new Date() })
-          .where(
-            and(
-              eq(userOnboarding.userId, userId),
-              eq(userOnboarding.cliAuthenticated, false),
-            ),
-          )
-          .returning({ userId: userOnboarding.userId });
+    // Atomically determine firstLogin and set cliAuthenticated = true
+    // Step 1: Try to update existing record where cliAuthenticated = false
+    const updateResult = await db
+      .update(userOnboarding)
+      .set({ cliAuthenticated: true, updatedAt: new Date() })
+      .where(
+        and(
+          eq(userOnboarding.userId, userId),
+          eq(userOnboarding.cliAuthenticated, false),
+        ),
+      )
+      .returning({ userId: userOnboarding.userId });
 
-        let firstLogin: boolean;
+    let firstLogin: boolean;
 
-        if (updateResult.length > 0) {
-          // Updated from false to true - this is first login
-          firstLogin = true;
-        } else {
-          // Either record doesn't exist, or cliAuthenticated was already true
-          // Try to insert new record (will do nothing if exists)
-          const insertResult = await db
-            .insert(userOnboarding)
-            .values({ userId, cliAuthenticated: true })
-            .onConflictDoNothing({ target: userOnboarding.userId })
-            .returning({ userId: userOnboarding.userId });
+    if (updateResult.length > 0) {
+      // Updated from false to true - this is first login
+      firstLogin = true;
+    } else {
+      // Either record doesn't exist, or cliAuthenticated was already true
+      // Try to insert new record (will do nothing if exists)
+      const insertResult = await db
+        .insert(userOnboarding)
+        .values({ userId, cliAuthenticated: true })
+        .onConflictDoNothing({ target: userOnboarding.userId })
+        .returning({ userId: userOnboarding.userId });
 
-          // If insert succeeded, this is a new user's first login
-          firstLogin = insertResult.length > 0;
-        }
+      // If insert succeeded, this is a new user's first login
+      firstLogin = insertResult.length > 0;
+    }
 
-        // Track in PostHog
-        await trackCliLoginServer(userId, { cliVersion, os, arch });
+    // Track in PostHog
+    await trackCliLoginServer(userId, { cliVersion, os, arch });
 
-        // Publish realtime event for instant UI update
-        if (realtime) {
-          const channel = realtime.channel(`onboarding:${userId}`);
-          await channel.emit("onboarding.stepCompleted", {
-            step: "cliAuthenticated" as const,
-            timestamp: new Date(),
-          });
-        }
+    // Publish realtime event for instant UI update
+    if (realtime) {
+      const channel = realtime.channel(`onboarding:${userId}`);
+      await channel.emit("onboarding.stepCompleted", {
+        step: "cliAuthenticated" as const,
+        timestamp: new Date(),
+      });
+    }
 
-        logger.info("CLI login tracked", {
-          userId,
-          cliVersion,
-          os,
-          arch,
-          firstLogin,
-        });
+    // Parse user name
+    const { firstName, lastName } = parseUserName(auth.user.name);
 
-        // Parse user name
-        const { firstName, lastName } = parseUserName(auth.user.name);
+    return NextResponse.json({
+      firstName,
+      lastName,
+      firstLogin,
+    });
+  } catch (error) {
+    await captureServerException(error, userId, {
+      operation: "cli.user.login",
+    });
 
-        return NextResponse.json({
-          firstName,
-          lastName,
-          firstLogin,
-        });
-      } catch (error) {
-        logger.error("Failed to track CLI login", {
-          userId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        Sentry.captureException(error, {
-          tags: { operation: "cli.user.login" },
-          contexts: { user: { id: userId } },
-        });
-
-        return NextResponse.json(
-          { error: "Internal server error" },
-          { status: 500 },
-        );
-      }
-    },
-  );
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
 }
