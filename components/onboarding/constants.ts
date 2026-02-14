@@ -20,7 +20,7 @@ export const INSTALL_COMMANDS = {
   npm: {
     command: `npm install -g @kubeasy-dev/kubeasy-cli@latest`,
     label: "npm",
-    icon: "⋂₱₥",
+    icon: "🐢",
   },
 } as const;
 
