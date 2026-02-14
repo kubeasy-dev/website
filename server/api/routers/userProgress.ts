@@ -3,7 +3,6 @@ import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import {
-  captureServerException,
   trackChallengeCompletedServer,
   trackChallengeStartedServer,
   trackChallengeValidationFailedServer,
@@ -241,9 +240,6 @@ export const userProgressRouter = createTRPCRouter({
           });
         }
 
-        // Get old rank before XP update
-        const _oldRankInfo = await calculateLevel(userId);
-
         // Check if user has XP record (still used for backward compatibility)
         const [existingXp] = await ctx.db
           .select()
@@ -311,11 +307,6 @@ export const userProgressRouter = createTRPCRouter({
           isFirstChallenge,
         };
       } catch (error) {
-        captureServerException(error, userId, {
-          operation: "challenge.complete",
-          challengeId,
-          difficulty: challengeData.difficulty,
-        });
         throw error;
       }
     }),
@@ -766,11 +757,6 @@ export const userProgressRouter = createTRPCRouter({
           currentStreak,
         };
       } catch (error) {
-        captureServerException(error, userId, {
-          operation: "challenge.submit",
-          challengeId: challengeData.id,
-          difficulty: challengeData.difficulty,
-        });
         throw error;
       }
     }),
@@ -800,38 +786,40 @@ export const userProgressRouter = createTRPCRouter({
         throw new Error("Challenge not found");
       }
 
-      try {
-        // Delete user progress
-        await ctx.db
-          .delete(userProgress)
-          .where(
-            and(
-              eq(userProgress.userId, userId),
-              eq(userProgress.challengeId, challengeData.id),
-            ),
-          );
+      // Delete user progress
+      await ctx.db
+        .delete(userProgress)
+        .where(
+          and(
+            eq(userProgress.userId, userId),
+            eq(userProgress.challengeId, challengeData.id),
+          ),
+        );
 
-        // Delete user submissions for this challenge
-        await ctx.db
-          .delete(userSubmission)
-          .where(
-            and(
-              eq(userSubmission.userId, userId),
-              eq(userSubmission.challengeId, challengeData.id),
-            ),
-          );
+      // Delete user submissions for this challenge
+      await ctx.db
+        .delete(userSubmission)
+        .where(
+          and(
+            eq(userSubmission.userId, userId),
+            eq(userSubmission.challengeId, challengeData.id),
+          ),
+        );
 
-        return {
-          success: true,
-          message: "Challenge progress reset successfully",
-        };
-      } catch (error) {
-        captureServerException(error, userId, {
-          operation: "challenge.reset",
-          challengeId: challengeData.id,
-        });
-        throw error;
-      }
+      // Delete XP transactions for this challenge
+      await ctx.db
+        .delete(userXpTransaction)
+        .where(
+          and(
+            eq(userXpTransaction.userId, userId),
+            eq(userXpTransaction.challengeId, challengeData.id),
+          ),
+        );
+
+      return {
+        success: true,
+        message: "Challenge progress reset successfully",
+      };
     }),
 
   /**

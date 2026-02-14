@@ -65,7 +65,7 @@ export const emailPreferenceRouter = createTRPCRouter({
         subscribed: subMap.get(topic.resendTopicId) ?? topic.defaultOptIn,
       }));
     } catch (error) {
-      captureServerException(error, ctx.user.id, {
+      await captureServerException(error, ctx.user.id, {
         operation: "emailPreference.listTopics",
         contactId: userData.resendContactId,
       });
@@ -130,12 +130,7 @@ export const emailPreferenceRouter = createTRPCRouter({
         });
 
         return { success: true };
-      } catch (error) {
-        captureServerException(error, ctx.user.id, {
-          operation: "emailPreference.updateSubscription",
-          topicId: input.topicId,
-          topicName: topic.name,
-        });
+      } catch (_error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update email subscription",

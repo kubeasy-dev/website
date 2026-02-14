@@ -174,7 +174,7 @@ async function pageToPost(page: PageObjectResponse): Promise<BlogPost | null> {
       author,
     };
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "notion.pageToPost",
       pageId: page.id,
     });
@@ -227,7 +227,11 @@ async function getAuthor(authorId: string): Promise<Author | null> {
       twitter,
       github,
     };
-  } catch {
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      operation: "notion.getAuthor",
+      authorId,
+    });
     return null;
   }
 }
@@ -412,7 +416,7 @@ async function fetchBlocks(pageId: string): Promise<NotionBlock[]> {
         : undefined;
     } while (cursor);
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "notion.fetchBlocks",
       pageId,
     });
@@ -491,7 +495,7 @@ export async function getAllPosts(includeDrafts = false): Promise<BlogPost[]> {
 
     return posts;
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "notion.getAllPosts",
     });
     return [];
@@ -520,7 +524,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 
     return await pageToPost(page);
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "notion.getPostBySlug",
       slug,
     });
@@ -580,7 +584,7 @@ export async function getPostsByCategory(
 
     return posts;
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "notion.getPostsByCategory",
       category,
     });
@@ -626,7 +630,7 @@ export async function getAllCategories(
       count: categoryCountMap.get(opt.name) ?? 0,
     }));
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "notion.getAllCategories",
     });
     return [];

@@ -58,7 +58,7 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
-    captureServerException(error, auth.user.id, {
+    await captureServerException(error, auth.user.id, {
       operation: "cli.challenge.submit",
       slug,
     });
@@ -73,7 +73,7 @@ export async function POST(
     }
 
     return NextResponse.json(
-      { error: "Internal server error", details: message },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }

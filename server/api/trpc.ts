@@ -86,7 +86,7 @@ export const createTRPCRouter = t.router;
 const errorMiddleware = t.middleware(async ({ path, type, next }) => {
   const result = await next();
   if (!result.ok) {
-    captureServerException(result.error, undefined, {
+    await captureServerException(result.error, undefined, {
       trpcPath: path,
       trpcType: type,
     });

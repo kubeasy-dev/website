@@ -28,7 +28,7 @@ export async function createResendContact(params: {
 
     return { contactId: contact.data.id };
   } catch (error) {
-    captureServerException(error, params.userId, {
+    await captureServerException(error, params.userId, {
       operation: "resend.createContact",
     });
     throw error;
@@ -51,7 +51,7 @@ export async function updateContactTopics(params: {
 
     await resend.contacts.topics.update(updateParams);
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "resend.updateContactTopics",
       contactIdOrEmail: params.contactIdOrEmail,
     });
@@ -85,7 +85,7 @@ export async function getContactSubscriptions(
 
     return subscriptions;
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "resend.getContactSubscriptions",
       contactId,
     });

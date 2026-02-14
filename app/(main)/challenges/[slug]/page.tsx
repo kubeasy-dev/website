@@ -30,7 +30,8 @@ export async function generateStaticParams() {
     return challenges.map((challenge) => ({
       slug: challenge.slug,
     }));
-  } catch {
+  } catch (error) {
+    console.error("[generateStaticParams] Failed to generate challenge params:", error);
     // Fallback: no pre-generation, pages will be rendered on-demand
     return [];
   }

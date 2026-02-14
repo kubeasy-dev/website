@@ -123,7 +123,7 @@ export async function POST(request: Request) {
         : "Validation failed. Make sure the nginx pod is running in the demo namespace.",
     });
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "demo.submit",
     });
     return NextResponse.json(

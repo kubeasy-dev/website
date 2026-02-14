@@ -39,7 +39,7 @@ export default async function GetStartedPage() {
 
     return <DemoContent token={session.token} />;
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "demo.session.create",
     });
     return (

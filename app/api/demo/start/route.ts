@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "demo.start",
     });
     return NextResponse.json(

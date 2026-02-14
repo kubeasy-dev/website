@@ -10,7 +10,13 @@ export default function GlobalError({
   error: Error & { digest?: string };
 }) {
   useEffect(() => {
-    posthog.captureException(error);
+    try {
+      if (posthog && typeof posthog.captureException === "function") {
+        posthog.captureException(error);
+      }
+    } catch {
+      // PostHog may not be initialized in the error boundary context
+    }
   }, [error]);
 
   return (

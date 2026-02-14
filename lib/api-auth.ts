@@ -112,7 +112,7 @@ export async function authenticateApiRequest(
       session: mockSession,
     };
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "api.auth",
     });
     return {

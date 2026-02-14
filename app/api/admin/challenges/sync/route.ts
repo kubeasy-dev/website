@@ -258,14 +258,11 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "challenge.sync",
     });
     return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }

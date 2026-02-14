@@ -64,7 +64,7 @@ export const auth = betterAuth({
             const value = await redis.get<string>(key);
             return value;
           } catch (error) {
-            captureServerException(error, undefined, {
+            await captureServerException(error, undefined, {
               operation: "redis.secondaryStorage.get",
               key,
             });
@@ -86,7 +86,7 @@ export const auth = betterAuth({
               await redis.set(key, value);
             }
           } catch (error) {
-            captureServerException(error, undefined, {
+            await captureServerException(error, undefined, {
               operation: "redis.secondaryStorage.set",
               key,
               ttl,
@@ -100,7 +100,7 @@ export const auth = betterAuth({
           try {
             await redis.del(key);
           } catch (error) {
-            captureServerException(error, undefined, {
+            await captureServerException(error, undefined, {
               operation: "redis.secondaryStorage.delete",
               key,
             });
@@ -158,9 +158,8 @@ export const auth = betterAuth({
               .set({ resendContactId: contactId })
               .where(eq(schema.user.id, user.id));
           } catch (error) {
-            captureServerException(error, user.id, {
+            await captureServerException(error, user.id, {
               operation: "resend.createContact",
-              email: user.email,
             });
             // Don't throw - graceful degradation, user can still use the app
           }
@@ -198,7 +197,7 @@ export const auth = betterAuth({
 
             await trackUserSignupServer(account.userId, provider, user?.email);
           } catch (error) {
-            captureServerException(error, account.userId, {
+            await captureServerException(error, account.userId, {
               operation: "posthog.trackUserSignup",
               providerId: account.providerId,
             });

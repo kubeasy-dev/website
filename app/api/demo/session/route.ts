@@ -33,7 +33,7 @@ export async function POST() {
       token: session.token,
     });
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "demo.session.create",
     });
     return NextResponse.json(
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
       completedAt: session.completedAt,
     });
   } catch (error) {
-    captureServerException(error, undefined, {
+    await captureServerException(error, undefined, {
       operation: "demo.session.status",
     });
     return NextResponse.json(
