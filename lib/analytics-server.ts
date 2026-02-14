@@ -57,10 +57,7 @@ async function safePostHogOperation<T>(
   }
 
   if (isDevelopment && devLog) {
-    console.debug(
-      `[PostHog Server] ${devLog.event}`,
-      devLog.properties ?? "",
-    );
+    console.debug(`[PostHog Server] ${devLog.event}`, devLog.properties ?? "");
     return;
   }
 
@@ -130,7 +127,12 @@ export async function trackChallengeStartedServer(
   challengeSlug: string,
   challengeTitle: string,
 ) {
-  const properties = { challengeId, challengeSlug, challengeTitle, source: "cli" };
+  const properties = {
+    challengeId,
+    challengeSlug,
+    challengeTitle,
+    source: "cli",
+  };
   await safePostHogOperation(
     "trackChallengeStartedServer",
     async () => {
@@ -162,7 +164,14 @@ export async function trackChallengeCompletedServer(
   xpAwarded: number,
   isFirstChallenge: boolean,
 ) {
-  const properties = { challengeId, challengeSlug, difficulty, xpAwarded, isFirstChallenge, source: "cli" };
+  const properties = {
+    challengeId,
+    challengeSlug,
+    difficulty,
+    xpAwarded,
+    isFirstChallenge,
+    source: "cli",
+  };
   await safePostHogOperation(
     "trackChallengeCompletedServer",
     async () => {
@@ -218,7 +227,13 @@ export async function trackChallengeValidationFailedServer(
   failedObjectiveCount: number,
   failedObjectiveIds: string[],
 ) {
-  const properties = { challengeId, challengeSlug, failedObjectiveCount, failedObjectiveIds, source: "cli" };
+  const properties = {
+    challengeId,
+    challengeSlug,
+    failedObjectiveCount,
+    failedObjectiveIds,
+    source: "cli",
+  };
   await safePostHogOperation(
     "trackChallengeValidationFailedServer",
     async () => {

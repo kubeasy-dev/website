@@ -32,7 +32,10 @@ export async function generateStaticParams() {
       slug: theme.slug,
     }));
   } catch (error) {
-    console.error("[generateStaticParams] Failed to generate theme params:", error);
+    console.error(
+      "[generateStaticParams] Failed to generate theme params:",
+      error,
+    );
     // Fallback: no pre-generation, pages will be rendered on-demand
     return [];
   }

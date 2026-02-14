@@ -31,7 +31,10 @@ export async function generateStaticParams() {
       slug: challenge.slug,
     }));
   } catch (error) {
-    console.error("[generateStaticParams] Failed to generate challenge params:", error);
+    console.error(
+      "[generateStaticParams] Failed to generate challenge params:",
+      error,
+    );
     // Fallback: no pre-generation, pages will be rendered on-demand
     return [];
   }
