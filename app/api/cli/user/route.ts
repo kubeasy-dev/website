@@ -1,20 +1,14 @@
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import {
   captureServerException,
   trackCliLoginServer,
 } from "@/lib/analytics-server";
 import { authenticateApiRequest } from "@/lib/api-auth";
 import { realtime } from "@/lib/realtime";
+import { cliMetadataSchema } from "@/schemas/cli-api";
 import db from "@/server/db";
 import { userOnboarding } from "@/server/db/schema/onboarding";
-
-const cliMetadataSchema = z.object({
-  cliVersion: z.string(),
-  os: z.string(),
-  arch: z.string(),
-});
 
 /**
  * Helper to parse user name into first/last name
@@ -105,10 +99,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Malformed JSON body" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Malformed JSON body" }, { status: 400 });
   }
 
   try {

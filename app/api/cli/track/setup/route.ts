@@ -1,20 +1,14 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import {
   captureServerException,
   trackCliSetupServer,
 } from "@/lib/analytics-server";
 import { authenticateApiRequest } from "@/lib/api-auth";
 import { realtime } from "@/lib/realtime";
+import { cliMetadataSchema } from "@/schemas/cli-api";
 import db from "@/server/db";
 import { userOnboarding } from "@/server/db/schema/onboarding";
-
-const trackSetupSchema = z.object({
-  cliVersion: z.string(),
-  os: z.string(),
-  arch: z.string(),
-});
 
 /**
  * POST /api/cli/track/setup
@@ -53,7 +47,7 @@ export async function POST(request: Request) {
   try {
     // Parse and validate body
     const body = await request.json();
-    const parsed = trackSetupSchema.safeParse(body);
+    const parsed = cliMetadataSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(

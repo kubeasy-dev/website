@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { captureServerException } from "@/lib/analytics-server";
 import { authenticateApiRequest, createApiCaller } from "@/lib/api-auth";
-import type { ObjectiveResult } from "@/types/cli-api";
+import { challengeSubmitRequestSchema } from "@/schemas/cli-api";
 
 /**
  * POST /api/cli/challenge/[slug]/submit
@@ -24,28 +24,22 @@ export async function POST(
   }
 
   try {
-    // Parse request body
+    // Parse and validate request body
     const body = await request.json();
+    const parsed = challengeSubmitRequestSchema.safeParse(body);
 
-    const results = body.results as ObjectiveResult[] | undefined;
-
-    // Validate request
-    if (!Array.isArray(results)) {
+    if (!parsed.success) {
       return NextResponse.json(
         {
           error:
             "Invalid request body. Expected { results: ObjectiveResult[] }",
+          details: parsed.error.message,
         },
         { status: 400 },
       );
     }
 
-    if (results.length === 0) {
-      return NextResponse.json(
-        { error: "results array cannot be empty" },
-        { status: 400 },
-      );
-    }
+    const { results } = parsed.data;
 
     // Create tRPC caller with authenticated context
     const trpc = createApiCaller(auth.user, auth.session);
