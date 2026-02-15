@@ -4,6 +4,7 @@ import {
   challengeResponseSchema,
   challengeStartResponseSchema,
   challengeStatusResponseSchema,
+  challengeSubmitFailureResponseSchema,
   challengeSubmitRequestSchema,
   challengeSubmitSuccessResponseSchema,
   cliMetadataSchema,
@@ -185,10 +186,18 @@ export function generateOpenApiDocument() {
           },
           responses: {
             "200": {
-              description: "Submission accepted (check `success` field)",
+              description: "Submission accepted, all validations passed",
               content: {
                 "application/json": {
                   schema: challengeSubmitSuccessResponseSchema,
+                },
+              },
+            },
+            "422": {
+              description: "Validation failed (some objectives did not pass)",
+              content: {
+                "application/json": {
+                  schema: challengeSubmitFailureResponseSchema,
                 },
               },
             },

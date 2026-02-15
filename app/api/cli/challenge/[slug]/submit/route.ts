@@ -23,9 +23,16 @@ export async function POST(
     );
   }
 
+  // Parse JSON body with dedicated error handling
+  let body: unknown;
   try {
-    // Parse and validate request body
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Malformed JSON body" }, { status: 400 });
+  }
+
+  try {
+    // Validate request body
     const parsed = challengeSubmitRequestSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -33,7 +40,7 @@ export async function POST(
         {
           error:
             "Invalid request body. Expected { results: ObjectiveResult[] }",
-          details: parsed.error.message,
+          details: parsed.error.format(),
         },
         { status: 400 },
       );
@@ -50,7 +57,8 @@ export async function POST(
       results,
     });
 
-    return NextResponse.json(result);
+    const status = result.success ? 200 : 422;
+    return NextResponse.json(result, { status });
   } catch (error) {
     await captureServerException(error, auth.user.id, {
       operation: "cli.challenge.submit",
