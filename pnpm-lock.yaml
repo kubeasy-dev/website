@@ -150,6 +150,9 @@ importers:
       zod:
         specifier: 4.3.6
         version: 4.3.6
+      zod-openapi:
+        specifier: ^5.4.6
+        version: 5.4.6(zod@4.3.6)
     devDependencies:
       '@biomejs/biome':
         specifier: 2.3.14
@@ -208,6 +211,9 @@ importers:
       tailwindcss:
         specifier: 4.1.18
         version: 4.1.18
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       tw-animate-css:
         specifier: 1.4.0
         version: 1.4.0
@@ -5236,6 +5242,12 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod-openapi@5.4.6:
+    resolution: {integrity: sha512-P2jsOOBAq/6hCwUsMCjUATZ8szkMsV5VAwZENfyxp2Hc/XPJQpVwAgevWZc65xZauCwWB9LAn7zYeiCJFAEL+A==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      zod: ^3.25.74 || ^4.0.0
+
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
@@ -7987,7 +7999,6 @@ snapshots:
       '@esbuild/win32-arm64': 0.27.2
       '@esbuild/win32-ia32': 0.27.2
       '@esbuild/win32-x64': 0.27.2
-    optional: true
 
   escalade@3.2.0: {}
 
@@ -9846,7 +9857,6 @@ snapshots:
       get-tsconfig: 4.12.0
     optionalDependencies:
       fsevents: 2.3.3
-    optional: true
 
   tunnel-agent@0.6.0:
     dependencies:
@@ -10219,6 +10229,10 @@ snapshots:
   yaml@2.8.1: {}
 
   yocto-queue@0.1.0: {}
+
+  zod-openapi@5.4.6(zod@4.3.6):
+    dependencies:
+      zod: 4.3.6
 
   zod-validation-error@4.0.2(zod@4.3.6):
     dependencies:

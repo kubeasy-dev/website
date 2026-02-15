@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { captureServerException } from "@/lib/analytics-server";
 import { authenticateApiRequest, createApiCaller } from "@/lib/api-auth";
-import type { ObjectiveResult } from "@/types/cli-api";
+import { challengeSubmitRequestSchema } from "@/schemas/cli-api";
 
 /**
  * POST /api/cli/challenge/[slug]/submit
@@ -23,29 +23,30 @@ export async function POST(
     );
   }
 
+  // Parse JSON body with dedicated error handling
+  let body: unknown;
   try {
-    // Parse request body
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Malformed JSON body" }, { status: 400 });
+  }
 
-    const results = body.results as ObjectiveResult[] | undefined;
+  try {
+    // Validate request body
+    const parsed = challengeSubmitRequestSchema.safeParse(body);
 
-    // Validate request
-    if (!Array.isArray(results)) {
+    if (!parsed.success) {
       return NextResponse.json(
         {
           error:
             "Invalid request body. Expected { results: ObjectiveResult[] }",
+          details: parsed.error.format(),
         },
         { status: 400 },
       );
     }
 
-    if (results.length === 0) {
-      return NextResponse.json(
-        { error: "results array cannot be empty" },
-        { status: 400 },
-      );
-    }
+    const { results } = parsed.data;
 
     // Create tRPC caller with authenticated context
     const trpc = createApiCaller(auth.user, auth.session);
@@ -56,7 +57,8 @@ export async function POST(
       results,
     });
 
-    return NextResponse.json(result);
+    const status = result.success ? 200 : 422;
+    return NextResponse.json(result, { status });
   } catch (error) {
     await captureServerException(error, auth.user.id, {
       operation: "cli.challenge.submit",
