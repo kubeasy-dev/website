@@ -11,17 +11,11 @@ export function createDemoSteps(token: string): WorkflowStep[] {
       key: "install",
       number: 1,
       title: "Install the CLI",
-      description: "Install the Kubeasy CLI globally using npm.",
-      command: "npm install -g @kubeasy-dev/kubeasy-cli",
+      description:
+        "Install the Kubeasy CLI using your preferred package manager.",
       icon: Terminal,
       color: "primary",
-      advancement: { type: "auto-on-copy" },
-      links: [
-        {
-          text: "Install npm",
-          url: "https://docs.npmjs.com/downloading-and-installing-node-js-and-npm",
-        },
-      ],
+      advancement: { type: "manual" },
     },
     {
       key: "start",

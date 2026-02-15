@@ -1,12 +1,8 @@
 "use client";
 
 import { CheckCircle2, Download, Terminal } from "lucide-react";
-import { useState } from "react";
+import { CliInstallTabs } from "@/components/cli-install-tabs";
 import { Button } from "@/components/ui/button";
-import { trackCommandCopied } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
-import { INSTALL_COMMANDS, METHODS, type Method } from "./constants";
-import { TerminalCommand } from "./terminal-command";
 
 interface StepCliInstallProps {
   onContinue: () => void;
@@ -15,11 +11,9 @@ interface StepCliInstallProps {
 
 /**
  * CLI installation step for onboarding wizard.
- * Detects user's platform and shows the appropriate install command.
+ * Shows all available install methods with tabbed interface.
  */
 export function StepCliInstall({ onContinue, onBack }: StepCliInstallProps) {
-  const [method, setMethod] = useState<Method>("npm");
-
   return (
     <div className="flex flex-col items-center space-y-8 max-w-2xl mx-auto">
       {/* Header */}
@@ -36,56 +30,8 @@ export function StepCliInstall({ onContinue, onBack }: StepCliInstallProps) {
         </p>
       </div>
 
-      {/* Methods Tabs */}
-      <div
-        className="w-full"
-        role="tablist"
-        aria-label="Select your operating system"
-      >
-        <div className="flex neo-border-thick rounded-xl overflow-hidden">
-          {METHODS.map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="tab"
-              aria-selected={method === m}
-              aria-controls={`panel-${m}`}
-              onClick={() => setMethod(m)}
-              className={cn(
-                "flex-1 px-4 py-3 font-bold transition-all flex items-center justify-center gap-2",
-                method === m
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card hover:bg-secondary text-foreground/70 hover:text-foreground",
-              )}
-            >
-              <span className="text-lg" aria-hidden="true">
-                {INSTALL_COMMANDS[m].icon}
-              </span>
-              <span className="hidden sm:inline">
-                {INSTALL_COMMANDS[m].label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Terminal Command */}
-      <div
-        id={`panel-${method}`}
-        role="tabpanel"
-        aria-labelledby={`tab-${method}`}
-        className="w-full"
-      >
-        <TerminalCommand
-          command={INSTALL_COMMANDS[method].command}
-          onCopy={() =>
-            trackCommandCopied(
-              INSTALL_COMMANDS[method].command,
-              "onboarding_cli_install",
-            )
-          }
-        />
-      </div>
+      {/* Install Tabs */}
+      <CliInstallTabs analyticsSource="onboarding_cli_install" />
 
       {/* Verification Box */}
       <div className="flex items-center gap-3 p-4 bg-secondary/50 rounded-lg w-full">

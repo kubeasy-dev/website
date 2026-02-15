@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   Check,
   ChevronDown,
   Copy,
@@ -9,6 +10,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { CliInstallTabs } from "@/components/cli-install-tabs";
 import { TrackedOutboundLink } from "@/components/tracked-outbound-link";
 import { trackDemoStepCompleted } from "@/lib/analytics";
 import { useRealtime } from "@/lib/realtime-client";
@@ -281,7 +283,7 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
               </button>
 
               {/* Expanded content - only for current step */}
-              {isCurrent && step.command && (
+              {isCurrent && (step.command || step.key === "install") && (
                 <div className="animate-in slide-in-from-top-2 duration-300">
                   <div className="px-4 pb-2 pt-2">
                     <p className="text-sm text-muted-foreground font-medium">
@@ -289,80 +291,97 @@ export function DemoSteps({ token, onComplete }: Readonly<DemoStepsProps>) {
                     </p>
                   </div>
 
-                  {/* Command block */}
-                  <div className="p-4 bg-foreground">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0 font-mono text-sm text-background overflow-x-auto">
-                        <span className="text-green-400 mr-2">$</span>
-                        <span className="whitespace-nowrap">
-                          {step.command}
-                        </span>
-                      </div>
-                      {waitingForEvent === index ? (
-                        <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm bg-amber-500 text-white">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Waiting...
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (step.command) {
-                              handleCopyCommand(step.command, index);
-                            }
-                          }}
-                          className={cn(
-                            "flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wide transition-all",
-                            copiedStep === index
-                              ? "bg-green-500 text-white"
-                              : "bg-primary text-primary-foreground hover:bg-primary/90",
-                          )}
-                        >
-                          {copiedStep === index ? (
-                            <>
-                              <Check className="w-4 h-4" />
-                              Copied!
-                            </>
+                  {/* Install step: show tabbed install component */}
+                  {step.key === "install" ? (
+                    <div className="p-4 space-y-4">
+                      <CliInstallTabs analyticsSource="demo_cli_install" />
+                      <button
+                        type="button"
+                        onClick={advanceToNextStep}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wide transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                        Continue
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Command block */}
+                      <div className="p-4 bg-foreground">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 min-w-0 font-mono text-sm text-background overflow-x-auto">
+                            <span className="text-green-400 mr-2">$</span>
+                            <span className="whitespace-nowrap">
+                              {step.command}
+                            </span>
+                          </div>
+                          {waitingForEvent === index ? (
+                            <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm bg-amber-500 text-white">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Waiting...
+                            </div>
                           ) : (
-                            <>
-                              <Copy className="w-4 h-4" />
-                              {isAutoAdvance ? "Copy & Continue" : "Copy"}
-                            </>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (step.command) {
+                                  handleCopyCommand(step.command, index);
+                                }
+                              }}
+                              className={cn(
+                                "flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wide transition-all",
+                                copiedStep === index
+                                  ? "bg-green-500 text-white"
+                                  : "bg-primary text-primary-foreground hover:bg-primary/90",
+                              )}
+                            >
+                              {copiedStep === index ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Copied!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  {isAutoAdvance ? "Copy & Continue" : "Copy"}
+                                </>
+                              )}
+                            </button>
                           )}
-                        </button>
-                      )}
-                    </div>
-                    {/* Waiting hint */}
-                    {waitingForEvent === index && (
-                      <div className="mt-3 text-xs text-white/70">
-                        Run the command in your terminal...
+                        </div>
+                        {/* Waiting hint */}
+                        {waitingForEvent === index && (
+                          <div className="mt-3 text-xs text-white/70">
+                            Run the command in your terminal...
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Links */}
-                  {step.links && step.links.length > 0 && (
-                    <div className="px-4 py-3 bg-secondary/30 border-t-2 border-foreground">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                          Resources:
-                        </span>
-                        {step.links.map((link) => (
-                          <TrackedOutboundLink
-                            key={link.url}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            linkType="docs"
-                            location="demo_try_page"
-                            className="inline-flex items-center gap-1.5 text-sm text-primary font-bold hover:underline"
-                          >
-                            {link.text}
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </TrackedOutboundLink>
-                        ))}
-                      </div>
-                    </div>
+                      {/* Links */}
+                      {step.links && step.links.length > 0 && (
+                        <div className="px-4 py-3 bg-secondary/30 border-t-2 border-foreground">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                              Resources:
+                            </span>
+                            {step.links.map((link) => (
+                              <TrackedOutboundLink
+                                key={link.url}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                linkType="docs"
+                                location="demo_try_page"
+                                className="inline-flex items-center gap-1.5 text-sm text-primary font-bold hover:underline"
+                              >
+                                {link.text}
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </TrackedOutboundLink>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
