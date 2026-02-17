@@ -183,8 +183,6 @@ export async function POST(request: Request) {
             estimatedTime: incomingChallenge.estimatedTime,
             initialSituation: incomingChallenge.initialSituation,
             objective: incomingChallenge.objective,
-            ofTheWeek: incomingChallenge.ofTheWeek,
-            starterFriendly: incomingChallenge.starterFriendly,
           })
           .returning({ id: challenge.id });
 
@@ -205,9 +203,7 @@ export async function POST(request: Request) {
           existing.typeSlug !== incomingChallenge.type ||
           existing.estimatedTime !== incomingChallenge.estimatedTime ||
           existing.initialSituation !== incomingChallenge.initialSituation ||
-          existing.objective !== incomingChallenge.objective ||
-          existing.ofTheWeek !== incomingChallenge.ofTheWeek ||
-          existing.starterFriendly !== incomingChallenge.starterFriendly;
+          existing.objective !== incomingChallenge.objective;
 
         if (needsUpdate) {
           await db
@@ -221,8 +217,6 @@ export async function POST(request: Request) {
               estimatedTime: incomingChallenge.estimatedTime,
               initialSituation: incomingChallenge.initialSituation,
               objective: incomingChallenge.objective,
-              ofTheWeek: incomingChallenge.ofTheWeek,
-              starterFriendly: incomingChallenge.starterFriendly,
             })
             .where(eq(challenge.slug, incomingChallenge.slug));
           updated.push(incomingChallenge.slug);
