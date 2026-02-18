@@ -80,8 +80,7 @@ export function OnboardingWizard({
       initializeMutation.mutate();
       trackOnboardingStarted();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run once on mount
-  }, [initializeMutation.mutate]);
+  }, [initializeMutation]);
 
   const handleStepComplete = useCallback((stepNumber: number) => {
     trackOnboardingStepCompleted(STEP_KEYS[stepNumber - 1], stepNumber);
