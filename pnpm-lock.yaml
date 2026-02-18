@@ -151,7 +151,7 @@ importers:
         specifier: 4.3.6
         version: 4.3.6
       zod-openapi:
-        specifier: ^5.4.6
+        specifier: 5.4.6
         version: 5.4.6(zod@4.3.6)
     devDependencies:
       '@biomejs/biome':
@@ -212,7 +212,7 @@ importers:
         specifier: 4.1.18
         version: 4.1.18
       tsx:
-        specifier: ^4.21.0
+        specifier: 4.21.0
         version: 4.21.0
       tw-animate-css:
         specifier: 1.4.0
