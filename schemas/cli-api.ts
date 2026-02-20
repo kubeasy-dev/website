@@ -1,5 +1,6 @@
 import "zod-openapi";
 import { z } from "zod";
+import { challengeDifficultyEnum } from "@/server/db/schema/challenge";
 
 // ---------- Shared ----------
 
@@ -49,7 +50,7 @@ export const challengeResponseSchema = z
     title: z.string(),
     slug: z.string(),
     description: z.string(),
-    difficulty: z.enum(["easy", "medium", "hard"]),
+    difficulty: z.enum(challengeDifficultyEnum.enumValues),
     theme: z.string(),
     initial_situation: z.string(),
     objective: z.string(),
@@ -149,6 +150,44 @@ export const challengeResetResponseSchema = z
     message: z.string(),
   })
   .meta({ description: "Challenge reset response" });
+
+// ---------- Metadata (public, no auth) ----------
+
+export const cliThemeSchema = z
+  .object({
+    slug: z.string(),
+    name: z.string(),
+    description: z.string(),
+    logo: z.string().nullable(),
+  })
+  .meta({ description: "Challenge theme" });
+
+export const cliThemesResponseSchema = z
+  .object({
+    themes: z.array(cliThemeSchema),
+  })
+  .meta({ description: "List of available themes" });
+
+export const cliTypeSchema = z
+  .object({
+    slug: z.string(),
+    name: z.string(),
+    description: z.string(),
+    logo: z.string().nullable(),
+  })
+  .meta({ description: "Challenge type" });
+
+export const cliTypesResponseSchema = z
+  .object({
+    types: z.array(cliTypeSchema),
+  })
+  .meta({ description: "List of available types" });
+
+export const cliDifficultiesResponseSchema = z
+  .object({
+    difficulties: z.array(z.enum(challengeDifficultyEnum.enumValues)),
+  })
+  .meta({ description: "List of available difficulty levels" });
 
 // ---------- Track Setup ----------
 

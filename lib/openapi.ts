@@ -7,7 +7,10 @@ import {
   challengeSubmitFailureResponseSchema,
   challengeSubmitRequestSchema,
   challengeSubmitSuccessResponseSchema,
+  cliDifficultiesResponseSchema,
   cliMetadataSchema,
+  cliThemesResponseSchema,
+  cliTypesResponseSchema,
   errorResponseSchema,
   slugParamSchema,
   trackSetupResponseSchema,
@@ -225,6 +228,67 @@ export function generateOpenApiDocument() {
             },
             ...notFoundResponse,
             ...errorResponses,
+          },
+        },
+      },
+
+      // ---- Metadata (public) ----
+      "/api/cli/types": {
+        get: {
+          operationId: "getTypes",
+          summary: "List available challenge types",
+          tags: ["Metadata"],
+          responses: {
+            "200": {
+              description: "List of challenge types",
+              content: {
+                "application/json": { schema: cliTypesResponseSchema },
+              },
+            },
+            "500": {
+              description: "Internal server error",
+              content: {
+                "application/json": { schema: errorResponseSchema },
+              },
+            },
+          },
+        },
+      },
+
+      "/api/cli/themes": {
+        get: {
+          operationId: "getThemes",
+          summary: "List available challenge themes",
+          tags: ["Metadata"],
+          responses: {
+            "200": {
+              description: "List of challenge themes",
+              content: {
+                "application/json": { schema: cliThemesResponseSchema },
+              },
+            },
+            "500": {
+              description: "Internal server error",
+              content: {
+                "application/json": { schema: errorResponseSchema },
+              },
+            },
+          },
+        },
+      },
+
+      "/api/cli/difficulties": {
+        get: {
+          operationId: "getDifficulties",
+          summary: "List available difficulty levels",
+          tags: ["Metadata"],
+          responses: {
+            "200": {
+              description: "List of difficulty levels",
+              content: {
+                "application/json": { schema: cliDifficultiesResponseSchema },
+              },
+            },
           },
         },
       },
