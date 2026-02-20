@@ -233,7 +233,7 @@ export function generateOpenApiDocument() {
       },
 
       // ---- Metadata (public) ----
-      "/api/cli/types": {
+      "/api/types": {
         get: {
           operationId: "getTypes",
           summary: "List available challenge types",
@@ -255,7 +255,7 @@ export function generateOpenApiDocument() {
         },
       },
 
-      "/api/cli/themes": {
+      "/api/themes": {
         get: {
           operationId: "getThemes",
           summary: "List available challenge themes",
@@ -277,7 +277,7 @@ export function generateOpenApiDocument() {
         },
       },
 
-      "/api/cli/difficulties": {
+      "/api/difficulties": {
         get: {
           operationId: "getDifficulties",
           summary: "List available difficulty levels",
