@@ -30,6 +30,9 @@ const socialProviders = {
 };
 
 export const auth = betterAuth({
+  baseURL: process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000",
   trustedOrigins: [
     "http://localhost:3000",
     "https://kubeasy.dev",
