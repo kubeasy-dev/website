@@ -85,6 +85,13 @@
       "when": 1770727748825,
       "tag": "0015_fearless_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1772202205603,
+      "tag": "0016_giant_paper_doll",
+      "breakpoints": true
     }
   ]
 }
