@@ -18,22 +18,18 @@ const socialProviders = {
   github: {
     clientId: env.GITHUB_CLIENT_ID,
     clientSecret: env.GITHUB_CLIENT_SECRET,
-    redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/github`,
   },
   google: {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
-    redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/google`,
   },
   microsoft: {
     clientId: env.MICROSOFT_CLIENT_ID,
     clientSecret: env.MICROSOFT_CLIENT_SECRET,
-    redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/microsoft`,
   },
 };
 
 export const auth = betterAuth({
-  baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: [
     "http://localhost:3000",
     "https://kubeasy.dev",
