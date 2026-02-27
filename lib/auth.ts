@@ -80,10 +80,9 @@ export const auth = betterAuth({
   ],
   account: {
     encryptOAuthTokens: true,
-    //cache the account in the cookie
     storeAccountCookie: true,
-    //to update scopes
     updateAccountOnSignIn: true,
+    storeStateStrategy: "cookie",
   },
   session: {
     cookieCache: {
