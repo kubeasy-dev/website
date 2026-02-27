@@ -1,13 +1,15 @@
+import { all } from "better-all";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { cache } from "react";
 import { env } from "@/env";
 import {
   captureServerException,
   trackUserSignupServer,
 } from "@/lib/analytics-server";
-import { isRedisConfigured, redis } from "@/lib/redis";
 import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
 import { createResendContact } from "./resend";
@@ -35,7 +37,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:3000",
     "https://kubeasy.dev",
-    "https://*.vercel.app", // Allow all Vercel preview deployments
+    "https://website-*-kubeasy.vercel.app",
   ],
   database: drizzleAdapter(db, {
     provider: "pg", // or "mysql", "sqlite"
@@ -50,65 +52,6 @@ export const auth = betterAuth({
       },
     },
   },
-  // Redis as secondary storage for session caching and revocation (optional)
-  // This allows stateless session validation via cookie while maintaining
-  // the ability to revoke sessions through Redis
-  // Falls back to database-only sessions if Redis is not configured
-  ...(isRedisConfigured &&
-    redis && {
-      secondaryStorage: {
-        get: async (key: string): Promise<string | null> => {
-          // Safety check - should never be null due to outer condition
-          if (!redis) return null;
-          try {
-            const value = await redis.get<string>(key);
-            return value;
-          } catch (error) {
-            await captureServerException(error, undefined, {
-              operation: "redis.secondaryStorage.get",
-              key,
-            });
-            // Return null on error - Better Auth will fall back to database
-            return null;
-          }
-        },
-        set: async (
-          key: string,
-          value: string,
-          ttl?: number,
-        ): Promise<void> => {
-          // Safety check - should never be null due to outer condition
-          if (!redis) return;
-          try {
-            if (ttl) {
-              await redis.set(key, value, { ex: ttl });
-            } else {
-              await redis.set(key, value);
-            }
-          } catch (error) {
-            await captureServerException(error, undefined, {
-              operation: "redis.secondaryStorage.set",
-              key,
-              ttl,
-            });
-            // Don't throw - Better Auth will continue without caching
-          }
-        },
-        delete: async (key: string): Promise<void> => {
-          // Safety check - should never be null due to outer condition
-          if (!redis) return;
-          try {
-            await redis.del(key);
-          } catch (error) {
-            await captureServerException(error, undefined, {
-              operation: "redis.secondaryStorage.delete",
-              key,
-            });
-            // Don't throw - session will expire naturally
-          }
-        },
-      },
-    }),
   plugins: [
     apiKey({
       rateLimit: {
@@ -126,8 +69,23 @@ export const auth = betterAuth({
       },
     }),
     admin(),
-    oAuthProxy(),
+    ...(process.env.VERCEL
+      ? [oAuthProxy({ productionURL: "https://kubeasy.dev" })]
+      : []),
   ],
+  account: {
+    encryptOAuthTokens: true,
+    //cache the account in the cookie
+    storeAccountCookie: true,
+    //to update scopes
+    updateAccountOnSignIn: true,
+  },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 24 * 7,
+    },
+  },
   socialProviders: {
     ...socialProviders,
   },
@@ -207,4 +165,33 @@ export const auth = betterAuth({
       },
     },
   },
+});
+
+export const getServerSession = cache(async () => {
+  try {
+    const { session, account } = await all({
+      async session() {
+        const session = await auth.api.getSession({
+          headers: await headers(),
+        });
+        return session;
+      },
+      async account() {
+        const accessToken = await auth.api.getAccessToken({
+          headers: await headers(),
+          body: { providerId: "github" },
+        });
+        return accessToken;
+      },
+    });
+    if (!session || !account?.accessToken) {
+      return null;
+    }
+    return {
+      user: session.user,
+      session,
+    };
+  } catch {
+    return null;
+  }
 });
