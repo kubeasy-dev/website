@@ -10,7 +10,7 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - uses: anthropics/claude-code-action@ade221fd1c400376a4799977d683a4eda09f9d7c # v1.0.60
+      - uses: anthropics/claude-code-action@1dd74842e568f373608605d9e45c9e854f65f543 # v1.0.63
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
