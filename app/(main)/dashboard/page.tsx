@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { Clock, Target, TrendingUp, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -131,22 +132,34 @@ async function DashboardContent() {
   const queryClient = getQueryClient();
 
   // Fetch onboarding status and prefetch data for client components
-  const [onboardingStatus] = await Promise.all([
-    queryClient.fetchQuery(trpc.onboarding.getStatus.queryOptions()),
-    prefetch(
-      trpc.userProgress.getCompletionPercentage.queryOptions({
-        splitByTheme: true,
-      }),
-    ),
-    prefetch(
-      trpc.userProgress.getCompletionPercentage.queryOptions({
-        splitByTheme: false,
-      }),
-    ),
-    prefetch(trpc.userProgress.getXpAndRank.queryOptions()),
-    prefetch(trpc.userProgress.getStreak.queryOptions()),
-    prefetch(trpc.theme.list.queryOptions()),
-  ]);
+  const { onboardingStatus } = await all({
+    async onboardingStatus() {
+      return queryClient.fetchQuery(trpc.onboarding.getStatus.queryOptions());
+    },
+    async completionByTheme() {
+      await prefetch(
+        trpc.userProgress.getCompletionPercentage.queryOptions({
+          splitByTheme: true,
+        }),
+      );
+    },
+    async completionTotal() {
+      await prefetch(
+        trpc.userProgress.getCompletionPercentage.queryOptions({
+          splitByTheme: false,
+        }),
+      );
+    },
+    async xpAndRank() {
+      await prefetch(trpc.userProgress.getXpAndRank.queryOptions());
+    },
+    async streak() {
+      await prefetch(trpc.userProgress.getStreak.queryOptions());
+    },
+    async themes() {
+      await prefetch(trpc.theme.list.queryOptions());
+    },
+  });
 
   const isOnboardingComplete =
     onboardingStatus.isComplete || onboardingStatus.steps.hasCompletedChallenge;

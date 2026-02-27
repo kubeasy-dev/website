@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
 import { isNotionConfigured } from "@/lib/notion";
@@ -12,14 +13,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
 
   // Fetch all challenges, themes, and blog posts for dynamic routes
-  const [{ challenges }, themes, blogData, blogCategories] = await Promise.all([
-    getChallenges(),
-    getThemes(),
-    isNotionConfigured
-      ? getBlogPosts(1, null, 100)
-      : Promise.resolve({ posts: [] }),
-    isNotionConfigured ? getAllBlogCategoryNames() : Promise.resolve([]),
-  ]);
+  const { challengeData, themes, blogData, blogCategories } = await all({
+    async challengeData() {
+      return getChallenges();
+    },
+    async themes() {
+      return getThemes();
+    },
+    async blogData() {
+      return isNotionConfigured
+        ? getBlogPosts(1, null, 100)
+        : { posts: [] as Awaited<ReturnType<typeof getBlogPosts>>["posts"] };
+    },
+    async blogCategories() {
+      return isNotionConfigured ? getAllBlogCategoryNames() : [];
+    },
+  });
+  const { challenges } = challengeData;
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
