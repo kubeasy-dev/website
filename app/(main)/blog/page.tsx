@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { FileText } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -46,10 +47,15 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const currentPage = Math.max(1, Number(page) || 1);
   const selectedCategory = category || null;
 
-  const [{ posts, totalPages, totalPosts }, categories] = await Promise.all([
-    getBlogPosts(currentPage, selectedCategory),
-    getBlogCategories(),
-  ]);
+  const { blogData, categories } = await all({
+    async blogData() {
+      return getBlogPosts(currentPage, selectedCategory);
+    },
+    async categories() {
+      return getBlogCategories();
+    },
+  });
+  const { posts, totalPages, totalPosts } = blogData;
 
   return (
     <div className="w-full overflow-x-hidden">

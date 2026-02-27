@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { Suspense } from "react";
 import { ProfileApiTokens } from "@/components/profile-api-tokens";
 import { ProfileDangerZone } from "@/components/profile-danger-zone";
@@ -32,10 +33,14 @@ async function ProfileContent() {
   const session = await requireAuth();
 
   // Prefetch data in parallel (prefetch won't throw on error, data will be hydrated to client)
-  await Promise.all([
-    prefetch(trpc.emailPreference.listTopics.queryOptions()),
-    prefetch(trpc.userProgress.getXpAndRank.queryOptions()),
-  ]);
+  await all({
+    async emailPreferences() {
+      await prefetch(trpc.emailPreference.listTopics.queryOptions());
+    },
+    async xpAndRank() {
+      await prefetch(trpc.userProgress.getXpAndRank.queryOptions());
+    },
+  });
 
   // Extract user information
   const user = session.user;
