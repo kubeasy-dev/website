@@ -26,6 +26,26 @@ export const user = pgTable("user", {
   resendContactId: text("resend_contact_id"),
 });
 
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    impersonatedBy: text("impersonated_by"),
+  },
+  (table) => [index("session_userId_idx").on(table.userId)],
+);
+
 export const account = pgTable(
   "account",
   {
@@ -100,8 +120,16 @@ export const apikey = pgTable(
 );
 
 export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
   accounts: many(account),
   apikeys: many(apikey),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
 }));
 
 export const accountRelations = relations(account, ({ one }) => ({

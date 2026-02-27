@@ -1,33 +1,18 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/lib/auth";
 
 /**
  * Require authentication for a page.
  * The proxy.ts handles redirecting unauthenticated users to login with the correct `next` param.
- * This function validates the session and returns it.
+ * This function validates the session server-side and returns it.
  *
  * @returns The authenticated session
- * @throws Redirects to /login if session is invalid (fallback, proxy should handle this)
- *
- * @example
- * ```tsx
- * export default async function ProtectedPage() {
- *   const session = await requireAuth();
- *   // User is authenticated, session is available
- *   return <div>Hello {session.user.name}</div>;
- * }
- * ```
+ * @throws Redirects to / if session is invalid (fallback, proxy should handle this)
  */
 export async function requireAuth() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
+  const session = await getServerSession();
   if (!session) {
-    // Fallback redirect - the proxy should have already handled this
-    redirect("/login");
+    return redirect("/");
   }
-
   return session;
 }
