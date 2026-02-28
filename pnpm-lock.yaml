@@ -79,7 +79,7 @@ importers:
         specifier: 10.4.24
         version: 10.4.24(postcss@8.5.6)
       better-all:
-        specifier: ^0.0.7
+        specifier: 0.0.7
         version: 0.0.7
       better-auth:
         specifier: 1.4.19
