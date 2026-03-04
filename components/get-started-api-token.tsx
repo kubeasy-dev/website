@@ -70,7 +70,7 @@ export function GetStartedApiToken() {
     );
   }
 
-  const hasTokens = tokens && tokens.length > 0;
+  const hasTokens = tokens?.apiKeys && tokens.apiKeys.length > 0;
 
   // If user just created a token, show it
   if (newlyCreatedToken) {
@@ -117,7 +117,8 @@ export function GetStartedApiToken() {
         <Check className="h-5 w-5 text-green-600 shrink-0" />
         <div className="flex-1">
           <p className="font-bold text-green-800">
-            You have {tokens.length} API token{tokens.length > 1 ? "s" : ""}
+            You have {tokens.apiKeys.length} API token
+            {tokens.apiKeys.length > 1 ? "s" : ""}
           </p>
           <p className="text-sm text-green-700">
             Run{" "}

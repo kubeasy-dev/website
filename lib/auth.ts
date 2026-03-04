@@ -1,7 +1,8 @@
+import { apiKey } from "@better-auth/api-key";
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { all } from "better-all";
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, apiKey, oAuthProxy } from "better-auth/plugins";
+import { admin, oAuthProxy } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { cache } from "react";
