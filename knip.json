@@ -26,7 +26,6 @@
     "postcss",
     "autoprefixer",
     "tailwindcss",
-    "tailwindcss-animate",
     "tw-animate-css",
     "@biomejs/biome",
     "husky",
