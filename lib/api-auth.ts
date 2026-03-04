@@ -56,14 +56,21 @@ export async function authenticateApiRequest(
     });
 
     if (!verifyResult.valid || !verifyResult.key) {
+      const errorMessage =
+        typeof verifyResult.error?.message === "string"
+          ? verifyResult.error.message
+          : "Invalid or expired token";
       return {
         success: false,
-        error: verifyResult.error?.message || "Invalid or expired token",
+        error: errorMessage,
       };
     }
 
-    // Get user from database
-    const userId = verifyResult.key.userId;
+    // Get user from database (referenceId contains userId when references="user")
+    const userId = verifyResult.key.referenceId;
+    if (!userId) {
+      return { success: false, error: "API key is not linked to a user" };
+    }
     const [userResult] = await db
       .select()
       .from(userTable)

@@ -23,6 +23,8 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts"
   },
   "dependencies": {
+    "@better-auth/api-key": "^1.5.3",
+    "@better-auth/drizzle-adapter": "^1.5.3",
     "@neondatabase/serverless": "1.0.2",
     "@notionhq/client": "5.11.0",
     "@posthog/nextjs-config": "1.8.18",
@@ -46,7 +48,7 @@
     "@vercel/analytics": "1.6.1",
     "autoprefixer": "10.4.27",
     "better-all": "0.0.7",
-    "better-auth": "1.4.20",
+    "better-auth": "1.5.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "drizzle-orm": "0.45.1",

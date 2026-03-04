@@ -1,4 +1,5 @@
-import { adminClient, apiKeyClient } from "better-auth/client/plugins";
+import { apiKeyClient } from "@better-auth/api-key/client";
+import { adminClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { resetAnalytics } from "@/lib/analytics";
 

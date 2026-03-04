@@ -217,7 +217,7 @@ export function ProfileApiTokens() {
             <div className="h-6 w-32 bg-muted rounded mb-2" />
             <div className="h-4 w-48 bg-muted rounded" />
           </div>
-        ) : !tokens || tokens.length === 0 ? (
+        ) : !tokens?.apiKeys || tokens.apiKeys.length === 0 ? (
           <Empty>
             <EmptyMedia variant="icon">
               <Key />
@@ -230,7 +230,7 @@ export function ProfileApiTokens() {
             </EmptyHeader>
           </Empty>
         ) : (
-          tokens.map((token) => (
+          tokens.apiKeys.map((token) => (
             <div
               key={token.id}
               className="p-4 bg-background neo-border flex items-center justify-between gap-4"
