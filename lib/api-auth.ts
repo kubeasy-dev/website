@@ -68,6 +68,9 @@ export async function authenticateApiRequest(
 
     // Get user from database (referenceId contains userId when references="user")
     const userId = verifyResult.key.referenceId;
+    if (!userId) {
+      return { success: false, error: "API key is not linked to a user" };
+    }
     const [userResult] = await db
       .select()
       .from(userTable)
