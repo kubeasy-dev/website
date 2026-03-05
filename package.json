@@ -23,8 +23,8 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts"
   },
   "dependencies": {
-    "@better-auth/api-key": "^1.5.3",
-    "@better-auth/drizzle-adapter": "^1.5.3",
+    "@better-auth/api-key": "1.5.3",
+    "@better-auth/drizzle-adapter": "1.5.3",
     "@neondatabase/serverless": "1.0.2",
     "@notionhq/client": "5.11.0",
     "@posthog/nextjs-config": "1.8.18",
