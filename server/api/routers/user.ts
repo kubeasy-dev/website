@@ -57,6 +57,7 @@ export const userRouter = createTRPCRouter({
     };
   }),
 
+  // TODO: add limit/offset pagination as user count grows
   adminList: adminProcedure.query(async ({ ctx }) => {
     const users = await ctx.db
       .select({
@@ -95,6 +96,7 @@ export const userRouter = createTRPCRouter({
         .update(user)
         .set({ banned: true, banReason: input.reason ?? null })
         .where(eq(user.id, input.userId));
+      revalidateTag(`user-${input.userId}-profile`, "max");
       return { success: true };
     }),
 
@@ -105,6 +107,7 @@ export const userRouter = createTRPCRouter({
         .update(user)
         .set({ banned: false, banReason: null, banExpires: null })
         .where(eq(user.id, input.userId));
+      revalidateTag(`user-${input.userId}-profile`, "max");
       return { success: true };
     }),
 
@@ -123,6 +126,7 @@ export const userRouter = createTRPCRouter({
         .update(user)
         .set({ role: input.role === "user" ? null : input.role })
         .where(eq(user.id, input.userId));
+      revalidateTag(`user-${input.userId}-profile`, "max");
       return { success: true };
     }),
 

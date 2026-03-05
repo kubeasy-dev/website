@@ -89,6 +89,7 @@ export async function getChallengeBySlug(slug: string) {
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
       ofTheWeek: challenge.ofTheWeek,
+      available: challenge.available,
       createdAt: challenge.createdAt,
       updatedAt: challenge.updatedAt,
     })
@@ -149,7 +150,7 @@ export async function getChallengeCountByTheme(themeSlug: string) {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(challenge)
-    .where(eq(challenge.theme, themeSlug));
+    .where(and(eq(challenge.theme, themeSlug), eq(challenge.available, true)));
 
   return result[0]?.count ?? 0;
 }
@@ -167,7 +168,9 @@ export async function getChallengeCountByType(typeSlug: string) {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(challenge)
-    .where(eq(challenge.typeSlug, typeSlug));
+    .where(
+      and(eq(challenge.typeSlug, typeSlug), eq(challenge.available, true)),
+    );
 
   return result[0]?.count ?? 0;
 }

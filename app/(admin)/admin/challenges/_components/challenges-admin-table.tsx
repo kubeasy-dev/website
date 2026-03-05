@@ -1,6 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -16,18 +18,43 @@ import { useTRPC } from "@/trpc/client";
 export function ChallengesAdminTable() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [pendingSlugs, setPendingSlugs] = useState<Set<string>>(new Set());
 
   const { data, isLoading } = useQuery(trpc.challenge.adminList.queryOptions());
 
-  const { mutate: setAvailability, isPending } = useMutation(
+  const { mutate: setAvailability } = useMutation(
     trpc.challenge.setAvailability.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_, { slug }) => {
+        setPendingSlugs((prev) => {
+          const next = new Set(prev);
+          next.delete(slug);
+          return next;
+        });
+        void queryClient.invalidateQueries(
+          trpc.challenge.adminList.queryOptions(),
+        );
+      },
+      onError: (error, { slug }) => {
+        setPendingSlugs((prev) => {
+          const next = new Set(prev);
+          next.delete(slug);
+          return next;
+        });
+        toast.error("Failed to update availability", {
+          description: error.message,
+        });
+        // Refetch to restore correct state in the UI
         void queryClient.invalidateQueries(
           trpc.challenge.adminList.queryOptions(),
         );
       },
     }),
   );
+
+  const handleToggle = (slug: string, available: boolean) => {
+    setPendingSlugs((prev) => new Set(prev).add(slug));
+    setAvailability({ slug, available });
+  };
 
   if (isLoading) {
     return (
@@ -116,9 +143,9 @@ export function ChallengesAdminTable() {
               <TableCell className="text-right">
                 <Switch
                   checked={c.available}
-                  disabled={isPending}
+                  disabled={pendingSlugs.has(c.slug)}
                   onCheckedChange={(available) =>
-                    setAvailability({ slug: c.slug, available })
+                    handleToggle(c.slug, available)
                   }
                   aria-label={`Toggle availability for ${c.title}`}
                 />

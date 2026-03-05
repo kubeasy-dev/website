@@ -120,8 +120,12 @@ export const challengeRouter = createTRPCRouter({
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ input }) => {
-      const challenge = await getChallengeBySlug(input.slug);
-      return { challenge };
+      const challengeData = await getChallengeBySlug(input.slug);
+      // Return null for unavailable challenges so the page 404s
+      if (challengeData && !challengeData.available) {
+        return { challenge: null };
+      }
+      return { challenge: challengeData };
     }),
 
   create: adminProcedure

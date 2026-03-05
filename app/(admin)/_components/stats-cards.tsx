@@ -12,19 +12,6 @@ export interface StatCardDef<T> {
   getSub: (data: T | undefined) => string;
 }
 
-function _StatCardSkeleton() {
-  return (
-    <div className="flex items-start gap-4 p-6">
-      <div className="mt-0.5 rounded-lg p-2 bg-muted shrink-0 h-8 w-8 animate-pulse" />
-      <div className="min-w-0 flex-1">
-        <div className="h-3 w-20 bg-muted rounded animate-pulse" />
-        <div className="mt-2 h-7 w-16 bg-muted rounded animate-pulse" />
-        <div className="mt-1.5 h-3 w-28 bg-muted rounded animate-pulse" />
-      </div>
-    </div>
-  );
-}
-
 export function StatsCards<T>({
   stats,
   data,

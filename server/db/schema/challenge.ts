@@ -84,6 +84,11 @@ export const challenge = pgTable(
     index("challenge_created_at_idx").on(table.createdAt),
     // Index pour les challenges starter-friendly
     index("challenge_starter_friendly_idx").on(table.starterFriendly),
+    // Index composite pour le filtre de disponibilité (used in all public queries)
+    index("challenge_available_difficulty_idx").on(
+      table.available,
+      table.difficulty,
+    ),
   ],
 );
 
