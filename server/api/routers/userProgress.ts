@@ -756,6 +756,7 @@ export const userProgressRouter = createTRPCRouter({
       revalidateTag(`user-${userId}-streak`, "max");
       revalidateTag(`challenge-${challengeSlug}`, "max");
       revalidateTag("challenges", "max");
+      revalidateTag(`challenge-list-${userId}`, "max");
 
       return {
         success: true,
@@ -836,6 +837,9 @@ export const userProgressRouter = createTRPCRouter({
         .update(userXp)
         .set({ totalXp: xpResult.totalXp })
         .where(eq(userXp.userId, userId));
+
+      revalidateTag(`challenge-list-${userId}`, "max");
+      revalidateTag("challenges", "max");
 
       return {
         success: true,
