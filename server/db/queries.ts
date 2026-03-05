@@ -213,7 +213,13 @@ export async function getChallengeTypes() {
       challengeCount: sql<number>`count(${challenge.id})`.as("challenge_count"),
     })
     .from(challengeType)
-    .leftJoin(challenge, eq(challengeType.slug, challenge.typeSlug))
+    .leftJoin(
+      challenge,
+      and(
+        eq(challengeType.slug, challenge.typeSlug),
+        eq(challenge.available, true),
+      ),
+    )
     .groupBy(challengeType.slug)
     .orderBy(asc(challengeType.name));
 

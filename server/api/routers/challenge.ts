@@ -317,7 +317,7 @@ export const challengeRouter = createTRPCRouter({
       // First get the challenge to ensure it exists and get its ID
       const challengeData = await getChallengeBySlug(input.slug);
 
-      if (!challengeData) {
+      if (!challengeData || !challengeData.available) {
         return { objectives: [] };
       }
 
