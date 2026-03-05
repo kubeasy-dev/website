@@ -27,7 +27,7 @@ export const onboardingRouter = createTRPCRouter({
     const [tokenResult] = await ctx.db
       .select({ count: count() })
       .from(apikey)
-      .where(eq(apikey.userId, userId));
+      .where(eq(apikey.referenceId, userId));
     const hasApiToken = (tokenResult?.count ?? 0) > 0;
 
     // 3. Derive hasStartedChallenge from userProgress table

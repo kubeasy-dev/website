@@ -35,7 +35,13 @@ const routeList: RouteProps[] = [
   },
 ];
 
-export function MobileMenu({ user }: { user: User | null }) {
+export function MobileMenu({
+  user,
+  isAdmin,
+}: {
+  user: User | null;
+  isAdmin?: boolean;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -70,6 +76,16 @@ export function MobileMenu({ user }: { user: User | null }) {
                 Profile
               </Link>
             </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/admin/challenges"
+                  className="font-bold cursor-pointer"
+                >
+                  Admin
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <SignOutButton />

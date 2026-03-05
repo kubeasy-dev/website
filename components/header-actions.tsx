@@ -26,16 +26,22 @@ const UserDropdown = dynamic(
   },
 );
 
-export function HeaderActions({ user }: { user: User | null }) {
+export function HeaderActions({
+  user,
+  isAdmin,
+}: {
+  user: User | null;
+  isAdmin?: boolean;
+}) {
   return (
     <div className="flex items-center gap-3">
       {/* Mobile Menu - only on small screens */}
-      <MobileMenu user={user} />
+      <MobileMenu user={user} isAdmin={isAdmin} />
 
       {/* User dropdown / Auth buttons - visible on medium screens and up */}
       <div className="hidden md:flex items-center gap-3">
         {user ? (
-          <UserDropdown user={user} />
+          <UserDropdown user={user} isAdmin={isAdmin} />
         ) : (
           <>
             <Button variant="ghost" size="sm" className="font-bold" asChild>

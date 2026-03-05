@@ -62,6 +62,7 @@ export const challenge = pgTable(
     objective: text("objective").notNull(),
     ofTheWeek: boolean("of_the_week").default(false).notNull(),
     starterFriendly: boolean("starter_friendly").default(false).notNull(),
+    available: boolean("available").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
