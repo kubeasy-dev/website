@@ -838,6 +838,9 @@ export const userProgressRouter = createTRPCRouter({
         .set({ totalXp: xpResult.totalXp })
         .where(eq(userXp.userId, userId));
 
+      revalidateTag(`challenge-list-${userId}`, "max");
+      revalidateTag("challenges", "max");
+
       return {
         success: true,
         message: "Challenge progress reset successfully",

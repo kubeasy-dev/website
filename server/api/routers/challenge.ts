@@ -1,5 +1,5 @@
 import { and, eq, ilike, sql } from "drizzle-orm";
-import { cacheLife, cacheTag } from "next/cache";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import { z } from "zod";
 import type { ChallengeFilters } from "@/schemas/challengeFilters";
 import { challengeFiltersSchema } from "@/schemas/challengeFilters";
@@ -165,6 +165,8 @@ export const challengeRouter = createTRPCRouter({
           .where(eq(challenge.slug, input.slug))
           .returning();
 
+        revalidateTag("challenges", "max");
+
         return {
           success: true,
           challenge: updated,
@@ -187,6 +189,8 @@ export const challengeRouter = createTRPCRouter({
           ofTheWeek: input.ofTheWeek,
         })
         .returning();
+
+      revalidateTag("challenges", "max");
 
       return {
         success: true,
@@ -211,6 +215,8 @@ export const challengeRouter = createTRPCRouter({
 
       // Delete the challenge (cascading will handle related records)
       await ctx.db.delete(challenge).where(eq(challenge.slug, input.slug));
+
+      revalidateTag("challenges", "max");
 
       return {
         success: true,
