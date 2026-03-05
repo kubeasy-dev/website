@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
@@ -27,11 +28,17 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default async function ChallengesPage() {
-  await Promise.all([
-    prefetch(trpc.challenge.list.queryOptions({ showCompleted: true })),
-    prefetch(trpc.theme.list.queryOptions()),
-    prefetch(trpc.type.list.queryOptions()),
-  ]);
+  await all({
+    async challenges() {
+      await prefetch(trpc.challenge.list.queryOptions({ showCompleted: true }));
+    },
+    async themes() {
+      await prefetch(trpc.theme.list.queryOptions());
+    },
+    async types() {
+      await prefetch(trpc.type.list.queryOptions());
+    },
+  });
 
   return (
     <HydrateClient>
