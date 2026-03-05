@@ -27,9 +27,11 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default async function ChallengesPage() {
-  await prefetch(trpc.challenge.list.queryOptions({ showCompleted: true }));
-  await prefetch(trpc.theme.list.queryOptions());
-  await prefetch(trpc.type.list.queryOptions());
+  await Promise.all([
+    prefetch(trpc.challenge.list.queryOptions({ showCompleted: true })),
+    prefetch(trpc.theme.list.queryOptions()),
+    prefetch(trpc.type.list.queryOptions()),
+  ]);
 
   return (
     <HydrateClient>

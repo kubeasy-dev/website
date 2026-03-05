@@ -101,9 +101,7 @@ export default async function ThemePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  await prefetch(
-    trpc.challenge.list.queryOptions({ theme: slug, showCompleted: true }),
-  );
+  await prefetch(trpc.challenge.list.queryOptions({ theme: slug }));
 
   return (
     <HydrateClient>
