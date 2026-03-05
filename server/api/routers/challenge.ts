@@ -1,11 +1,14 @@
 import { and, eq, ilike, sql } from "drizzle-orm";
+import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod";
+import type { ChallengeFilters } from "@/schemas/challengeFilters";
 import { challengeFiltersSchema } from "@/schemas/challengeFilters";
 import {
   adminProcedure,
   createTRPCRouter,
   publicProcedure,
 } from "@/server/api/trpc";
+import db from "@/server/db";
 import { getChallengeBySlug, getThemeBySlug } from "@/server/db/queries";
 import {
   challenge,
@@ -15,92 +18,102 @@ import {
   userProgress,
 } from "@/server/db/schema";
 
+async function fetchChallengeList(
+  userId: string | undefined,
+  input: ChallengeFilters,
+) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("challenges");
+  if (userId) {
+    cacheTag(`challenge-list-${userId}`);
+  }
+
+  const filters = [];
+  if (input.difficulty) {
+    filters.push(eq(challenge.difficulty, input.difficulty));
+  }
+  if (input.type) {
+    filters.push(eq(challenge.typeSlug, input.type));
+  }
+  if (input.theme) {
+    filters.push(eq(challenge.theme, input.theme));
+  }
+  if (input.search) {
+    filters.push(ilike(challenge.title, `%${input.search}%`));
+  }
+
+  // Build conditions for userProgress join
+  const userProgressConditions = userId
+    ? and(
+        eq(challenge.id, userProgress.challengeId),
+        eq(userProgress.userId, userId),
+      )
+    : eq(challenge.id, userProgress.challengeId);
+
+  if (input.showCompleted === false && userId) {
+    const completedChallenges = await db
+      .select({ challengeId: userProgress.challengeId })
+      .from(userProgress)
+      .where(
+        and(
+          eq(userProgress.userId, userId),
+          eq(userProgress.status, "completed"),
+        ),
+      );
+
+    const completedChallengeIds = completedChallenges.map((c) => c.challengeId);
+
+    if (completedChallengeIds.length > 0) {
+      filters.push(
+        sql`${challenge.id} NOT IN (${sql.join(
+          completedChallengeIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})`,
+      );
+    }
+  }
+
+  const challenges = await db
+    .select({
+      id: challenge.id,
+      slug: challenge.slug,
+      title: challenge.title,
+      description: challenge.description,
+      theme: challengeTheme.name,
+      themeSlug: challenge.theme,
+      difficulty: challenge.difficulty,
+      type: challengeType.name,
+      typeSlug: challenge.typeSlug,
+      estimatedTime: challenge.estimatedTime,
+      initialSituation: challenge.initialSituation,
+      objective: challenge.objective,
+      ofTheWeek: challenge.ofTheWeek,
+      createdAt: challenge.createdAt,
+      updatedAt: challenge.updatedAt,
+      completedCount: sql<number>`CAST(COUNT(CASE WHEN ${userProgress.status} = 'completed' THEN 1 END) AS INTEGER)`,
+      userStatus: userId
+        ? sql<string>`COALESCE(MAX(CASE WHEN ${userProgress.userId} = ${userId} THEN ${userProgress.status} END), 'not_started')`
+        : sql<null>`NULL`,
+    })
+    .from(challenge)
+    .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+    .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug))
+    .leftJoin(userProgress, userProgressConditions)
+    .where(and(...filters))
+    .groupBy(challenge.id, challengeTheme.name, challengeType.name);
+
+  return {
+    challenges,
+    count: challenges.length,
+  };
+}
+
 export const challengeRouter = createTRPCRouter({
   list: publicProcedure
     .input(challengeFiltersSchema)
     .query(async ({ ctx, input }) => {
-      const filters = [];
-      if (input.difficulty) {
-        filters.push(eq(challenge.difficulty, input.difficulty));
-      }
-      if (input.type) {
-        filters.push(eq(challenge.typeSlug, input.type));
-      }
-      if (input.theme) {
-        filters.push(eq(challenge.theme, input.theme));
-      }
-      if (input.search) {
-        filters.push(ilike(challenge.title, `%${input.search}%`));
-      }
-
-      const userId = ctx.user?.id;
-
-      // Build conditions for userProgress join
-      const userProgressConditions = userId
-        ? and(
-            eq(challenge.id, userProgress.challengeId),
-            eq(userProgress.userId, userId),
-          )
-        : eq(challenge.id, userProgress.challengeId);
-
-      if (input.showCompleted === false && userId) {
-        const completedChallenges = await ctx.db
-          .select({ challengeId: userProgress.challengeId })
-          .from(userProgress)
-          .where(
-            and(
-              eq(userProgress.userId, userId),
-              eq(userProgress.status, "completed"),
-            ),
-          );
-
-        const completedChallengeIds = completedChallenges.map(
-          (c) => c.challengeId,
-        );
-
-        if (completedChallengeIds.length > 0) {
-          filters.push(
-            sql`${challenge.id} NOT IN (${sql.join(
-              completedChallengeIds.map((id) => sql`${id}`),
-              sql`, `,
-            )})`,
-          );
-        }
-      }
-
-      const challenges = await ctx.db
-        .select({
-          id: challenge.id,
-          slug: challenge.slug,
-          title: challenge.title,
-          description: challenge.description,
-          theme: challengeTheme.name,
-          themeSlug: challenge.theme,
-          difficulty: challenge.difficulty,
-          type: challengeType.name,
-          typeSlug: challenge.typeSlug,
-          estimatedTime: challenge.estimatedTime,
-          initialSituation: challenge.initialSituation,
-          objective: challenge.objective,
-          ofTheWeek: challenge.ofTheWeek,
-          createdAt: challenge.createdAt,
-          updatedAt: challenge.updatedAt,
-          completedCount: sql<number>`CAST(COUNT(CASE WHEN ${userProgress.status} = 'completed' THEN 1 END) AS INTEGER)`,
-          userStatus: userId
-            ? sql<string>`COALESCE(MAX(CASE WHEN ${userProgress.userId} = ${userId} THEN ${userProgress.status} END), 'not_started')`
-            : sql<null>`NULL`,
-        })
-        .from(challenge)
-        .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
-        .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug))
-        .leftJoin(userProgress, userProgressConditions)
-        .where(and(...filters))
-        .groupBy(challenge.id, challengeTheme.name, challengeType.name);
-
-      return {
-        challenges,
-        count: challenges.length,
-      };
+      return fetchChallengeList(ctx.user?.id, input);
     }),
 
   getBySlug: publicProcedure
