@@ -64,7 +64,9 @@ export const apiKeyRouter = createTRPCRouter({
       const [existingKey] = await ctx.db
         .select()
         .from(apikey)
-        .where(and(eq(apikey.id, input.id), eq(apikey.userId, ctx.user.id)))
+        .where(
+          and(eq(apikey.id, input.id), eq(apikey.referenceId, ctx.user.id)),
+        )
         .limit(1);
 
       if (!existingKey) {
@@ -100,7 +102,9 @@ export const apiKeyRouter = createTRPCRouter({
       const [existingKey] = await ctx.db
         .select()
         .from(apikey)
-        .where(and(eq(apikey.id, input.id), eq(apikey.userId, ctx.user.id)))
+        .where(
+          and(eq(apikey.id, input.id), eq(apikey.referenceId, ctx.user.id)),
+        )
         .limit(1);
 
       if (!existingKey) {

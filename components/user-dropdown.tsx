@@ -15,7 +15,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
 
-export function UserDropdown({ user }: { user: User }) {
+export function UserDropdown({
+  user,
+  isAdmin,
+}: {
+  user: User;
+  isAdmin?: boolean;
+}) {
   const handleLogout = async () => {
     await signOut();
   };
@@ -54,6 +60,11 @@ export function UserDropdown({ user }: { user: User }) {
         <DropdownMenuItem asChild>
           <Link href="/profile">Profile</Link>
         </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin/challenges">Admin</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="text-destructive">
           <LogOut className="mr-2 h-4 w-4" />

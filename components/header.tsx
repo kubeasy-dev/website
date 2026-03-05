@@ -82,7 +82,7 @@ export async function Header() {
         </NavigationMenu>
 
         {/* Actions */}
-        <HeaderActions user={user ?? null} />
+        <HeaderActions user={user ?? null} isAdmin={user?.role === "admin"} />
       </div>
     </header>
   );

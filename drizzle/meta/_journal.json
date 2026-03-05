@@ -92,6 +92,13 @@
       "when": 1772202205603,
       "tag": "0016_giant_paper_doll",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1772720763978,
+      "tag": "0017_uneven_steel_serpent",
+      "breakpoints": true
     }
   ]
 }

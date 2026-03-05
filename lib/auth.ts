@@ -15,31 +15,38 @@ import db from "@/server/db";
 import * as schema from "@/server/db/schema/auth";
 import { createResendContact } from "./resend";
 
+const authBaseUrl =
+  process.env.VERCEL_ENV === "production"
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000";
+
+const redirectUri =
+  process.env.NODE_ENV === "production"
+    ? "https://kubeasy.dev/api/auth/callback"
+    : "http://localhost:3000/api/auth/callback";
+
 const socialProviders = {
   github: {
     clientId: env.GITHUB_CLIENT_ID,
     clientSecret: env.GITHUB_CLIENT_SECRET,
-    redirectURI: "https://kubeasy.dev/api/auth/callback/github",
+    redirectURI: `${redirectUri}/github`,
   },
   google: {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
-    redirectURI: "https://kubeasy.dev/api/auth/callback/google",
+    redirectURI: `${redirectUri}/google`,
   },
   microsoft: {
     clientId: env.MICROSOFT_CLIENT_ID,
     clientSecret: env.MICROSOFT_CLIENT_SECRET,
-    redirectURI: "https://kubeasy.dev/api/auth/callback/microsoft",
+    redirectURI: `${redirectUri}/microsoft`,
   },
 };
 
 export const auth = betterAuth({
-  baseURL:
-    process.env.VERCEL_ENV === "production"
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000",
+  baseURL: authBaseUrl,
   trustedOrigins: [
     "http://localhost:3000",
     "https://kubeasy.dev",

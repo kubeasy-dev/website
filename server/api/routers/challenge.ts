@@ -16,6 +16,7 @@ import {
   challengeTheme,
   challengeType,
   userProgress,
+  userSubmission,
 } from "@/server/db/schema";
 
 async function fetchChallengeList(
@@ -29,7 +30,7 @@ async function fetchChallengeList(
     cacheTag(`challenge-list-${userId}`);
   }
 
-  const filters = [];
+  const filters = [eq(challenge.available, true)];
   if (input.difficulty) {
     filters.push(eq(challenge.difficulty, input.difficulty));
   }
@@ -119,8 +120,12 @@ export const challengeRouter = createTRPCRouter({
   getBySlug: publicProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ input }) => {
-      const challenge = await getChallengeBySlug(input.slug);
-      return { challenge };
+      const challengeData = await getChallengeBySlug(input.slug);
+      // Return null for unavailable challenges so the page 404s
+      if (challengeData && !challengeData.available) {
+        return { challenge: null };
+      }
+      return { challenge: challengeData };
     }),
 
   create: adminProcedure
@@ -224,6 +229,83 @@ export const challengeRouter = createTRPCRouter({
       };
     }),
 
+  adminList: adminProcedure.query(async ({ ctx }) => {
+    const challenges = await ctx.db
+      .select({
+        id: challenge.id,
+        slug: challenge.slug,
+        title: challenge.title,
+        difficulty: challenge.difficulty,
+        theme: challengeTheme.name,
+        type: challengeType.name,
+        available: challenge.available,
+        ofTheWeek: challenge.ofTheWeek,
+        createdAt: challenge.createdAt,
+        starts: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${userProgress.status} != 'not_started' THEN ${userProgress.userId} END) AS INTEGER)`,
+        completions: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${userProgress.status} = 'completed' THEN ${userProgress.userId} END) AS INTEGER)`,
+        totalSubmissions: sql<number>`CAST(COUNT(DISTINCT ${userSubmission.id}) AS INTEGER)`,
+        successfulSubmissions: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${userSubmission.validated} = true THEN ${userSubmission.id} END) AS INTEGER)`,
+      })
+      .from(challenge)
+      .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
+      .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug))
+      .leftJoin(userProgress, eq(challenge.id, userProgress.challengeId))
+      .leftJoin(userSubmission, eq(challenge.id, userSubmission.challengeId))
+      .groupBy(challenge.id, challengeTheme.name, challengeType.name)
+      .orderBy(challenge.createdAt);
+
+    return { challenges };
+  }),
+
+  adminStats: adminProcedure.query(async ({ ctx }) => {
+    const [submissionStats] = await ctx.db
+      .select({
+        total: sql<number>`CAST(COUNT(*) AS INTEGER)`,
+        successful: sql<number>`CAST(COUNT(CASE WHEN ${userSubmission.validated} = true THEN 1 END) AS INTEGER)`,
+      })
+      .from(userSubmission);
+
+    const [progressStats] = await ctx.db
+      .select({
+        totalStarts: sql<number>`CAST(COUNT(CASE WHEN ${userProgress.status} != 'not_started' THEN 1 END) AS INTEGER)`,
+        totalCompletions: sql<number>`CAST(COUNT(CASE WHEN ${userProgress.status} = 'completed' THEN 1 END) AS INTEGER)`,
+      })
+      .from(userProgress);
+
+    const totalSubmissions = submissionStats?.total ?? 0;
+    const successfulSubmissions = submissionStats?.successful ?? 0;
+    const totalStarts = progressStats?.totalStarts ?? 0;
+    const totalCompletions = progressStats?.totalCompletions ?? 0;
+
+    return {
+      totalSubmissions,
+      successfulSubmissions,
+      successRate:
+        totalSubmissions > 0
+          ? Math.round((successfulSubmissions / totalSubmissions) * 100)
+          : 0,
+      totalStarts,
+      totalCompletions,
+      completionRate:
+        totalStarts > 0
+          ? Math.round((totalCompletions / totalStarts) * 100)
+          : 0,
+    };
+  }),
+
+  setAvailability: adminProcedure
+    .input(z.object({ slug: z.string(), available: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(challenge)
+        .set({ available: input.available })
+        .where(eq(challenge.slug, input.slug));
+
+      revalidateTag("challenges", "max");
+
+      return { success: true };
+    }),
+
   /**
    * Get objectives for a challenge by its slug.
    * Returns the list of validation objectives that must be completed.
@@ -235,7 +317,7 @@ export const challengeRouter = createTRPCRouter({
       // First get the challenge to ensure it exists and get its ID
       const challengeData = await getChallengeBySlug(input.slug);
 
-      if (!challengeData) {
+      if (!challengeData || !challengeData.available) {
         return { objectives: [] };
       }
 

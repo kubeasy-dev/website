@@ -4,7 +4,7 @@
  * for granular cache invalidation
  */
 
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { cacheLife, cacheTag } from "next/cache";
 import {
   getAllCategories as fetchAllCategories,
@@ -56,7 +56,8 @@ export async function getChallenges() {
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
-    .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug));
+    .innerJoin(challengeType, eq(challenge.typeSlug, challengeType.slug))
+    .where(eq(challenge.available, true));
 
   return {
     challenges,
@@ -88,6 +89,7 @@ export async function getChallengeBySlug(slug: string) {
       initialSituation: challenge.initialSituation,
       objective: challenge.objective,
       ofTheWeek: challenge.ofTheWeek,
+      available: challenge.available,
       createdAt: challenge.createdAt,
       updatedAt: challenge.updatedAt,
     })
@@ -148,7 +150,7 @@ export async function getChallengeCountByTheme(themeSlug: string) {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(challenge)
-    .where(eq(challenge.theme, themeSlug));
+    .where(and(eq(challenge.theme, themeSlug), eq(challenge.available, true)));
 
   return result[0]?.count ?? 0;
 }
@@ -166,7 +168,9 @@ export async function getChallengeCountByType(typeSlug: string) {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(challenge)
-    .where(eq(challenge.typeSlug, typeSlug));
+    .where(
+      and(eq(challenge.typeSlug, typeSlug), eq(challenge.available, true)),
+    );
 
   return result[0]?.count ?? 0;
 }
@@ -209,7 +213,13 @@ export async function getChallengeTypes() {
       challengeCount: sql<number>`count(${challenge.id})`.as("challenge_count"),
     })
     .from(challengeType)
-    .leftJoin(challenge, eq(challengeType.slug, challenge.typeSlug))
+    .leftJoin(
+      challenge,
+      and(
+        eq(challengeType.slug, challenge.typeSlug),
+        eq(challenge.available, true),
+      ),
+    )
     .groupBy(challengeType.slug)
     .orderBy(asc(challengeType.name));
 
@@ -261,7 +271,9 @@ export async function getStarterChallenges(limit = 5) {
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))
-    .where(eq(challenge.starterFriendly, true))
+    .where(
+      and(eq(challenge.starterFriendly, true), eq(challenge.available, true)),
+    )
     .orderBy(
       // Order by difficulty: easy first, then medium, then hard
       sql`CASE ${challenge.difficulty} WHEN 'easy' THEN 1 WHEN 'medium' THEN 2 WHEN 'hard' THEN 3 END`,
