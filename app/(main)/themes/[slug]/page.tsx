@@ -19,6 +19,7 @@ import {
   getThemeBySlug,
   getThemes,
 } from "@/server/db/queries";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 /** Maximum duration for SSR (60 seconds) */
 export const maxDuration = 60;
@@ -99,10 +100,21 @@ export default async function ThemePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
+  await prefetch(
+    trpc.challenge.list.queryOptions({ theme: slug, showCompleted: true }),
+  );
+
+  return (
+    <HydrateClient>
+      <ThemePageContent slug={slug} />
+    </HydrateClient>
+  );
+}
+
+async function ThemePageContent({ slug }: { slug: string }) {
   "use cache";
   cacheLife("hours");
-
-  const { slug } = await params;
   cacheTag("themes-page", `theme-${slug}`);
 
   // Verify theme exists (direct DB access with caching)

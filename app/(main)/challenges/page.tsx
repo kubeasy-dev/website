@@ -8,6 +8,7 @@ import { ChallengesView } from "@/components/challenges-view";
 import { UserStats } from "@/components/user-stats";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getChallenges } from "@/server/db/queries";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 export const metadata: Metadata = generateSEOMetadata({
   title: "Kubernetes Challenges",
@@ -26,6 +27,18 @@ export const metadata: Metadata = generateSEOMetadata({
 });
 
 export default async function ChallengesPage() {
+  await prefetch(trpc.challenge.list.queryOptions({ showCompleted: true }));
+  await prefetch(trpc.theme.list.queryOptions());
+  await prefetch(trpc.type.list.queryOptions());
+
+  return (
+    <HydrateClient>
+      <ChallengesPageContent />
+    </HydrateClient>
+  );
+}
+
+async function ChallengesPageContent() {
   "use cache";
   cacheLife("hours");
   cacheTag("challenges");
