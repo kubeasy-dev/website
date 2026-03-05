@@ -22,21 +22,26 @@ const authBaseUrl =
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000";
 
+const redirectUri =
+  process.env.NODE_ENV === "production"
+    ? "https://kubeasy.dev/api/auth/callback"
+    : "http://localhost:3000/api/auth/callback";
+
 const socialProviders = {
   github: {
     clientId: env.GITHUB_CLIENT_ID,
     clientSecret: env.GITHUB_CLIENT_SECRET,
-    redirectURI: `${authBaseUrl}/api/auth/callback/github`,
+    redirectURI: `${redirectUri}/github`,
   },
   google: {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
-    redirectURI: `${authBaseUrl}/api/auth/callback/google`,
+    redirectURI: `${redirectUri}/google`,
   },
   microsoft: {
     clientId: env.MICROSOFT_CLIENT_ID,
     clientSecret: env.MICROSOFT_CLIENT_SECRET,
-    redirectURI: `${authBaseUrl}/api/auth/callback/microsoft`,
+    redirectURI: `${redirectUri}/microsoft`,
   },
 };
 
