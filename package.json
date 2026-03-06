@@ -113,9 +113,10 @@
       "@types/react-dom": "19.2.3"
     },
     "onlyBuiltDependencies": [
+      "@posthog/cli",
       "@tailwindcss/oxide",
+      "core-js",
       "esbuild",
-      "protobufjs",
       "sharp",
       "unrs-resolver"
     ]
