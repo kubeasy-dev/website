@@ -167,7 +167,7 @@ export function DashboardRecentGainsClient({
                       </span>
                     </div>
                     <span className="text-primary-foreground/80 text-sm font-bold">
-                      {recentGains.length}{" "}
+                      {recentGains.length} recent{" "}
                       {recentGains.length === 1 ? "activity" : "activities"}
                     </span>
                   </div>
