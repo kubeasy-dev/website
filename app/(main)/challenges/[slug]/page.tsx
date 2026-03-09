@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { ArrowLeft, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -81,15 +82,19 @@ export default async function ChallengePage({
 }) {
   const { slug } = await params;
 
-  // Access database directly
-  const challenge = await getChallengeBySlug(slug);
+  // Parallelize independent async operations
+  const { challenge } = await all({
+    async challenge() {
+      return getChallengeBySlug(slug);
+    },
+    async objectives() {
+      await prefetch(trpc.challenge.getObjectives.queryOptions({ slug }));
+    },
+  });
 
   if (!challenge) {
     return notFound();
   }
-
-  // Prefetch objectives to avoid loading spinner
-  await prefetch(trpc.challenge.getObjectives.queryOptions({ slug }));
 
   const difficultyLabels: Record<string, string> = {
     easy: "Beginner",
