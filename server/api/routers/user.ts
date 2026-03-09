@@ -65,32 +65,33 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const [{ total }] = await ctx.db
-        .select({ total: sql<number>`CAST(COUNT(*) AS INTEGER)` })
-        .from(user);
+      const [countResult, users] = await Promise.all([
+        ctx.db
+          .select({ total: sql<number>`CAST(COUNT(*) AS INTEGER)` })
+          .from(user),
+        ctx.db
+          .select({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            role: user.role,
+            banned: user.banned,
+            banReason: user.banReason,
+            createdAt: user.createdAt,
+            completedChallenges: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${userProgress.status} = 'completed' THEN ${userProgress.challengeId} END) AS INTEGER)`,
+            totalXp: sql<number>`CAST(COALESCE(MAX(${userXp.totalXp}), 0) AS INTEGER)`,
+          })
+          .from(user)
+          .leftJoin(userProgress, eq(user.id, userProgress.userId))
+          .leftJoin(userXp, eq(user.id, userXp.userId))
+          .groupBy(user.id)
+          .orderBy(desc(user.createdAt))
+          .limit(input.limit)
+          .offset(input.offset),
+      ]);
 
-      const users = await ctx.db
-        .select({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-          banned: user.banned,
-          banReason: user.banReason,
-          createdAt: user.createdAt,
-          completedChallenges: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${userProgress.status} = 'completed' THEN ${userProgress.challengeId} END) AS INTEGER)`,
-          totalXp: sql<number>`CAST(COALESCE(MAX(${userXp.totalXp}), 0) AS INTEGER)`,
-        })
-        .from(user)
-        .leftJoin(userProgress, eq(user.id, userProgress.userId))
-        .leftJoin(userXp, eq(user.id, userXp.userId))
-        .groupBy(user.id)
-        .orderBy(desc(user.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
-
-      return { users, total };
+      return { users, total: countResult[0]?.total ?? 0 };
     }),
 
   banUser: adminProcedure

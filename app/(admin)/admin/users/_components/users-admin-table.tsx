@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   MoreHorizontal,
   ShieldCheck,
@@ -38,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
 const PAGE_SIZE = 50;
@@ -100,12 +106,13 @@ export function UsersAdminTable() {
     }),
   );
 
-  const { data, isLoading } = useQuery(
-    trpc.user.adminList.queryOptions({
+  const { data, isLoading, isFetching } = useQuery({
+    ...trpc.user.adminList.queryOptions({
       limit: PAGE_SIZE,
       offset: page * PAGE_SIZE,
     }),
-  );
+    placeholderData: keepPreviousData,
+  });
 
   if (isLoading) {
     return (
@@ -124,7 +131,12 @@ export function UsersAdminTable() {
 
   return (
     <>
-      <div className="overflow-hidden">
+      <div
+        className={cn(
+          "overflow-hidden",
+          isFetching && "opacity-60 pointer-events-none",
+        )}
+      >
         <Table>
           <TableHeader>
             <TableRow>
@@ -270,7 +282,9 @@ export function UsersAdminTable() {
         <span>
           {total === 0
             ? "No users"
-            : `${offset + 1}–${Math.min(offset + PAGE_SIZE, total)} of ${total} users`}
+            : offset + 1 > total
+              ? `${total} of ${total} users`
+              : `${offset + 1}–${Math.min(offset + PAGE_SIZE, total)} of ${total} users`}
         </span>
         <div className="flex gap-2">
           <Button
