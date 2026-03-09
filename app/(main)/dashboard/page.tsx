@@ -1,18 +1,10 @@
 import { all } from "better-all";
 import { Clock, Target, TrendingUp, Trophy } from "lucide-react";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-
-const DashboardChart = dynamic(
-  () =>
-    import("@/components/dashboard-chart").then((m) => ({
-      default: m.DashboardChart,
-    })),
-  { ssr: false },
-);
+import { DashboardChart } from "@/components/dashboard-chart-lazy";
 
 import { DashboardRecentGains } from "@/components/dashboard-recent-gains";
 import { DashboardStats } from "@/components/dashboard-stats";
