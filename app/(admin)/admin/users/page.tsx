@@ -7,11 +7,11 @@ import {
 } from "@/components/ui/card";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 import { UserStatsCards } from "./_components/user-stats-cards";
-import { UsersAdminTable } from "./_components/users-admin-table";
+import { PAGE_SIZE, UsersAdminTable } from "./_components/users-admin-table";
 
 export default async function AdminUsersPage() {
   await Promise.all([
-    prefetch(trpc.user.adminList.queryOptions({ limit: 50, offset: 0 })),
+    prefetch(trpc.user.adminList.queryOptions({ limit: PAGE_SIZE, offset: 0 })),
     prefetch(trpc.user.adminStats.queryOptions()),
   ]);
 

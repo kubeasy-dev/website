@@ -46,7 +46,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
-const PAGE_SIZE = 50;
+export const PAGE_SIZE = 50;
 
 export function UsersAdminTable() {
   const trpc = useTRPC();
