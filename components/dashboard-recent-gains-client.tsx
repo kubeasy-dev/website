@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { RouterOutputs } from "@/types/trpc";
 
-const PREVIEW_COUNT = 3;
+const PREVIEW_COUNT = 4;
 
 type RecentGains = RouterOutputs["xpTransaction"]["getRecentGains"];
 type Gain = RecentGains[number];
