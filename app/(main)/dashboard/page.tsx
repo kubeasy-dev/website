@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { DashboardChart } from "@/components/dashboard-chart-lazy";
-
 import { DashboardRecentGains } from "@/components/dashboard-recent-gains";
 import { DashboardStats } from "@/components/dashboard-stats";
 import { DashboardChecklist } from "@/components/onboarding/dashboard-checklist";
