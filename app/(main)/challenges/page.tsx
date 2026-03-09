@@ -2,11 +2,8 @@ import { all } from "better-all";
 import { Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
-import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesQuickStartCTA } from "@/components/challenges-quick-start-cta";
 import { ChallengesView } from "@/components/challenges-view";
-import { UserStats } from "@/components/user-stats";
 import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 import { getChallenges } from "@/server/db/queries";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
@@ -71,21 +68,6 @@ async function ChallengesPageContent() {
           designed to teach you real-world skills you&apos;ll use in production.
         </p>
       </div>
-
-      {/* Stats Cards - Client-side component handles auth check */}
-      <ErrorBoundary fallback={<div>Error loading user statistics.</div>}>
-        <Suspense
-          fallback={
-            <div className="grid grid-cols-3 gap-6 mb-8">
-              <div className="p-6 bg-secondary neo-border-thick animate-pulse h-32" />
-              <div className="p-6 bg-primary neo-border-thick animate-pulse h-32" />
-              <div className="p-6 bg-[#FF6B6B] neo-border-thick animate-pulse h-32" />
-            </div>
-          }
-        >
-          <UserStats />
-        </Suspense>
-      </ErrorBoundary>
 
       {/* Quick Start CTA - Only shown to unauthenticated users */}
       <ChallengesQuickStartCTA />
