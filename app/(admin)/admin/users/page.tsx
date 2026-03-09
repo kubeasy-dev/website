@@ -11,7 +11,7 @@ import { UsersAdminTable } from "./_components/users-admin-table";
 
 export default async function AdminUsersPage() {
   await Promise.all([
-    prefetch(trpc.user.adminList.queryOptions()),
+    prefetch(trpc.user.adminList.queryOptions({ limit: 50, offset: 0 })),
     prefetch(trpc.user.adminStats.queryOptions()),
   ]);
 

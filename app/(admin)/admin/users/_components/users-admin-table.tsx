@@ -40,9 +40,12 @@ import {
 } from "@/components/ui/table";
 import { useTRPC } from "@/trpc/client";
 
+const PAGE_SIZE = 50;
+
 export function UsersAdminTable() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(0);
   const [banTarget, setBanTarget] = useState<{
     id: string;
     name: string;
@@ -50,7 +53,12 @@ export function UsersAdminTable() {
   const [banReason, setBanReason] = useState("");
 
   const invalidate = () =>
-    queryClient.invalidateQueries(trpc.user.adminList.queryOptions());
+    queryClient.invalidateQueries(
+      trpc.user.adminList.queryOptions({
+        limit: PAGE_SIZE,
+        offset: page * PAGE_SIZE,
+      }),
+    );
 
   const { mutate: banUser, isPending: isBanning } = useMutation(
     trpc.user.banUser.mutationOptions({
@@ -92,7 +100,12 @@ export function UsersAdminTable() {
     }),
   );
 
-  const { data, isLoading } = useQuery(trpc.user.adminList.queryOptions());
+  const { data, isLoading } = useQuery(
+    trpc.user.adminList.queryOptions({
+      limit: PAGE_SIZE,
+      offset: page * PAGE_SIZE,
+    }),
+  );
 
   if (isLoading) {
     return (
@@ -106,6 +119,8 @@ export function UsersAdminTable() {
   }
 
   const users = data?.users ?? [];
+  const total = data?.total ?? 0;
+  const offset = page * PAGE_SIZE;
 
   return (
     <>
@@ -249,6 +264,32 @@ export function UsersAdminTable() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between px-2 py-3 text-sm text-muted-foreground">
+        <span>
+          {total === 0
+            ? "No users"
+            : `${offset + 1}–${Math.min(offset + PAGE_SIZE, total)} of ${total} users`}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => p - 1)}
+            disabled={page === 0}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={offset + PAGE_SIZE >= total}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* Ban confirmation dialog */}

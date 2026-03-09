@@ -57,29 +57,41 @@ export const userRouter = createTRPCRouter({
     };
   }),
 
-  // TODO: add limit/offset pagination as user count grows
-  adminList: adminProcedure.query(async ({ ctx }) => {
-    const users = await ctx.db
-      .select({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: user.image,
-        role: user.role,
-        banned: user.banned,
-        banReason: user.banReason,
-        createdAt: user.createdAt,
-        completedChallenges: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${userProgress.status} = 'completed' THEN ${userProgress.challengeId} END) AS INTEGER)`,
-        totalXp: sql<number>`CAST(COALESCE(MAX(${userXp.totalXp}), 0) AS INTEGER)`,
-      })
-      .from(user)
-      .leftJoin(userProgress, eq(user.id, userProgress.userId))
-      .leftJoin(userXp, eq(user.id, userXp.userId))
-      .groupBy(user.id)
-      .orderBy(desc(user.createdAt));
+  adminList: adminProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const [{ total }] = await ctx.db
+        .select({ total: sql<number>`CAST(COUNT(*) AS INTEGER)` })
+        .from(user);
 
-    return { users };
-  }),
+      const users = await ctx.db
+        .select({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role,
+          banned: user.banned,
+          banReason: user.banReason,
+          createdAt: user.createdAt,
+          completedChallenges: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${userProgress.status} = 'completed' THEN ${userProgress.challengeId} END) AS INTEGER)`,
+          totalXp: sql<number>`CAST(COALESCE(MAX(${userXp.totalXp}), 0) AS INTEGER)`,
+        })
+        .from(user)
+        .leftJoin(userProgress, eq(user.id, userProgress.userId))
+        .leftJoin(userXp, eq(user.id, userXp.userId))
+        .groupBy(user.id)
+        .orderBy(desc(user.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+
+      return { users, total };
+    }),
 
   banUser: adminProcedure
     .input(
