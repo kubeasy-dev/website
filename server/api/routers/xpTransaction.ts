@@ -24,7 +24,7 @@ export const xpTransactionRouter = createTRPCRouter({
       .leftJoin(challenge, eq(userXpTransaction.challengeId, challenge.id))
       .where(eq(userXpTransaction.userId, userId))
       .orderBy(desc(userXpTransaction.createdAt))
-      .limit(5);
+      .limit(20);
 
     return recentGains;
   }),
