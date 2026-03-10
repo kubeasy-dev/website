@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, ne, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
@@ -645,24 +645,53 @@ export const userProgressRouter = createTRPCRouter({
         isFirstChallenge,
         currentStreak,
       });
-      // Update or create user progress
+      // Atomic conditional update/insert to prevent race conditions (double XP / duplicate analytics)
+      let progressUpdated: boolean;
       if (existingProgress) {
-        await ctx.db
+        // Only update if not already completed — if RETURNING is empty, race was lost
+        const updated = await ctx.db
           .update(userProgress)
           .set({
             status: "completed",
             completedAt: new Date(),
             updatedAt: new Date(),
           })
-          .where(eq(userProgress.id, existingProgress.id));
+          .where(
+            and(
+              eq(userProgress.id, existingProgress.id),
+              ne(userProgress.status, "completed"),
+            ),
+          )
+          .returning({ id: userProgress.id });
+        progressUpdated = updated.length > 0;
       } else {
-        await ctx.db.insert(userProgress).values({
-          id: nanoid(),
-          userId,
-          challengeId: challengeData.id,
-          status: "completed",
-          completedAt: new Date(),
-        });
+        // onConflictDoNothing + unique index catches concurrent inserts
+        const inserted = await ctx.db
+          .insert(userProgress)
+          .values({
+            id: nanoid(),
+            userId,
+            challengeId: challengeData.id,
+            status: "completed",
+            completedAt: new Date(),
+          })
+          .onConflictDoNothing()
+          .returning({ id: userProgress.id });
+        progressUpdated = inserted.length > 0;
+      }
+
+      // If a concurrent request already completed this challenge, skip XP and analytics
+      if (!progressUpdated) {
+        return {
+          success: true,
+          xpAwarded: 0,
+          totalXp: 0,
+          rank: "",
+          rankUp: false,
+          firstChallenge: isFirstChallenge,
+          streakBonus: 0,
+          currentStreak,
+        };
       }
 
       // Submission details were already stored before validation check
