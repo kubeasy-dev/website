@@ -117,6 +117,11 @@ export const userProgress = pgTable(
       .notNull(),
   },
   (table) => [
+    // Unique constraint to prevent duplicate progress rows and enable onConflictDoNothing
+    uniqueIndex("user_progress_user_challenge_unique_idx").on(
+      table.userId,
+      table.challengeId,
+    ),
     // Index composite critique pour la requête des challenges complétés par utilisateur
     // Utilisé dans la requête: WHERE userId = ? AND status = 'completed'
     index("user_progress_user_status_challenge_idx").on(
