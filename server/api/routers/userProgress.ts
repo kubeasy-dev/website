@@ -192,22 +192,60 @@ export const userProgressRouter = createTRPCRouter({
           ),
         );
 
+      // Fast-path for intentional re-submissions; the atomic write below is the actual race guard
       if (existingProgress?.status === "completed") {
         throw new Error("Challenge already completed");
       }
 
-      // Check if this is the user's first challenge
-      const [completedCount] = await ctx.db
+      // Atomic conditional update/insert (race guard — the SELECT above is only a UX fast-path)
+      let progressUpdated: boolean;
+      if (existingProgress) {
+        const updated = await ctx.db
+          .update(userProgress)
+          .set({
+            status: "completed",
+            completedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(userProgress.id, existingProgress.id),
+              ne(userProgress.status, "completed"),
+            ),
+          )
+          .returning({ id: userProgress.id });
+        progressUpdated = updated.length > 0;
+      } else {
+        const inserted = await ctx.db
+          .insert(userProgress)
+          .values({
+            id: nanoid(),
+            userId,
+            challengeId,
+            status: "completed",
+            completedAt: new Date(),
+          })
+          .onConflictDoNothing()
+          .returning({ id: userProgress.id });
+        progressUpdated = inserted.length > 0;
+      }
+
+      if (!progressUpdated) {
+        throw new Error("Challenge already completed");
+      }
+
+      // Only winners reach here — use xpTransaction count (authoritative source) to detect
+      // the first challenge, read after the atomic write to minimise the race window
+      const [completedTransactions] = await ctx.db
         .select({ count: count() })
-        .from(userProgress)
+        .from(userXpTransaction)
         .where(
           and(
-            eq(userProgress.userId, userId),
-            eq(userProgress.status, "completed"),
+            eq(userXpTransaction.userId, userId),
+            eq(userXpTransaction.action, "challenge_completed"),
           ),
         );
-
-      const isFirstChallenge = (completedCount?.count ?? 0) === 0;
+      const isFirstChallenge = (completedTransactions?.count ?? 0) === 0;
 
       // Get current streak to calculate streak bonus
       const currentStreak = await calculateStreak(userId);
@@ -218,51 +256,20 @@ export const userProgressRouter = createTRPCRouter({
         isFirstChallenge,
         currentStreak,
       });
-      // Update or create user progress
-      if (existingProgress) {
-        await ctx.db
-          .update(userProgress)
-          .set({
-            status: "completed",
-            completedAt: new Date(),
+
+      // Atomically increment userXp — avoids lost-update races between concurrent winners
+      const [updatedXp] = await ctx.db
+        .insert(userXp)
+        .values({ userId, totalXp: xpGain.total })
+        .onConflictDoUpdate({
+          target: userXp.userId,
+          set: {
+            totalXp: sql`${userXp.totalXp} + ${xpGain.total}`,
             updatedAt: new Date(),
-          })
-          .where(eq(userProgress.id, existingProgress.id));
-      } else {
-        await ctx.db.insert(userProgress).values({
-          id: nanoid(),
-          userId,
-          challengeId,
-          status: "completed",
-          completedAt: new Date(),
-        });
-      }
-
-      // Check if user has XP record (still used for backward compatibility)
-      const [existingXp] = await ctx.db
-        .select()
-        .from(userXp)
-        .where(eq(userXp.userId, userId));
-
-      const oldXp = existingXp?.totalXp ?? 0;
-      const newXp = oldXp + xpGain.total;
-
-      if (existingXp) {
-        // Update existing XP
-        await ctx.db
-          .update(userXp)
-          .set({
-            totalXp: newXp,
-            updatedAt: new Date(),
-          })
-          .where(eq(userXp.userId, userId));
-      } else {
-        // Create new XP record
-        await ctx.db.insert(userXp).values({
-          userId,
-          totalXp: xpGain.total,
-        });
-      }
+          },
+        })
+        .returning({ totalXp: userXp.totalXp });
+      const _newXp = updatedXp?.totalXp ?? xpGain.total;
 
       // Record base XP transaction
       await ctx.db.insert(userXpTransaction).values({
@@ -515,6 +522,7 @@ export const userProgressRouter = createTRPCRouter({
         )
         .limit(1);
 
+      // Fast-path for intentional re-submissions; the atomic write below is the actual race guard
       if (existingProgress?.status === "completed") {
         throw new Error("Challenge already completed");
       }
@@ -622,29 +630,6 @@ export const userProgressRouter = createTRPCRouter({
         };
       }
 
-      // Validation passed - calculate XP using XP service
-      // Check if this is the user's first challenge
-      const [completedCount] = await ctx.db
-        .select({ count: count() })
-        .from(userProgress)
-        .where(
-          and(
-            eq(userProgress.userId, userId),
-            eq(userProgress.status, "completed"),
-          ),
-        );
-
-      const isFirstChallenge = (completedCount?.count ?? 0) === 0;
-
-      // Get current streak to calculate streak bonus
-      const currentStreak = await calculateStreak(userId);
-
-      // Calculate XP using XP service
-      const xpGain = calculateXPGain({
-        difficulty: challengeData.difficulty,
-        isFirstChallenge,
-        currentStreak,
-      });
       // Atomic conditional update/insert to prevent race conditions (double XP / duplicate analytics)
       let progressUpdated: boolean;
       if (existingProgress) {
@@ -686,44 +671,56 @@ export const userProgressRouter = createTRPCRouter({
           success: true,
           xpAwarded: 0,
           totalXp: 0,
-          rank: "",
+          rank: null,
           rankUp: false,
-          firstChallenge: isFirstChallenge,
+          firstChallenge: false,
           streakBonus: 0,
-          currentStreak,
+          currentStreak: 0,
         };
       }
+
+      // Only winners reach here — read isFirstChallenge from xpTransaction count (authoritative
+      // source) *after* the atomic write, so concurrent winners for different challenges see each
+      // other's committed transaction before awarding the first-challenge bonus
+      const [completedTransactions] = await ctx.db
+        .select({ count: count() })
+        .from(userXpTransaction)
+        .where(
+          and(
+            eq(userXpTransaction.userId, userId),
+            eq(userXpTransaction.action, "challenge_completed"),
+          ),
+        );
+      const isFirstChallenge = (completedTransactions?.count ?? 0) === 0;
+
+      // Get current streak to calculate streak bonus
+      const currentStreak = await calculateStreak(userId);
+
+      // Calculate XP using XP service
+      const xpGain = calculateXPGain({
+        difficulty: challengeData.difficulty,
+        isFirstChallenge,
+        currentStreak,
+      });
 
       // Submission details were already stored before validation check
 
       // Get old rank before XP update
       const oldRankInfo = await calculateLevel(userId);
 
-      // Check if user has XP record (still used for backward compatibility)
-      const [existingXp] = await ctx.db
-        .select()
-        .from(userXp)
-        .where(eq(userXp.userId, userId));
-
-      const oldXp = existingXp?.totalXp ?? 0;
-      const newXp = oldXp + xpGain.total;
-
-      if (existingXp) {
-        // Update existing XP
-        await ctx.db
-          .update(userXp)
-          .set({
-            totalXp: newXp,
+      // Atomically increment userXp — avoids lost-update races between concurrent winners
+      const [updatedXp] = await ctx.db
+        .insert(userXp)
+        .values({ userId, totalXp: xpGain.total })
+        .onConflictDoUpdate({
+          target: userXp.userId,
+          set: {
+            totalXp: sql`${userXp.totalXp} + ${xpGain.total}`,
             updatedAt: new Date(),
-          })
-          .where(eq(userXp.userId, userId));
-      } else {
-        // Create new XP record
-        await ctx.db.insert(userXp).values({
-          userId,
-          totalXp: xpGain.total,
-        });
-      }
+          },
+        })
+        .returning({ totalXp: userXp.totalXp });
+      const newXp = updatedXp?.totalXp ?? xpGain.total;
 
       // Record base XP transaction
       await ctx.db.insert(userXpTransaction).values({
