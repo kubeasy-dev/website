@@ -53,7 +53,6 @@ export const challengeResponseSchema = z
     difficulty: z.enum(challengeDifficultyEnum.enumValues),
     theme: z.string(),
     initial_situation: z.string(),
-    objective: z.string(),
   })
   .meta({ description: "Challenge details" });
 
