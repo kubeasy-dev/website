@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { ObjectiveSchema } from "./challengeObjectives";
 
+const semanticVersionSchema = z
+  .string()
+  .regex(
+    /^(\d+\.)?(\d+\.)?(\*|\d+)$/,
+    "Invalid semantic version format (e.g., 1.0.0)",
+  );
+
 // Schema du fichier challenge.yaml
 export const challengeYamlSchema = z.object({
   title: z.string().min(1).describe("Challenge title"),
@@ -8,6 +15,9 @@ export const challengeYamlSchema = z.object({
     .string()
     .min(1)
     .describe("Brief description of symptoms (NOT the cause)"),
+  minRequiredVersion: semanticVersionSchema
+    .describe("Minimum required version of the CLI")
+    .default("2.0.0"),
   theme: z
     .string()
     .min(1)
