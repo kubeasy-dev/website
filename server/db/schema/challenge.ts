@@ -59,7 +59,6 @@ export const challenge = pgTable(
       .references(() => challengeType.slug, { onDelete: "restrict" }),
     estimatedTime: integer("estimated_time").notNull(),
     initialSituation: text("initial_situation").notNull(),
-    objective: text("objective").notNull(),
     ofTheWeek: boolean("of_the_week").default(false).notNull(),
     starterFriendly: boolean("starter_friendly").default(false).notNull(),
     available: boolean("available").default(true).notNull(),

@@ -17,7 +17,6 @@ import { authenticateApiRequest, createApiCaller } from "@/lib/api-auth";
  *   difficulty: string,
  *   theme: string,
  *   initialSituation: string,
- *   objective: string
  * }
  */
 export async function GET(
@@ -61,7 +60,6 @@ export async function GET(
       difficulty: result.challenge.difficulty,
       theme: result.challenge.themeSlug,
       initial_situation: result.challenge.initialSituation,
-      objective: result.challenge.objective,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

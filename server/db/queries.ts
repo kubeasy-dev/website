@@ -49,7 +49,6 @@ export async function getChallenges() {
       typeSlug: challenge.typeSlug,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
-      objective: challenge.objective,
       ofTheWeek: challenge.ofTheWeek,
       createdAt: challenge.createdAt,
       updatedAt: challenge.updatedAt,
@@ -87,7 +86,6 @@ export async function getChallengeBySlug(slug: string) {
       typeSlug: challenge.typeSlug,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
-      objective: challenge.objective,
       ofTheWeek: challenge.ofTheWeek,
       available: challenge.available,
       createdAt: challenge.createdAt,
@@ -267,7 +265,6 @@ export async function getStarterChallenges(limit = 5) {
       estimatedTime: challenge.estimatedTime,
       starterFriendly: challenge.starterFriendly,
       initialSituation: challenge.initialSituation,
-      objective: challenge.objective,
     })
     .from(challenge)
     .innerJoin(challengeTheme, eq(challenge.theme, challengeTheme.slug))

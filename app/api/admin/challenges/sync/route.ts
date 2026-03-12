@@ -182,7 +182,6 @@ export async function POST(request: Request) {
             typeSlug: incomingChallenge.type,
             estimatedTime: incomingChallenge.estimatedTime,
             initialSituation: incomingChallenge.initialSituation,
-            objective: incomingChallenge.objective,
           })
           .returning({ id: challenge.id });
 
@@ -202,8 +201,7 @@ export async function POST(request: Request) {
           existing.difficulty !== incomingChallenge.difficulty ||
           existing.typeSlug !== incomingChallenge.type ||
           existing.estimatedTime !== incomingChallenge.estimatedTime ||
-          existing.initialSituation !== incomingChallenge.initialSituation ||
-          existing.objective !== incomingChallenge.objective;
+          existing.initialSituation !== incomingChallenge.initialSituation;
 
         if (needsUpdate) {
           await db
@@ -216,7 +214,6 @@ export async function POST(request: Request) {
               typeSlug: incomingChallenge.type,
               estimatedTime: incomingChallenge.estimatedTime,
               initialSituation: incomingChallenge.initialSituation,
-              objective: incomingChallenge.objective,
             })
             .where(eq(challenge.slug, incomingChallenge.slug));
           updated.push(incomingChallenge.slug);

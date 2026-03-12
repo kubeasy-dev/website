@@ -33,7 +33,6 @@ export const challengeYamlSchema = z.object({
     .positive()
     .describe("Estimated time in minutes"),
   initialSituation: z.string().min(1).describe("What user finds when starting"),
-  objective: z.string().min(1).describe("What needs to be achieved (NOT how)"),
   objectives: z
     .array(ObjectiveSchema)
     .default([])

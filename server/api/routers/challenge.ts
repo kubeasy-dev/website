@@ -88,7 +88,6 @@ async function fetchChallengeList(
       typeSlug: challenge.typeSlug,
       estimatedTime: challenge.estimatedTime,
       initialSituation: challenge.initialSituation,
-      objective: challenge.objective,
       ofTheWeek: challenge.ofTheWeek,
       createdAt: challenge.createdAt,
       updatedAt: challenge.updatedAt,
@@ -138,7 +137,6 @@ export const challengeRouter = createTRPCRouter({
         difficulty: z.enum(["easy", "medium", "hard"]),
         estimatedTime: z.number().int().positive(),
         initialSituation: z.string().min(1),
-        objective: z.string().min(1),
         ofTheWeek: z.boolean().default(false),
       }),
     )
@@ -164,7 +162,6 @@ export const challengeRouter = createTRPCRouter({
             difficulty: input.difficulty,
             estimatedTime: input.estimatedTime,
             initialSituation: input.initialSituation,
-            objective: input.objective,
             ofTheWeek: input.ofTheWeek,
           })
           .where(eq(challenge.slug, input.slug))
@@ -190,7 +187,6 @@ export const challengeRouter = createTRPCRouter({
           difficulty: input.difficulty,
           estimatedTime: input.estimatedTime,
           initialSituation: input.initialSituation,
-          objective: input.objective,
           ofTheWeek: input.ofTheWeek,
         })
         .returning();
