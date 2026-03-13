@@ -26,7 +26,7 @@
     "@better-auth/api-key": "1.5.4",
     "@better-auth/drizzle-adapter": "1.5.4",
     "@neondatabase/serverless": "1.0.2",
-    "@notionhq/client": "5.11.1",
+    "@notionhq/client": "5.12.0",
     "@posthog/nextjs-config": "1.8.19",
     "@radix-ui/react-avatar": "1.1.11",
     "@radix-ui/react-dialog": "1.1.15",
@@ -90,7 +90,7 @@
     "eslint-config-next": "16.1.6",
     "husky": "9.1.7",
     "knip": "5.86.0",
-    "lint-staged": "16.3.2",
+    "lint-staged": "16.3.3",
     "postcss": "8.5.8",
     "prettier": "3.8.1",
     "tailwindcss": "4.2.1",
@@ -98,7 +98,7 @@
     "typescript": "5.9.3",
     "vitest": "4.0.18"
   },
-  "packageManager": "pnpm@10.31.0",
+  "packageManager": "pnpm@10.32.0",
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
       "biome check --write --unsafe --files-ignore-unknown=true --no-errors-on-unmatched"
