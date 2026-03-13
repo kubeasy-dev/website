@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -5,6 +6,9 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LoginCard } from "@/components/login-card";
 import { auth } from "@/lib/auth";
+import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = generateSEOMetadata({ noIndex: true });
 
 interface LoginPageProps {
   searchParams: Promise<{ next?: string }>;

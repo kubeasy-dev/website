@@ -119,6 +119,7 @@ export function generateSoftwareApplicationSchema() {
       "Command-line tool to set up local Kubernetes clusters and run hands-on challenges",
     applicationCategory: "DeveloperApplication",
     operatingSystem: "macOS, Linux, Windows",
+    url: "https://www.npmjs.com/package/@kubeasy-dev/kubeasy-cli",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -131,7 +132,6 @@ export function generateSoftwareApplicationSchema() {
     },
     downloadUrl: "https://www.npmjs.com/package/@kubeasy-dev/kubeasy-cli",
     softwareVersion: "1.0.0",
-    aggregateRating: undefined,
   };
 }
 
@@ -142,6 +142,7 @@ export function generateOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${siteConfig.url}/#organization`,
     name: siteConfig.name,
     description: siteConfig.description,
     url: siteConfig.url,
@@ -157,15 +158,13 @@ export function generateWebsiteSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${siteConfig.url}/#website`,
     name: siteConfig.name,
     description: siteConfig.description,
     url: siteConfig.url,
     potentialAction: {
       "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${siteConfig.url}/challenges?search={search_term_string}`,
-      },
+      target: `${siteConfig.url}/challenges?search={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };
@@ -195,10 +194,15 @@ export function generateCourseSchema({
       name: provider,
       url: siteConfig.url,
     },
-    url,
+    url: url.startsWith("http") ? url : `${siteConfig.url}${url}`,
     educationalLevel: "Beginner to Advanced",
     inLanguage: "en",
     isAccessibleForFree: true,
+    hasCourseInstance: {
+      "@type": "CourseInstance",
+      courseMode: "online",
+      inLanguage: "en",
+    },
   };
 }
 
@@ -225,7 +229,7 @@ export function generateLearningResourceSchema({
     "@type": "LearningResource",
     name,
     description,
-    url,
+    url: url.startsWith("http") ? url : `${siteConfig.url}${url}`,
     educationalLevel: difficulty,
     timeRequired: `PT${estimatedTime}M`,
     learningResourceType: "Hands-on Exercise",

@@ -51,7 +51,7 @@ export async function generateMetadata({
   const challenge = await getChallengeBySlug(slug);
 
   if (!challenge) {
-    return {};
+    return generateSEOMetadata({ noIndex: true });
   }
 
   const difficultyLabels: Record<string, string> = {

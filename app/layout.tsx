@@ -13,9 +13,18 @@ import {
 } from "@/lib/seo";
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import dynamic from "next/dynamic";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
+
+const ReactQueryDevtools =
+  process.env.NODE_ENV === "development"
+    ? dynamic(() =>
+        import("@tanstack/react-query-devtools").then((m) => ({
+          default: m.ReactQueryDevtools,
+        })),
+      )
+    : () => null;
 
 export const metadata: Metadata = generateMetadata();
 
