@@ -117,7 +117,7 @@ export function generateSoftwareApplicationSchema() {
     name: "Kubeasy CLI",
     description:
       "Command-line tool to set up local Kubernetes clusters and run hands-on challenges",
-    applicationCategory: "Developer Tools",
+    applicationCategory: "DeveloperApplication",
     operatingSystem: "macOS, Linux, Windows",
     url: "https://www.npmjs.com/package/@kubeasy-dev/kubeasy-cli",
     offers: {
@@ -201,7 +201,6 @@ export function generateCourseSchema({
     hasCourseInstance: {
       "@type": "CourseInstance",
       courseMode: "online",
-      courseWorkload: "PT30M",
       inLanguage: "en",
     },
   };

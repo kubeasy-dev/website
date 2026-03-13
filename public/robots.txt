@@ -4,18 +4,18 @@ Disallow: /api/
 Disallow: /auth/
 Disallow: /onboarding
 Disallow: /admin/
+Disallow: /login
 
-User-Agent: GPTBot
+User-agent: GPTBot
 Allow: /
 
-User-Agent: OAI-SearchBot
+User-agent: OAI-SearchBot
 Allow: /
 
-User-Agent: ClaudeBot
+User-agent: ClaudeBot
 Allow: /
 
-User-Agent: PerplexityBot
+User-agent: PerplexityBot
 Allow: /
 
-Host: https://kubeasy.dev
 Sitemap: https://kubeasy.dev/sitemap.xml
