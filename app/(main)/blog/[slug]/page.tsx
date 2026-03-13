@@ -124,7 +124,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     articleSection: post.category.name,
     keywords: post.tags.join(", "),
     wordCount,
-    timeRequired: `PT${readingTime}M`,
   };
 
   return (

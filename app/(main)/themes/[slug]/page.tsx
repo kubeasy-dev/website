@@ -52,7 +52,7 @@ export async function generateMetadata({
   const theme = await getThemeBySlug(slug);
 
   if (!theme) {
-    return {};
+    return generateSEOMetadata({ noIndex: true });
   }
 
   return generateSEOMetadata({
