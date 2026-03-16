@@ -1,0 +1,22 @@
+# Kubeasy
+> Free, open-source Kubernetes learning platform. Hands-on troubleshooting challenges in a local cluster.
+
+## Troubleshooting Guides
+- https://kubeasy.dev/blog/kubernetes-crashloopbackoff-debug : Diagnose and fix CrashLoopBackOff errors
+- https://kubeasy.dev/blog/kubernetes-oomkilled-fix : Fix OOMKilled pod terminations
+- https://kubeasy.dev/blog/kubernetes-pod-pending-fix : Troubleshoot pods stuck in Pending state
+- https://kubeasy.dev/blog/kubernetes-imagepullbackoff-fix : Fix ImagePullBackOff errors
+- https://kubeasy.dev/blog/kubernetes-service-not-reachable : Debug unreachable Kubernetes services
+- https://kubeasy.dev/blog/kubernetes-service-types-explained : ClusterIP vs NodePort vs LoadBalancer explained
+- https://kubeasy.dev/blog/kubernetes-probes-explained : Liveness, Readiness & Startup probes guide
+
+## Challenges (hands-on exercises)
+- https://kubeasy.dev/challenges/pod-evicted : Easy — fix a pod being evicted due to resource constraints
+- https://kubeasy.dev/challenges/first-job : Easy — create your first Kubernetes Job
+- https://kubeasy.dev/challenges : Full list of challenges
+
+## Author
+Paul Brissaud — DevOps/Platform Engineer, creator of Kubeasy — https://twitter.com/paulbrissaud
+
+## Sitemap
+https://kubeasy.dev/sitemap.xml

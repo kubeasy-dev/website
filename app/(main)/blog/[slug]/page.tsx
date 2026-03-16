@@ -7,9 +7,9 @@ import { Suspense } from "react";
 import { AuthorCard } from "@/components/blog/author-card";
 import { BlockRenderer } from "@/components/blog/blocks";
 import { RelatedPosts } from "@/components/blog/related-posts";
-import { siteConfig } from "@/config/site";
 import { isNotionConfigured } from "@/lib/notion";
 import {
+  generateBlogPostSchema,
   generateMetadata as generateSEOMetadata,
   stringifyJsonLd,
 } from "@/lib/seo";
@@ -96,36 +96,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   });
 
   // JSON-LD structured data for blog post
-  const blogPostSchema = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: post.description,
-    image: post.cover || `${siteConfig.url}${siteConfig.ogImage}`,
-    datePublished: post.publishedAt,
-    dateModified: post.updatedAt,
+  const blogPostSchema = generateBlogPostSchema({
+    title: post.title,
+    description: post.description ?? "",
+    image: post.cover ?? undefined,
+    url: `/blog/${post.slug}`,
+    publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt,
     author: {
-      "@type": "Person",
       name: post.author.name,
-      url: post.author.twitter || post.author.github,
+      url: post.author.twitter || post.author.github || undefined,
     },
-    publisher: {
-      "@type": "Organization",
-      name: siteConfig.name,
-      logo: {
-        "@type": "ImageObject",
-        url: `${siteConfig.url}/logo.png`,
-      },
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `${siteConfig.url}/blog/${post.slug}`,
-    },
-    articleSection: post.category.name,
-    keywords: post.tags.join(", "),
+    category: post.category.name,
+    tags: post.tags,
     wordCount,
-    timeRequired: `PT${readingTime}M`,
-  };
+  });
 
   return (
     <>
