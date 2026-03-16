@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { and, count, desc, eq, ne, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
@@ -821,35 +822,34 @@ export const userProgressRouter = createTRPCRouter({
         throw new Error("Challenge not found");
       }
 
-      // Delete user progress
-      await ctx.db
-        .delete(userProgress)
-        .where(
-          and(
-            eq(userProgress.userId, userId),
-            eq(userProgress.challengeId, challengeData.id),
+      // Delete user progress, submissions, and XP transactions in parallel
+      // (neon-http doesn't support transactions, but these are independent + idempotent)
+      await all({
+        progress: ctx.db
+          .delete(userProgress)
+          .where(
+            and(
+              eq(userProgress.userId, userId),
+              eq(userProgress.challengeId, challengeData.id),
+            ),
           ),
-        );
-
-      // Delete user submissions for this challenge
-      await ctx.db
-        .delete(userSubmission)
-        .where(
-          and(
-            eq(userSubmission.userId, userId),
-            eq(userSubmission.challengeId, challengeData.id),
+        submissions: ctx.db
+          .delete(userSubmission)
+          .where(
+            and(
+              eq(userSubmission.userId, userId),
+              eq(userSubmission.challengeId, challengeData.id),
+            ),
           ),
-        );
-
-      // Delete XP transactions for this challenge
-      await ctx.db
-        .delete(userXpTransaction)
-        .where(
-          and(
-            eq(userXpTransaction.userId, userId),
-            eq(userXpTransaction.challengeId, challengeData.id),
+        xpTransactions: ctx.db
+          .delete(userXpTransaction)
+          .where(
+            and(
+              eq(userXpTransaction.userId, userId),
+              eq(userXpTransaction.challengeId, challengeData.id),
+            ),
           ),
-        );
+      });
 
       // Recalculate userXp.totalXp from remaining transactions
       const [xpResult] = await ctx.db
