@@ -274,7 +274,6 @@ export function generateBlogPostSchema({
   category,
   tags,
   wordCount,
-  readingTime,
 }: {
   title: string;
   description: string;
@@ -286,7 +285,6 @@ export function generateBlogPostSchema({
   category: string;
   tags: string[];
   wordCount?: number;
-  readingTime?: number;
 }) {
   return {
     "@context": "https://schema.org",
@@ -316,7 +314,6 @@ export function generateBlogPostSchema({
     articleSection: category,
     keywords: tags.join(", "),
     ...(wordCount && { wordCount }),
-    ...(readingTime && { timeRequired: `PT${readingTime}M` }),
   };
 }
 
