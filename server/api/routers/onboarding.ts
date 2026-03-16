@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { and, count, eq, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import {
@@ -17,42 +18,58 @@ export const onboardingRouter = createTRPCRouter({
   getStatus: privateProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
 
-    // 1. Get the onboarding record (or null)
-    const [onboarding] = await ctx.db
-      .select()
-      .from(userOnboarding)
-      .where(eq(userOnboarding.userId, userId));
+    // Run all 4 independent DB queries in parallel (reduces ~4x RTT to ~1x RTT)
+    const {
+      onboardingResult,
+      hasApiToken,
+      hasStartedChallenge,
+      hasCompletedChallenge,
+    } = await all({
+      // 1. Get the onboarding record (or null)
+      async onboardingResult() {
+        const [onboarding] = await ctx.db
+          .select()
+          .from(userOnboarding)
+          .where(eq(userOnboarding.userId, userId));
+        return onboarding;
+      },
+      // 2. Derive hasApiToken from apikey table
+      async hasApiToken() {
+        const [tokenResult] = await ctx.db
+          .select({ count: count() })
+          .from(apikey)
+          .where(eq(apikey.referenceId, userId));
+        return (tokenResult?.count ?? 0) > 0;
+      },
+      // 3. Derive hasStartedChallenge from userProgress table
+      async hasStartedChallenge() {
+        const [startedResult] = await ctx.db
+          .select({ count: count() })
+          .from(userProgress)
+          .where(
+            and(
+              eq(userProgress.userId, userId),
+              inArray(userProgress.status, ["in_progress", "completed"]),
+            ),
+          );
+        return (startedResult?.count ?? 0) > 0;
+      },
+      // 4. Derive hasCompletedChallenge from userProgress table
+      async hasCompletedChallenge() {
+        const [completedResult] = await ctx.db
+          .select({ count: count() })
+          .from(userProgress)
+          .where(
+            and(
+              eq(userProgress.userId, userId),
+              eq(userProgress.status, "completed"),
+            ),
+          );
+        return (completedResult?.count ?? 0) > 0;
+      },
+    });
 
-    // 2. Derive hasApiToken from apikey table
-    const [tokenResult] = await ctx.db
-      .select({ count: count() })
-      .from(apikey)
-      .where(eq(apikey.referenceId, userId));
-    const hasApiToken = (tokenResult?.count ?? 0) > 0;
-
-    // 3. Derive hasStartedChallenge from userProgress table
-    const [startedResult] = await ctx.db
-      .select({ count: count() })
-      .from(userProgress)
-      .where(
-        and(
-          eq(userProgress.userId, userId),
-          inArray(userProgress.status, ["in_progress", "completed"]),
-        ),
-      );
-    const hasStartedChallenge = (startedResult?.count ?? 0) > 0;
-
-    // 4. Derive hasCompletedChallenge from userProgress table
-    const [completedResult] = await ctx.db
-      .select({ count: count() })
-      .from(userProgress)
-      .where(
-        and(
-          eq(userProgress.userId, userId),
-          eq(userProgress.status, "completed"),
-        ),
-      );
-    const hasCompletedChallenge = (completedResult?.count ?? 0) > 0;
+    const onboarding = onboardingResult;
 
     // 5. Calculate current step (1-7)
     let currentStep = 1; // Welcome
