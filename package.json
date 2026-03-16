@@ -45,7 +45,7 @@
     "@trpc/tanstack-react-query": "11.12.0",
     "@upstash/realtime": "1.0.3",
     "@upstash/redis": "1.36.4",
-    "@vercel/analytics": "1.6.1",
+    "@vercel/analytics": "2.0.1",
     "autoprefixer": "10.4.27",
     "better-all": "0.0.7",
     "better-auth": "1.5.4",
