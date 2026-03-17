@@ -429,6 +429,24 @@ export function MyComponent() {
 }
 ```
 
+## Logging (PostHog via OpenTelemetry)
+
+Server-side structured logging is sent to PostHog via OpenTelemetry OTLP on Vercel deployments (preview + production). In local development, logs fall back to `console.*`.
+
+```typescript
+import { logger } from "@/lib/logger";
+
+logger.info("Something happened", { userId: "123" });
+logger.warn("Redis not configured");
+logger.error("Operation failed", { error: String(error) });
+logger.debug("Debug info", { key: "value" });
+```
+
+- **Server-side only**: `lib/logger.ts` uses `server-only` — client components should use `console.*`
+- **Environment gating**: Logs are sent to PostHog only when `process.env.VERCEL` is set (preview + production)
+- **OpenTelemetry provider**: Registered in `instrumentation.ts` via `register()` function
+- **Configuration**: Uses `NEXT_PUBLIC_POSTHOG_KEY` for auth, sends to `https://eu.i.posthog.com/i/v1/logs`
+
 ## Error Tracking (PostHog)
 
 - **Server-side**: Use `captureServerException(error, distinctId?, additionalProperties?)` from `@/lib/analytics-server`

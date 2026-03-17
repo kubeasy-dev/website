@@ -1,7 +1,7 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { NextRequest } from "next/server";
-import { env } from "@/env";
 import { captureServerException } from "@/lib/analytics-server";
+import { logger } from "@/lib/logger";
 import { appRouter } from "@/server/api/root";
 import { createTRPCContext } from "@/server/api/trpc";
 
@@ -27,12 +27,15 @@ const handler = (req: NextRequest) =>
     router: appRouter,
     createContext: () => createContext(req),
     onError: ({ path, error }: { path?: string; error: Error }) => {
-      if (env.NODE_ENV === "development") {
-        console.error(
-          `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`,
-        );
-      }
-      captureServerException(error, undefined, { trpcPath: path });
+      logger.error(`tRPC failed on ${path ?? "<no-path>"}`, {
+        path: path ?? "<no-path>",
+        error: error.message,
+      });
+      // onError is a sync callback — use void + .catch to prevent unhandled rejection
+      // and ensure flush completes best-effort in the serverless execution window
+      void captureServerException(error, undefined, {
+        trpcPath: path,
+      }).catch(() => {});
     },
   });
 

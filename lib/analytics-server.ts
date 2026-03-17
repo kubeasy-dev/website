@@ -6,6 +6,7 @@
  */
 
 import { PostHog } from "posthog-node";
+import { logger } from "@/lib/logger";
 
 // Initialize PostHog client for server-side tracking
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -26,15 +27,41 @@ if (posthogKey && posthogHost) {
     });
 
     if (isDevelopment) {
-      console.info("[PostHog Server] Disabled in development mode");
+      logger.info("PostHog Server disabled in development mode");
     }
   } catch (error) {
-    console.error("[PostHog Server] Failed to initialize:", error);
+    logger.error("PostHog Server failed to initialize", {
+      error: String(error),
+    });
   }
 } else if (isDevelopment) {
-  console.info(
-    "[PostHog Server] Not initialized: Missing environment variables",
-  );
+  logger.info("PostHog Server not initialized: missing environment variables");
+}
+
+/**
+ * Flatten a properties object into scalar-only log attributes.
+ * Arrays are joined as comma-separated strings; nested objects are stringified.
+ * Per PostHog best practices, only scalar values (string, number, boolean) are allowed.
+ */
+function toScalarAttributes(
+  props?: Record<string, unknown>,
+): Record<string, string | number | boolean> | undefined {
+  if (!props || Object.keys(props).length === 0) return undefined;
+  const attrs: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
+      attrs[key] = value;
+    } else if (Array.isArray(value)) {
+      attrs[key] = value.join(", ");
+    } else if (value !== null && value !== undefined) {
+      attrs[key] = String(value);
+    }
+  }
+  return Object.keys(attrs).length > 0 ? attrs : undefined;
 }
 
 /**
@@ -46,18 +73,24 @@ async function safePostHogOperation<T>(
   fn: () => Promise<T>,
   devLog?: { event: string; properties?: Record<string, unknown> },
 ): Promise<void> {
+  // Log in dev regardless of whether posthogClient exists:
+  // - First branch: client is null (missing env vars in dev)
+  // - Second branch: client exists but is disabled (disabled: true in dev config)
   if (!posthogClient) {
     if (isDevelopment && devLog) {
-      console.debug(
-        `[PostHog Server] ${devLog.event}`,
-        devLog.properties ?? "",
-      );
+      logger.debug(`PostHog Server: ${devLog.event}`, {
+        event: devLog.event,
+        ...toScalarAttributes(devLog.properties),
+      });
     }
     return;
   }
 
   if (isDevelopment && devLog) {
-    console.debug(`[PostHog Server] ${devLog.event}`, devLog.properties ?? "");
+    logger.debug(`PostHog Server: ${devLog.event}`, {
+      event: devLog.event,
+      ...toScalarAttributes(devLog.properties),
+    });
     return;
   }
 
@@ -65,7 +98,9 @@ async function safePostHogOperation<T>(
     await fn();
   } catch (error) {
     // Log but don't throw - analytics failures shouldn't break the application
-    console.error(`[PostHog Server] ${operation} failed:`, error);
+    logger.error(`PostHog Server: ${operation} failed`, {
+      error: String(error),
+    });
   }
 }
 
@@ -356,11 +391,10 @@ export async function captureServerException(
   additionalProperties?: Record<string, unknown>,
 ): Promise<void> {
   if (isDevelopment) {
-    console.debug(
-      "[PostHog Server] $exception",
-      error instanceof Error ? error.message : error,
-      additionalProperties ?? "",
-    );
+    logger.debug("PostHog Server: $exception", {
+      error: error instanceof Error ? error.message : String(error),
+      ...toScalarAttributes(additionalProperties),
+    });
     return;
   }
 
@@ -372,10 +406,9 @@ export async function captureServerException(
     posthogClient.captureException(error, distinctId, additionalProperties);
     await posthogClient.flush();
   } catch (captureError) {
-    console.error(
-      "[PostHog Server] captureServerException failed:",
-      captureError,
-    );
+    logger.error("PostHog Server: captureServerException failed", {
+      error: String(captureError),
+    });
   }
 }
 
@@ -397,6 +430,8 @@ export async function shutdownPostHog() {
   try {
     await posthogClient.shutdown();
   } catch (error) {
-    console.error("[PostHog Server] Failed to shutdown:", error);
+    logger.error("PostHog Server: failed to shutdown", {
+      error: String(error),
+    });
   }
 }

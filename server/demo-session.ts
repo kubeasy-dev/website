@@ -1,6 +1,7 @@
 import "server-only";
 
 import { nanoid } from "nanoid";
+import { logger } from "@/lib/logger";
 import { isRedisConfigured, redis } from "@/lib/redis";
 
 const DEMO_TTL = 24 * 60 * 60; // 24 hours in seconds
@@ -22,7 +23,7 @@ export interface DemoSession {
  */
 export async function createDemoSession(): Promise<DemoSession | null> {
   if (!isRedisConfigured || !redis) {
-    console.warn("[Demo] Redis not configured, cannot create demo session");
+    logger.warn("Redis not configured, cannot create demo session");
     return null;
   }
 
@@ -37,7 +38,7 @@ export async function createDemoSession(): Promise<DemoSession | null> {
     });
     return session;
   } catch (error) {
-    console.error("[Demo] Failed to create demo session:", error);
+    logger.error("Failed to create demo session", { error: String(error) });
     return null;
   }
 }
@@ -62,7 +63,7 @@ export async function getDemoSession(
 
     return typeof data === "string" ? JSON.parse(data) : (data as DemoSession);
   } catch (error) {
-    console.error("[Demo] Failed to get demo session:", error);
+    logger.error("Failed to get demo session", { error: String(error) });
     return null;
   }
 }
@@ -89,7 +90,9 @@ export async function markDemoCompleted(token: string): Promise<void> {
       }
     }
   } catch (error) {
-    console.error("[Demo] Failed to mark demo as completed:", error);
+    logger.error("Failed to mark demo as completed", {
+      error: String(error),
+    });
   }
 }
 

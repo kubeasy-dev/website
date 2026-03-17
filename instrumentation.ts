@@ -1,5 +1,19 @@
+import { logs } from "@opentelemetry/api-logs";
 import type { Instrumentation } from "next";
-import { getPostHogClient } from "@/lib/analytics-server";
+import { getPostHogClient, shutdownPostHog } from "@/lib/analytics-server";
+import { loggerProvider } from "@/lib/logger";
+
+export function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs" && loggerProvider) {
+    logs.setGlobalLoggerProvider(loggerProvider);
+  }
+}
+
+export async function onShutdown() {
+  await loggerProvider?.forceFlush();
+  await loggerProvider?.shutdown();
+  await shutdownPostHog();
+}
 
 export const onRequestError: Instrumentation.onRequestError = async (
   error,
