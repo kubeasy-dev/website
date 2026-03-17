@@ -32,7 +32,7 @@ export const loggerProvider =
     ? new LoggerProvider({
         resource: resourceFromAttributes({
           "service.name": "kubeasy",
-          "service.version": process.env.npm_package_version ?? "unknown",
+          "service.version": process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
           "deployment.environment": process.env.VERCEL_ENV ?? "unknown",
         }),
         processors: [
