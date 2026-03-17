@@ -3,6 +3,12 @@
  *
  * Sends logs to PostHog on Vercel deployments (preview + production).
  * Falls back to console.* in local development.
+ *
+ * Best practices (https://posthog.com/docs/logs/best-practices):
+ * - Only bind scalar values (strings, numbers, booleans) as attributes
+ * - Use lowercase severityText values (trace, debug, info, warn, error, fatal)
+ * - Set resource attributes (service.name, service.version, deployment.environment) once at startup
+ * - Set log attributes per event to describe the specific request
  */
 import "server-only";
 
@@ -26,6 +32,7 @@ export const loggerProvider =
     ? new LoggerProvider({
         resource: resourceFromAttributes({
           "service.name": "kubeasy",
+          "service.version": process.env.npm_package_version ?? "unknown",
           "deployment.environment": process.env.VERCEL_ENV ?? "unknown",
         }),
         processors: [
@@ -44,14 +51,34 @@ export const loggerProvider =
 
 const otelLogger = loggerProvider?.getLogger("kubeasy");
 
-type LogAttributes = Record<string, string | number | boolean | undefined>;
+/** Only scalar values — no objects, arrays, or undefined (per OTel spec & PostHog best practices) */
+export type LogAttributes = Record<string, string | number | boolean>;
+
+/**
+ * Strip undefined values from an attributes object so only OTel-compatible
+ * scalar values remain.
+ */
+function cleanAttributes(
+  attrs?: Record<string, string | number | boolean | undefined>,
+): LogAttributes | undefined {
+  if (!attrs) return undefined;
+  const cleaned: LogAttributes = {};
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value !== undefined) {
+      cleaned[key] = value;
+    }
+  }
+  return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+}
 
 function emit(
   severityNumber: SeverityNumber,
   severityText: string,
   message: string,
-  attributes?: LogAttributes,
+  attributes?: Record<string, string | number | boolean | undefined>,
 ) {
+  const cleaned = cleanAttributes(attributes);
+
   if (!otelLogger) {
     // Fallback to console in local dev
     const consoleFn =
@@ -62,7 +89,7 @@ function emit(
           : severityNumber >= SeverityNumber.INFO
             ? console.info
             : console.debug;
-    consoleFn(message, attributes ?? "");
+    consoleFn(message, cleaned ?? "");
     return;
   }
 
@@ -70,17 +97,25 @@ function emit(
     body: message,
     severityNumber,
     severityText,
-    attributes: attributes as Record<string, string | number | boolean>,
+    ...(cleaned && { attributes: cleaned }),
   });
 }
 
 export const logger = {
-  debug: (message: string, attributes?: LogAttributes) =>
-    emit(SeverityNumber.DEBUG, "DEBUG", message, attributes),
-  info: (message: string, attributes?: LogAttributes) =>
-    emit(SeverityNumber.INFO, "INFO", message, attributes),
-  warn: (message: string, attributes?: LogAttributes) =>
-    emit(SeverityNumber.WARN, "WARN", message, attributes),
-  error: (message: string, attributes?: LogAttributes) =>
-    emit(SeverityNumber.ERROR, "ERROR", message, attributes),
+  debug: (
+    message: string,
+    attributes?: Record<string, string | number | boolean | undefined>,
+  ) => emit(SeverityNumber.DEBUG, "debug", message, attributes),
+  info: (
+    message: string,
+    attributes?: Record<string, string | number | boolean | undefined>,
+  ) => emit(SeverityNumber.INFO, "info", message, attributes),
+  warn: (
+    message: string,
+    attributes?: Record<string, string | number | boolean | undefined>,
+  ) => emit(SeverityNumber.WARN, "warn", message, attributes),
+  error: (
+    message: string,
+    attributes?: Record<string, string | number | boolean | undefined>,
+  ) => emit(SeverityNumber.ERROR, "error", message, attributes),
 };

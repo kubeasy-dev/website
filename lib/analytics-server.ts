@@ -39,6 +39,32 @@ if (posthogKey && posthogHost) {
 }
 
 /**
+ * Flatten a properties object into scalar-only log attributes.
+ * Arrays are joined as comma-separated strings; nested objects are stringified.
+ * Per PostHog best practices, only scalar values (string, number, boolean) are allowed.
+ */
+function toScalarAttributes(
+  props?: Record<string, unknown>,
+): Record<string, string | number | boolean> | undefined {
+  if (!props || Object.keys(props).length === 0) return undefined;
+  const attrs: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
+      attrs[key] = value;
+    } else if (Array.isArray(value)) {
+      attrs[key] = value.join(", ");
+    } else if (value !== null && value !== undefined) {
+      attrs[key] = String(value);
+    }
+  }
+  return Object.keys(attrs).length > 0 ? attrs : undefined;
+}
+
+/**
  * Safe wrapper for PostHog server-side operations
  * In development, logs the event details to the console instead of sending to PostHog
  */
@@ -50,7 +76,8 @@ async function safePostHogOperation<T>(
   if (!posthogClient) {
     if (isDevelopment && devLog) {
       logger.debug(`PostHog Server: ${devLog.event}`, {
-        properties: JSON.stringify(devLog.properties ?? {}),
+        event: devLog.event,
+        ...toScalarAttributes(devLog.properties),
       });
     }
     return;
@@ -58,7 +85,8 @@ async function safePostHogOperation<T>(
 
   if (isDevelopment && devLog) {
     logger.debug(`PostHog Server: ${devLog.event}`, {
-      properties: JSON.stringify(devLog.properties ?? {}),
+      event: devLog.event,
+      ...toScalarAttributes(devLog.properties),
     });
     return;
   }
@@ -362,7 +390,7 @@ export async function captureServerException(
   if (isDevelopment) {
     logger.debug("PostHog Server: $exception", {
       error: error instanceof Error ? error.message : String(error),
-      properties: JSON.stringify(additionalProperties ?? {}),
+      ...toScalarAttributes(additionalProperties),
     });
     return;
   }
