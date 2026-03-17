@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { siteConfig } from "@/config/site";
+import { logger } from "@/lib/logger";
 import {
   generateBreadcrumbSchema,
   generateLearningResourceSchema,
@@ -32,10 +33,9 @@ export async function generateStaticParams() {
       slug: challenge.slug,
     }));
   } catch (error) {
-    console.error(
-      "[generateStaticParams] Failed to generate challenge params:",
-      error,
-    );
+    logger.error("Failed to generate challenge static params", {
+      error: String(error),
+    });
     // Fallback: no pre-generation, pages will be rendered on-demand
     return [];
   }

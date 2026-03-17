@@ -8,6 +8,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ChallengesGrid } from "@/components/challenges-grid";
 import { ThemeHero } from "@/components/theme-hero";
 import { siteConfig } from "@/config/site";
+import { logger } from "@/lib/logger";
 import {
   generateBreadcrumbSchema,
   generateCourseSchema,
@@ -33,10 +34,9 @@ export async function generateStaticParams() {
       slug: theme.slug,
     }));
   } catch (error) {
-    console.error(
-      "[generateStaticParams] Failed to generate theme params:",
-      error,
-    );
+    logger.error("Failed to generate theme static params", {
+      error: String(error),
+    });
     // Fallback: no pre-generation, pages will be rendered on-demand
     return [];
   }
