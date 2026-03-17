@@ -825,30 +825,36 @@ export const userProgressRouter = createTRPCRouter({
       // Delete user progress, submissions, and XP transactions in parallel
       // (neon-http doesn't support transactions, but these are independent + idempotent)
       await all({
-        progress: ctx.db
-          .delete(userProgress)
-          .where(
-            and(
-              eq(userProgress.userId, userId),
-              eq(userProgress.challengeId, challengeData.id),
-            ),
-          ),
-        submissions: ctx.db
-          .delete(userSubmission)
-          .where(
-            and(
-              eq(userSubmission.userId, userId),
-              eq(userSubmission.challengeId, challengeData.id),
-            ),
-          ),
-        xpTransactions: ctx.db
-          .delete(userXpTransaction)
-          .where(
-            and(
-              eq(userXpTransaction.userId, userId),
-              eq(userXpTransaction.challengeId, challengeData.id),
-            ),
-          ),
+        async progress() {
+          return ctx.db
+            .delete(userProgress)
+            .where(
+              and(
+                eq(userProgress.userId, userId),
+                eq(userProgress.challengeId, challengeData.id),
+              ),
+            );
+        },
+        async submissions() {
+          return ctx.db
+            .delete(userSubmission)
+            .where(
+              and(
+                eq(userSubmission.userId, userId),
+                eq(userSubmission.challengeId, challengeData.id),
+              ),
+            );
+        },
+        async xpTransactions() {
+          return ctx.db
+            .delete(userXpTransaction)
+            .where(
+              and(
+                eq(userXpTransaction.userId, userId),
+                eq(userXpTransaction.challengeId, challengeData.id),
+              ),
+            );
+        },
       });
 
       // Recalculate userXp.totalXp from remaining transactions

@@ -154,15 +154,21 @@ export const userRouter = createTRPCRouter({
     // Delete all user progress, XP transactions, and XP record in parallel
     // (neon-http doesn't support transactions, but these are independent + idempotent)
     const { deletedProgress, deletedTransactions } = await all({
-      deletedProgress: ctx.db
-        .delete(userProgress)
-        .where(eq(userProgress.userId, userId))
-        .returning(),
-      deletedTransactions: ctx.db
-        .delete(userXpTransaction)
-        .where(eq(userXpTransaction.userId, userId))
-        .returning(),
-      _xpRecord: ctx.db.delete(userXp).where(eq(userXp.userId, userId)),
+      async deletedProgress() {
+        return ctx.db
+          .delete(userProgress)
+          .where(eq(userProgress.userId, userId))
+          .returning();
+      },
+      async deletedTransactions() {
+        return ctx.db
+          .delete(userXpTransaction)
+          .where(eq(userXpTransaction.userId, userId))
+          .returning();
+      },
+      async _xpRecord() {
+        return ctx.db.delete(userXp).where(eq(userXp.userId, userId));
+      },
     });
 
     const deletedXp = deletedTransactions.reduce(
