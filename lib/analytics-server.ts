@@ -73,6 +73,9 @@ async function safePostHogOperation<T>(
   fn: () => Promise<T>,
   devLog?: { event: string; properties?: Record<string, unknown> },
 ): Promise<void> {
+  // Log in dev regardless of whether posthogClient exists:
+  // - First branch: client is null (missing env vars in dev)
+  // - Second branch: client exists but is disabled (disabled: true in dev config)
   if (!posthogClient) {
     if (isDevelopment && devLog) {
       logger.debug(`PostHog Server: ${devLog.event}`, {

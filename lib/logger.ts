@@ -89,7 +89,11 @@ function emit(
           : severityNumber >= SeverityNumber.INFO
             ? console.info
             : console.debug;
-    consoleFn(message, cleaned ?? "");
+    if (cleaned) {
+      consoleFn(message, cleaned);
+    } else {
+      consoleFn(message);
+    }
     return;
   }
 

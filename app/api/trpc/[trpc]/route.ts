@@ -31,7 +31,11 @@ const handler = (req: NextRequest) =>
         path: path ?? "<no-path>",
         error: error.message,
       });
-      captureServerException(error, undefined, { trpcPath: path });
+      // onError is a sync callback — use void + .catch to prevent unhandled rejection
+      // and ensure flush completes best-effort in the serverless execution window
+      void captureServerException(error, undefined, {
+        trpcPath: path,
+      }).catch(() => {});
     },
   });
 
