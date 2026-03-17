@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { desc, eq, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
@@ -150,25 +151,30 @@ export const userRouter = createTRPCRouter({
   resetProgress: privateProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.user.id;
 
-    // Delete all user progress (neon-http doesn't support transactions)
-    const deletedProgress = await ctx.db
-      .delete(userProgress)
-      .where(eq(userProgress.userId, userId))
-      .returning();
-
-    // Delete all XP transactions
-    const deletedTransactions = await ctx.db
-      .delete(userXpTransaction)
-      .where(eq(userXpTransaction.userId, userId))
-      .returning();
+    // Delete all user progress, XP transactions, and XP record in parallel
+    // (neon-http doesn't support transactions, but these are independent + idempotent)
+    const { deletedProgress, deletedTransactions } = await all({
+      async deletedProgress() {
+        return ctx.db
+          .delete(userProgress)
+          .where(eq(userProgress.userId, userId))
+          .returning();
+      },
+      async deletedTransactions() {
+        return ctx.db
+          .delete(userXpTransaction)
+          .where(eq(userXpTransaction.userId, userId))
+          .returning();
+      },
+      async _xpRecord() {
+        return ctx.db.delete(userXp).where(eq(userXp.userId, userId));
+      },
+    });
 
     const deletedXp = deletedTransactions.reduce(
       (sum, t) => sum + t.xpAmount,
       0,
     );
-
-    // Delete user XP record
-    await ctx.db.delete(userXp).where(eq(userXp.userId, userId));
 
     // Invalidate all user-related caches
     revalidateTag(`user-${userId}-stats`, "max");

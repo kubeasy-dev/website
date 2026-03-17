@@ -1,3 +1,4 @@
+import { all } from "better-all";
 import { and, count, desc, eq, ne, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
@@ -821,35 +822,40 @@ export const userProgressRouter = createTRPCRouter({
         throw new Error("Challenge not found");
       }
 
-      // Delete user progress
-      await ctx.db
-        .delete(userProgress)
-        .where(
-          and(
-            eq(userProgress.userId, userId),
-            eq(userProgress.challengeId, challengeData.id),
-          ),
-        );
-
-      // Delete user submissions for this challenge
-      await ctx.db
-        .delete(userSubmission)
-        .where(
-          and(
-            eq(userSubmission.userId, userId),
-            eq(userSubmission.challengeId, challengeData.id),
-          ),
-        );
-
-      // Delete XP transactions for this challenge
-      await ctx.db
-        .delete(userXpTransaction)
-        .where(
-          and(
-            eq(userXpTransaction.userId, userId),
-            eq(userXpTransaction.challengeId, challengeData.id),
-          ),
-        );
+      // Delete user progress, submissions, and XP transactions in parallel
+      // (neon-http doesn't support transactions, but these are independent + idempotent)
+      await all({
+        async progress() {
+          return ctx.db
+            .delete(userProgress)
+            .where(
+              and(
+                eq(userProgress.userId, userId),
+                eq(userProgress.challengeId, challengeData.id),
+              ),
+            );
+        },
+        async submissions() {
+          return ctx.db
+            .delete(userSubmission)
+            .where(
+              and(
+                eq(userSubmission.userId, userId),
+                eq(userSubmission.challengeId, challengeData.id),
+              ),
+            );
+        },
+        async xpTransactions() {
+          return ctx.db
+            .delete(userXpTransaction)
+            .where(
+              and(
+                eq(userXpTransaction.userId, userId),
+                eq(userXpTransaction.challengeId, challengeData.id),
+              ),
+            );
+        },
+      });
 
       // Recalculate userXp.totalXp from remaining transactions
       const [xpResult] = await ctx.db
@@ -866,6 +872,8 @@ export const userProgressRouter = createTRPCRouter({
 
       revalidateTag(`challenge-list-${userId}`, "max");
       revalidateTag("challenges", "max");
+      revalidateTag(`user-${userId}-xp`, "max");
+      revalidateTag(`user-${userId}-stats`, "max");
 
       return {
         success: true,
