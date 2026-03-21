@@ -79,7 +79,7 @@
     "zod-openapi": "5.4.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.6",
+    "@biomejs/biome": "2.4.8",
     "@eslint/eslintrc": "3.3.5",
     "@tailwindcss/postcss": "4.2.1",
     "@tanstack/react-query-devtools": "5.91.3",
